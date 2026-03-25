@@ -38,6 +38,9 @@ Karl Popper, critical rationalism, falsifiability
 - Failure Coordinates
 - Verification
 
+If context is incomplete, preserve the selected structure and use the sections to explain what is missing rather than collapsing to a generic answer.
+
+
 ## Failure Signals
 
 - Validation language instead of falsification

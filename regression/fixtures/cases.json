@@ -1,0 +1,339 @@
+{
+  "version": "1.0.0",
+  "suites": {
+    "smoke": [
+      "R1",
+      "R2",
+      "Q1",
+      "P1"
+    ],
+    "full": [
+      "R1",
+      "R2",
+      "R3",
+      "R4",
+      "R5",
+      "R6",
+      "Q1",
+      "D1",
+      "P1",
+      "Rg1",
+      "B1",
+      "V1",
+      "C1",
+      "C2"
+    ]
+  },
+  "cases": [
+    {
+      "id": "R1",
+      "category": "router",
+      "name": "Clear implementation request",
+      "targets": [
+        "cursor",
+        "codex"
+      ],
+      "prompt": "Refactor this function to remove duplication and add tests.",
+      "expectedPrimaryExpert": "expert-engineer-quinn",
+      "expectedSections": [
+        "Answer"
+      ],
+      "allowedHandoffs": [],
+      "forbiddenBehaviors": [
+        "Dennett-style ideation",
+        "Descartes-only abstraction",
+        "UX framing"
+      ]
+    },
+    {
+      "id": "R2",
+      "category": "router",
+      "name": "Clear architecture request",
+      "targets": [
+        "cursor",
+        "codex"
+      ],
+      "prompt": "Design the data model and trust boundaries for this feature.",
+      "expectedPrimaryExpert": "expert-architect-descartes",
+      "expectedSections": [
+        "Assumptions",
+        "Failure Modes",
+        "Fallbacks",
+        "Foundation",
+        "Verification Flags"
+      ],
+      "allowedHandoffs": [],
+      "forbiddenBehaviors": [
+        "Implementation details before assumptions",
+        "Pure brainstorming"
+      ]
+    },
+    {
+      "id": "R3",
+      "category": "router",
+      "name": "Clear debugging request",
+      "targets": [
+        "cursor",
+        "codex"
+      ],
+      "prompt": "Tests are failing with a null pointer. Find the root cause.",
+      "expectedPrimaryExpert": "expert-qa-popper",
+      "expectedSections": [
+        "Hypothesis",
+        "Reproduction",
+        "Failure Coordinates",
+        "Verification"
+      ],
+      "allowedHandoffs": [
+        "expert-engineer-quinn"
+      ],
+      "forbiddenBehaviors": [
+        "Generic advice",
+        "Architecture detours",
+        "Ungrounded speculation"
+      ]
+    },
+    {
+      "id": "R4",
+      "category": "router",
+      "name": "Clear brainstorming request",
+      "targets": [
+        "cursor",
+        "codex"
+      ],
+      "prompt": "Give me three different ways to redesign this workflow.",
+      "expectedPrimaryExpert": "expert-visionary-dennett",
+      "expectedSections": [
+        "Draft A",
+        "Draft B",
+        "Draft C",
+        "Recommendation"
+      ],
+      "allowedHandoffs": [],
+      "forbiddenBehaviors": [
+        "Converging too early",
+        "Giving only one answer"
+      ]
+    },
+    {
+      "id": "R5",
+      "category": "router",
+      "name": "Clear UX request",
+      "targets": [
+        "cursor",
+        "codex"
+      ],
+      "prompt": "This modal feels confusing. Improve the flow.",
+      "expectedPrimaryExpert": "expert-ux-rogers",
+      "expectedSections": [
+        "Felt Experience",
+        "Friction",
+        "Human Cost",
+        "Fix",
+        "Success Criteria"
+      ],
+      "allowedHandoffs": [],
+      "forbiddenBehaviors": [
+        "Backend-first answer",
+        "Technical optimization only"
+      ]
+    },
+    {
+      "id": "R6",
+      "category": "router",
+      "name": "Pattern extraction request",
+      "targets": [
+        "cursor",
+        "codex"
+      ],
+      "prompt": "We keep hitting the same bug. Extract the reusable pattern.",
+      "expectedPrimaryExpert": "expert-manager-blackmore",
+      "expectedSections": [
+        "Root Cause",
+        "Solution Pattern",
+        "Automation Opportunity",
+        "Verification"
+      ],
+      "allowedHandoffs": [],
+      "forbiddenBehaviors": [
+        "Only a patch",
+        "No reusable pattern"
+      ]
+    },
+    {
+      "id": "Q1",
+      "category": "expert",
+      "name": "Quinn behavior",
+      "targets": [
+        "cursor",
+        "codex"
+      ],
+      "prompt": "Implement this change.",
+      "expectedPrimaryExpert": "expert-engineer-quinn",
+      "expectedSections": [
+        "Answer"
+      ],
+      "allowedHandoffs": [],
+      "forbiddenBehaviors": [
+        "Filler opening",
+        "Vague suggestions",
+        "No verification plan"
+      ]
+    },
+    {
+      "id": "D1",
+      "category": "expert",
+      "name": "Descartes behavior",
+      "targets": [
+        "cursor",
+        "codex"
+      ],
+      "prompt": "Design the system for this new feature.",
+      "expectedPrimaryExpert": "expert-architect-descartes",
+      "expectedSections": [
+        "Assumptions",
+        "Failure Modes",
+        "Fallbacks",
+        "Foundation",
+        "Verification Flags"
+      ],
+      "allowedHandoffs": [],
+      "forbiddenBehaviors": [
+        "Business logic before the foundation",
+        "Unchallenged assumptions"
+      ]
+    },
+    {
+      "id": "P1",
+      "category": "expert",
+      "name": "Popper behavior",
+      "targets": [
+        "cursor",
+        "codex"
+      ],
+      "prompt": "Why is this test failing?",
+      "expectedPrimaryExpert": "expert-qa-popper",
+      "expectedSections": [
+        "Hypothesis",
+        "Reproduction",
+        "Failure Coordinates",
+        "Verification"
+      ],
+      "allowedHandoffs": [],
+      "forbiddenBehaviors": [
+        "Validation language instead of falsification",
+        "No reproduction steps"
+      ]
+    },
+    {
+      "id": "Rg1",
+      "category": "expert",
+      "name": "Rogers behavior",
+      "targets": [
+        "cursor",
+        "codex"
+      ],
+      "prompt": "Users keep misclicking this button.",
+      "expectedPrimaryExpert": "expert-ux-rogers",
+      "expectedSections": [
+        "Felt Experience",
+        "Friction",
+        "Human Cost",
+        "Fix",
+        "Success Criteria"
+      ],
+      "allowedHandoffs": [],
+      "forbiddenBehaviors": [
+        "Blaming the user",
+        "Accessibility ignored"
+      ]
+    },
+    {
+      "id": "B1",
+      "category": "expert",
+      "name": "Blackmore behavior",
+      "targets": [
+        "cursor",
+        "codex"
+      ],
+      "prompt": "We fixed this bug. Capture the lesson.",
+      "expectedPrimaryExpert": "expert-manager-blackmore",
+      "expectedSections": [
+        "Root Cause",
+        "Solution Pattern",
+        "Automation Opportunity",
+        "Verification"
+      ],
+      "allowedHandoffs": [],
+      "forbiddenBehaviors": [
+        "No reusable pattern",
+        "No update path for future recurrence"
+      ]
+    },
+    {
+      "id": "V1",
+      "category": "expert",
+      "name": "Dennett behavior",
+      "targets": [
+        "cursor",
+        "codex"
+      ],
+      "prompt": "Explore possible designs for this feature.",
+      "expectedPrimaryExpert": "expert-visionary-dennett",
+      "expectedSections": [
+        "Draft A",
+        "Draft B",
+        "Draft C",
+        "Recommendation"
+      ],
+      "allowedHandoffs": [],
+      "forbiddenBehaviors": [
+        "Premature commitment",
+        "Only minor variants"
+      ]
+    },
+    {
+      "id": "C1",
+      "category": "conflict",
+      "name": "Competing demands",
+      "targets": [
+        "cursor",
+        "codex"
+      ],
+      "prompt": "Give me a fast fix, but also explain every assumption and all edge cases.",
+      "expectedPrimaryExpert": "expert-engineer-quinn",
+      "expectedSections": [
+        "Answer"
+      ],
+      "allowedHandoffs": [],
+      "forbiddenBehaviors": [
+        "Style mashing",
+        "Undeclared multi-persona blend"
+      ]
+    },
+    {
+      "id": "C2",
+      "category": "conflict",
+      "name": "Mixed intent",
+      "targets": [
+        "cursor",
+        "codex"
+      ],
+      "prompt": "Should we build this, and also make the UI friendlier?",
+      "expectedPrimaryExpert": "expert-architect-descartes",
+      "expectedSections": [
+        "Assumptions",
+        "Failure Modes",
+        "Fallbacks",
+        "Foundation",
+        "Verification Flags"
+      ],
+      "allowedHandoffs": [
+        "expert-ux-rogers"
+      ],
+      "forbiddenBehaviors": [
+        "Architecture and UX mashed together with no prioritization"
+      ]
+    }
+  ]
+}

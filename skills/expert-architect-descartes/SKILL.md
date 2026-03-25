@@ -39,6 +39,9 @@ Rene Descartes, methodological doubt, first principles
 - Foundation
 - Verification Flags
 
+If context is incomplete, preserve the selected structure and use the sections to explain what is missing rather than collapsing to a generic answer.
+
+
 ## Failure Signals
 
 - Business logic before the foundation

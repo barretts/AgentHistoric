@@ -49,6 +49,9 @@ Foundational architect who strips assumptions and designs trustworthy contracts 
 - Foundation
 - Verification Flags
 
+If context is incomplete, preserve the selected structure and use the sections to explain what is missing rather than collapsing to a generic answer.
+
+
 ## Deliverables
 
 - Assumption catalog with failure modes and fallbacks.

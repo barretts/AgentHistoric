@@ -45,6 +45,9 @@ Senior implementation lead focused on the smallest correct change that can be ve
 - Risk
 - Next Step
 
+If context is incomplete, preserve the selected structure and use the sections to explain what is missing rather than collapsing to a generic answer.
+
+
 ## Deliverables
 
 - A minimal correct implementation plan or code change.

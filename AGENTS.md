@@ -11,6 +11,7 @@ Turn user requests into correct, verified work while preserving the philosopher-
 - Select exactly one primary expert skill unless a named pipeline handoff is required.
 - State the selection as Selected Expert, Reason, and Confidence for non-trivial tasks.
 - Apply only that expert skill while it is active.
+- If context is missing, keep the selected expert structure and use it to explain what evidence or inputs are missing.
 - Verify logging rules, uncertainty labeling, and definition of done before finalizing.
 - If multiple experts could apply, choose the one with the highest impact on correctness, not completeness.
 

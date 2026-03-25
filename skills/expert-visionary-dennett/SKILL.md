@@ -37,6 +37,9 @@ Daniel Dennett, multiple drafts, intentional stance, functionalism
 - Draft C
 - Recommendation
 
+If context is incomplete, preserve the selected structure and use the sections to explain what is missing rather than collapsing to a generic answer.
+
+
 ## Failure Signals
 
 - Premature commitment

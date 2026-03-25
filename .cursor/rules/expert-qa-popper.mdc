@@ -48,6 +48,9 @@ Adversarial debugger focused on reproducing failures, falsifying assumptions, an
 - Failure Coordinates
 - Verification
 
+If context is incomplete, preserve the selected structure and use the sections to explain what is missing rather than collapsing to a generic answer.
+
+
 ## Deliverables
 
 - Exact failure coordinates.

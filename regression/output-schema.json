@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PromptRegressionResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "routingDecision",
+    "activeExpert",
+    "handoffs",
+    "outputSections",
+    "confidenceLabeled",
+    "personaBlend",
+    "domainStayedInScope",
+    "summary",
+    "response"
+  ],
+  "properties": {
+    "routingDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "domain",
+        "selectedExpert",
+        "reason",
+        "confidence"
+      ],
+      "properties": {
+        "domain": {
+          "type": "string"
+        },
+        "selectedExpert": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "confidence": {
+          "type": "string"
+        }
+      }
+    },
+    "activeExpert": {
+      "type": "string"
+    },
+    "handoffs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "outputSections": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "confidenceLabeled": {
+      "type": "boolean"
+    },
+    "personaBlend": {
+      "type": "boolean"
+    },
+    "domainStayedInScope": {
+      "type": "boolean"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "response": {
+      "type": "string"
+    }
+  }
+}
