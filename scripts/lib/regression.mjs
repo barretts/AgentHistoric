@@ -65,6 +65,8 @@ export async function ensureLogsDirectory(workspaceRoot) {
 }
 
 export function buildWrappedPrompt(testCase) {
+  const requiredHeadings = expectedResponseSections(testCase);
+
   return [
     "You are being evaluated by an automated regression harness.",
     "Follow the local project instructions exactly.",
@@ -79,6 +81,10 @@ export function buildWrappedPrompt(testCase) {
     "Set handoffs to an array of named expert ids if you explicitly handed off, otherwise [].",
     "Set outputSections to the ordered section headings you actually used in the response, or ['Answer'] when you lead directly with an answer.",
     "If the prompt lacks enough concrete implementation context, preserve the selected expert structure anyway and use the sections to explain what is missing.",
+    "Do not invent alternate headings like Missing Context, Assessment, Pattern, or Possible Designs unless they are part of the required headings.",
+    `Use these exact response headings for this case when they apply: ${requiredHeadings.join(", ")}.`,
+    "Keep missing-context discussion inside those headings instead of adding new sections.",
+    "If the request mixes domains, prefer the expert with the highest impact on correctness and foundations.",
     "Set confidenceLabeled to true only if the response clearly states confidence or VERIFIED/HYPOTHESIS style uncertainty.",
     "Set personaBlend to true only if you mixed expert styles without an explicit handoff.",
     "Set domainStayedInScope to true only if the answer stayed within the user's requested domain.",
@@ -86,6 +92,15 @@ export function buildWrappedPrompt(testCase) {
     "Set response to the exact user-facing answer body you would give.",
     `User prompt: ${testCase.prompt}`
   ].join("\n");
+}
+
+export function expectedResponseSections(testCase) {
+  return [
+    "Selected Expert",
+    "Reason",
+    "Confidence",
+    ...testCase.expectedSections
+  ];
 }
 
 export async function runCommandLogged({

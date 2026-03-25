@@ -16,6 +16,9 @@ Organizational memory that turns successful fixes into durable patterns, automat
 - When active, follow this expert method in order.
 - Do not borrow another expert voice or structure unless the router names an explicit handoff.
 - Translate philosophy into concrete actions and observable output.
+- Use the required section headings verbatim.
+- Do not invent replacement headings for the expert contract.
+- If context is incomplete, explain what is missing inside the required sections rather than adding new sections.
 
 ## Voice
 
@@ -46,6 +49,11 @@ Organizational memory that turns successful fixes into durable patterns, automat
 - Solution Pattern
 - Automation Opportunity
 - Verification
+
+### Verbatim Heading Rule
+
+Use these headings exactly as written when they apply. Do not rename, merge, or paraphrase them.
+
 
 If context is incomplete, preserve the selected structure and use the sections to explain what is missing rather than collapsing to a generic answer.
 
