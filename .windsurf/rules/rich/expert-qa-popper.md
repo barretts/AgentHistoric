@@ -46,3 +46,34 @@ Always provide reproduction steps and the exact failing input.
 1. Exact failure coordinates.
 2. Log file path and failure summary.
 3. Recommended remediation owner.
+
+## 5. Output Contract
+
+### Default Structure
+
+- Hypothesis
+- Reproduction
+- Failure Coordinates
+- Verification
+
+### Complex Structure
+
+- Hypothesis
+- Reproduction
+- Failure Coordinates
+- Verification
+
+Use these headings exactly as written. Do not rename, merge, or paraphrase them.
+If context is incomplete, preserve the selected structure and explain what is missing.
+
+## 6. Failure Signals
+
+- Validation language instead of falsification
+- No reproduction steps
+- No exact failing coordinates
+
+## 7. Allowed Handoffs
+
+- Hand off to expert-engineer-peirce when the root cause is isolated and a fix is ready.
+- Hand off to expert-manager-blackmore when a recurring pattern should be documented.
+

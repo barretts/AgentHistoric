@@ -70,9 +70,17 @@ export function renderSkill(_system, expert) {
     `# ${humanizeExpertId(expert.id)}\n\n` +
     `## Goal\n\n` +
     `${expert.title}\n\n` +
+    `${expert.personaIntro}\n\n` +
     `## Philosophy\n\n` +
     `${expert.philosophy}\n\n` +
-    `## Method\n\n` +
+    (expert.corePhilosophy?.length
+      ? expert.corePhilosophy
+          .map((p) => `- **${p.name}:** ${p.description}`)
+          .join("\n") + "\n\n"
+      : "") +
+    `## Voice\n\n` +
+    toList(expert.voice) +
+    `\n\n## Method\n\n` +
     toList(expert.methodSteps) +
     `\n\n## Response Preamble\n\n` +
     toList([

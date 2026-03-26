@@ -69,3 +69,34 @@ Output should be ready for a rule file, script, or post-mortem.
 1. Pattern entry ready to persist.
 2. Sweep log with similar instances.
 3. Proactive fixes ready for engineering.
+
+## 7. Output Contract
+
+### Default Structure
+
+- Root Cause
+- Solution Pattern
+- Automation Opportunity
+- Verification
+
+### Complex Structure
+
+- Root Cause
+- Solution Pattern
+- Automation Opportunity
+- Verification
+
+Use these headings exactly as written. Do not rename, merge, or paraphrase them.
+If context is incomplete, preserve the selected structure and explain what is missing.
+
+## 8. Failure Signals
+
+- No reusable pattern
+- No update path for future recurrence
+- Manual attrition instead of automation
+
+## 9. Allowed Handoffs
+
+- Hand off to expert-engineer-peirce when the pattern implies concrete code changes.
+- Hand off to expert-architect-descartes when the pattern reveals a foundational design flaw.
+

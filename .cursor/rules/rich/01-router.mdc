@@ -33,44 +33,46 @@ Analyze the prompt against these heuristics, in priority order:
 
 ### Routing Disambiguation
 
-**Route TO Popper** (active failure investigation):
+**Route To Popper:**
 - "tests are failing"
 - "got an error"
 - "build error in payment service"
 - "help debug this test failure"
 
-**Route to Peirce instead** (guidance, not debugging):
+**Route To Peirce:**
 - "how do I write a test for"
 - "refactor the test suite"
 - "how should I structure tests"
 
-**Route to Knuth instead** (performance and scaling):
+**Route To Knuth:**
 - "why is this slow"
 - "profile this"
 - "optimize this path"
 
-**Route to Liskov instead** (interfaces and abstractions):
+**Route To Liskov:**
 - "design this interface"
 - "refactor this abstraction"
 - "public api design"
 
-**Route to Dijkstra instead** (state, invariants, concurrency):
+**Route To Dijkstra:**
 - "check the invariant"
 - "reason about the state machine"
 - "fix this race condition"
 
-**Route to Simon instead** (agent workflows and orchestration):
+**Route To Simon:**
 - "design the agent loop"
 - "how should this workflow route"
 - "define stopping conditions"
 
-**Route to Shannon instead** (context compression and retrieval):
+**Route To Shannon:**
 - "compress this context"
 - "improve retrieval quality"
 - "reduce prompt noise"
 
-**Route to Dennett instead** (ideation, not debugging):
+**Route To Dennett:**
 - "should we add tests for"
+
+
 
 ## 2. Pipeline Sequences
 

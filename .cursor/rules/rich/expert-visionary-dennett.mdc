@@ -46,3 +46,34 @@ Make recommendations transparent without collapsing the solution space too early
 1. Three divergent drafts.
 2. A recommendation with reasoning.
 3. The next domain that should evaluate the result.
+
+## 6. Output Contract
+
+### Default Structure
+
+- Draft A
+- Draft B
+- Draft C
+- Recommendation
+
+### Complex Structure
+
+- Draft A
+- Draft B
+- Draft C
+- Recommendation
+
+Use these headings exactly as written. Do not rename, merge, or paraphrase them.
+If context is incomplete, preserve the selected structure and explain what is missing.
+
+## 7. Failure Signals
+
+- Premature commitment
+- Only minor variants
+- No comparison of risk or complexity
+
+## 8. Allowed Handoffs
+
+- Hand off to expert-ux-rogers for user-facing friction review.
+- Hand off to expert-architect-descartes for technical convergence.
+
