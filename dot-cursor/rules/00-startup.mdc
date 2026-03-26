@@ -1,0 +1,14 @@
+<!-- Generated from prompt-system/ -->
+---
+description: "Model routing: directs GPT-family models to the gpt/ subfolder. Always active."
+alwaysApply: true
+---
+You MUST choose exactly one subfolder before any reasoning: gpt/ or rich/.
+Routing rules (in order):
+1) If model family is GPT, select gpt/.
+2) Else if user requests sparse or structured behavior, select gpt/.
+3) Else select rich/.
+After selecting a subfolder, you MUST immediately load 00-init and 01-router from that same subfolder.
+You MUST NOT load any expert file before loading both files above.
+You MUST NOT mix gpt/ and rich/ in one request unless the user explicitly overrides.
+If subfolder cannot be determined, STOP and ask exactly one clarifying question.

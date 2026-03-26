@@ -28,14 +28,14 @@ This file maps the original source prompts into the canonical spec and generated
 
 ## Canonical To Cursor
 
-- `prompt-system/philosopher-system.json -> .cursor/rules/00-init.mdc`
-- `prompt-system/philosopher-system.json -> .cursor/rules/01-router.mdc`
-- `prompt-system/philosopher-system.json -> .cursor/rules/expert-*.mdc`
+- `prompt-system/philosopher-system.json -> dot-cursor/rules/00-init.mdc`
+- `prompt-system/philosopher-system.json -> dot-cursor/rules/01-router.mdc`
+- `prompt-system/philosopher-system.json -> dot-cursor/rules/expert-*.mdc`
 
 ## Canonical To Codex
 
-- `prompt-system/philosopher-system.json -> .codex/AGENTS.md`
-- `prompt-system/philosopher-system.json -> .codex/skills/*/SKILL.md`
+- `prompt-system/philosopher-system.json -> dot-codex/AGENTS.md`
+- `prompt-system/philosopher-system.json -> dot-codex/skills/*/SKILL.md`
 
 ## Canonical To Regression
 

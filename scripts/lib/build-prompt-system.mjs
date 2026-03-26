@@ -11,45 +11,51 @@ import { renderAgents, renderSkill } from "./render-codex.mjs";
 const HEADER = fileHeader("Generated from prompt-system/");
 
 const STARTUP_BODY =
-  `If you are a GPT-family model, use the gpt/ subfolder for all rules.\n` +
-  `If you prefer sparse, structured rules, use the gpt/ subfolder.\n` +
-  `All other models (Claude, etc.) should use the rich/ subfolder.\n`;
+  `You MUST choose exactly one subfolder before any reasoning: gpt/ or rich/.\n` +
+  `Routing rules (in order):\n` +
+  `1) If model family is GPT, select gpt/.\n` +
+  `2) Else if user requests sparse or structured behavior, select gpt/.\n` +
+  `3) Else select rich/.\n` +
+  `After selecting a subfolder, you MUST immediately load 00-init and 01-router from that same subfolder.\n` +
+  `You MUST NOT load any expert file before loading both files above.\n` +
+  `You MUST NOT mix gpt/ and rich/ in one request unless the user explicitly overrides.\n` +
+  `If subfolder cannot be determined, STOP and ask exactly one clarifying question.\n`;
 
 // ── Public Entry Point ──────────────────────────────────────────────
 
 export function generateArtifacts(system) {
   const artifacts = new Map();
 
-  // Rich + md frontmatter → .claude/rules/ (no startup needed, Claude auto-loads)
-  addSet(artifacts, system, path.join(".claude", "rules"), ".md", mdFm, renderRichInit, renderRichRouter, renderRichExpert);
+  // Rich + md frontmatter → dot-claude/rules/ (no startup needed, Claude auto-loads)
+  addSet(artifacts, system, path.join("dot-claude", "rules"), ".md", mdFm, renderRichInit, renderRichRouter, renderRichExpert);
 
-  // Rich + md frontmatter → .windsurf/rules/rich/
-  addSet(artifacts, system, path.join(".windsurf", "rules", "rich"), ".md", mdFm, renderRichInit, renderRichRouter, renderRichExpert);
+  // Rich + md frontmatter → dot-windsurf/rules/rich/
+  addSet(artifacts, system, path.join("dot-windsurf", "rules", "rich"), ".md", mdFm, renderRichInit, renderRichRouter, renderRichExpert);
 
-  // Rich + cursor frontmatter → .cursor/rules/rich/
-  addSet(artifacts, system, path.join(".cursor", "rules", "rich"), ".mdc", cursorFm, renderRichInit, renderRichRouter, renderRichExpert);
+  // Rich + cursor frontmatter → dot-cursor/rules/rich/
+  addSet(artifacts, system, path.join("dot-cursor", "rules", "rich"), ".mdc", cursorFm, renderRichInit, renderRichRouter, renderRichExpert);
 
-  // Startup loader → .cursor/rules/ and .windsurf/rules/
+  // Startup loader → dot-cursor/rules/ and dot-windsurf/rules/
   artifacts.set(
-    path.join(".cursor", "rules", "00-startup.mdc"),
+    path.join("dot-cursor", "rules", "00-startup.mdc"),
     HEADER + cursorFm("startup", system) + STARTUP_BODY
   );
   artifacts.set(
-    path.join(".windsurf", "rules", "00-startup.md"),
+    path.join("dot-windsurf", "rules", "00-startup.md"),
     HEADER + mdFm("startup", system) + STARTUP_BODY
   );
 
-  // Sparse + cursor frontmatter → .cursor/rules/gpt/
-  addSet(artifacts, system, path.join(".cursor", "rules", "gpt"), ".mdc", cursorFm, renderSparseInit, renderSparseRouter, renderSparseExpert);
+  // Sparse + cursor frontmatter → dot-cursor/rules/gpt/
+  addSet(artifacts, system, path.join("dot-cursor", "rules", "gpt"), ".mdc", cursorFm, renderSparseInit, renderSparseRouter, renderSparseExpert);
 
-  // Sparse + md frontmatter → .windsurf/rules/gpt/
-  addSet(artifacts, system, path.join(".windsurf", "rules", "gpt"), ".md", mdFm, renderSparseInit, renderSparseRouter, renderSparseExpert);
+  // Sparse + md frontmatter → dot-windsurf/rules/gpt/
+  addSet(artifacts, system, path.join("dot-windsurf", "rules", "gpt"), ".md", mdFm, renderSparseInit, renderSparseRouter, renderSparseExpert);
 
   // Codex (own format, sparse)
-  artifacts.set(path.join(".codex", "AGENTS.md"), renderAgents(system));
+  artifacts.set(path.join("dot-codex", "AGENTS.md"), renderAgents(system));
   for (const expert of system.experts) {
     artifacts.set(
-      path.join(".codex", "skills", expert.codexSkillDir, "SKILL.md"),
+      path.join("dot-codex", "skills", expert.codexSkillDir, "SKILL.md"),
       renderSkill(system, expert)
     );
   }

@@ -10,6 +10,21 @@ export function renderSparseInit(system) {
     toList(g.executionBinding) +
     `\n\n## Routing Decision Format\n\n` +
     toList(g.routingDecisionFields) +
+    `\n\n## Routing Preconditions\n\n` +
+    toList([
+      "Before solving, choose exactly one subfolder: gpt/ or rich/.",
+      "Load 00-init and 01-router from the selected subfolder before loading any expert file.",
+      "Do not mix subfolders in one request unless the user explicitly overrides.",
+      "If the correct subfolder cannot be determined, stop and ask exactly one clarifying question."
+    ]) +
+    `\n\n## Routing Preflight Checklist\n\n` +
+    toList([
+      "Subfolder selected?",
+      "00-init loaded from selected subfolder?",
+      "01-router loaded from selected subfolder?",
+      "One primary expert selected?",
+      "If any answer is no, stop and resolve routing before continuing."
+    ]) +
     `\n\n## Logging Protocol\n\n` +
     `**Principle:** ${g.logging.principle}\n\n` +
     toList(g.logging.required) +
@@ -68,7 +83,10 @@ export function renderSparseRouter(system) {
       )
       .join("\n") +
     `\n## Response Requirement\n\n` +
-    "Before solving any non-trivial request, emit a short routing block using the fields from `00-init.mdc`. After that, activate only the chosen expert unless a named handoff is required.\n" +
+    "Before solving any request, emit a routing block with exactly these fields: `Selected Subfolder`, `Selected Expert`, `Reason`, and `Confidence (0-1)`.\n" +
+    "Do not continue until that routing block is complete.\n" +
+    "After routing, activate only the chosen expert unless a named handoff is required.\n" +
+    "If confidence is below 0.65, ask one clarifying question instead of proceeding.\n" +
     "In the visible user-facing response, explicitly include `Selected Expert`, `Reason`, and `Confidence` before the expert-specific sections whenever the task is non-trivial.\n" +
     "When multiple domains appear in one request, prefer the expert with the highest impact on correctness and foundations over the expert that is merely broader or more exploratory.\n" +
     "If the user asks whether something should be built and only secondarily mentions UX or friendliness, route to architecture before ideation.\n" +

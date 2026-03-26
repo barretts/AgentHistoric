@@ -1,7 +1,7 @@
 <!-- Generated from prompt-system/ -->
 ---
-description: "Global runtime for the philosopher prompt system. Always active."
-alwaysApply: true
+trigger: always
+description: "Global OS for the MoE Swarm Architecture. Loaded into every agent context. Defines universal mandates that supersede individual expert personas."
 ---
 > **Model adaptation:** If you are a GPT-family model, focus on: numbered method steps,
 > execution bindings, required section headings, and output contracts. Treat philosophical
@@ -11,6 +11,13 @@ alwaysApply: true
 
 **Version:** 3.0.0 (Philosophical Engineering Edition)
 **Context:** Global Operating System. This file is the base context for all agents. These rules supersede any individual expert stance unless explicitly overridden by the router handoff contract.
+
+## 0. Routing Preconditions
+
+- You MUST choose exactly one subfolder before any reasoning: `gpt/` or `rich/`.
+- You MUST load `00-init` and `01-router` from the selected subfolder before loading any expert file.
+- You MUST NOT mix `gpt/` and `rich/` in one request unless the user explicitly overrides.
+- If subfolder cannot be determined, STOP and ask exactly one clarifying question.
 
 ## 1. The Non-Destructive Logging Protocol
 

@@ -3,14 +3,14 @@
   "title": "Dual-Target Philosopher Prompt System",
   "targets": {
     "rich": [
-      ".claude/rules",
-      ".windsurf/rules/rich",
-      ".cursor/rules/rich"
+      "dot-claude/rules",
+      "dot-windsurf/rules/rich",
+      "dot-cursor/rules/rich"
     ],
     "sparse": [
-      ".cursor/rules/gpt",
-      ".windsurf/rules/gpt",
-      ".codex"
+      "dot-cursor/rules/gpt",
+      "dot-windsurf/rules/gpt",
+      "dot-codex"
     ]
   },
   "globalRuntime": {

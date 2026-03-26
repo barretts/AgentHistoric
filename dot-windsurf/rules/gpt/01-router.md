@@ -177,7 +177,10 @@ Analyzes intent, determines the SDLC phase, and routes to the correct expert or 
 
 ## Response Requirement
 
-Before solving any non-trivial request, emit a short routing block using the fields from `00-init.mdc`. After that, activate only the chosen expert unless a named handoff is required.
+Before solving any request, emit a routing block with exactly these fields: `Selected Subfolder`, `Selected Expert`, `Reason`, and `Confidence (0-1)`.
+Do not continue until that routing block is complete.
+After routing, activate only the chosen expert unless a named handoff is required.
+If confidence is below 0.65, ask one clarifying question instead of proceeding.
 In the visible user-facing response, explicitly include `Selected Expert`, `Reason`, and `Confidence` before the expert-specific sections whenever the task is non-trivial.
 When multiple domains appear in one request, prefer the expert with the highest impact on correctness and foundations over the expert that is merely broader or more exploratory.
 If the user asks whether something should be built and only secondarily mentions UX or friendliness, route to architecture before ideation.

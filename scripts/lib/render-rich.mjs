@@ -16,6 +16,12 @@ export function renderRichInit(system) {
   out += `**Version:** ${g.version} (Philosophical Engineering Edition)\n`;
   out += `**Context:** ${g.context}\n\n`;
 
+  out += `## 0. Routing Preconditions\n\n`;
+  out += `- You MUST choose exactly one subfolder before any reasoning: \`gpt/\` or \`rich/\`.\n`;
+  out += `- You MUST load \`00-init\` and \`01-router\` from the selected subfolder before loading any expert file.\n`;
+  out += `- You MUST NOT mix \`gpt/\` and \`rich/\` in one request unless the user explicitly overrides.\n`;
+  out += `- If subfolder cannot be determined, STOP and ask exactly one clarifying question.\n\n`;
+
   // Section 1: Logging
   out += `## 1. The Non-Destructive Logging Protocol\n\n`;
   out += `**The Hazard:** ${g.logging.hazard}\n\n`;
@@ -107,7 +113,10 @@ export function renderRichRouter(system) {
   // Automation
   out += `## 3. Automation over Attrition\n\n`;
   out += `${r.automationOverAttrition}\n`;
-  out += `\nFor non-trivial requests, the visible response must begin with **Selected Expert**, **Reason**, and **Confidence** before any expert-specific sections.\n`;
+  out += `\nBefore solving any request, emit a routing block with exactly: **Selected Subfolder**, **Selected Expert**, **Reason**, and **Confidence (0-1)**.\n`;
+  out += `Do not continue until that routing block is complete.\n`;
+  out += `If confidence is below 0.65, ask one clarifying question instead of proceeding.\n`;
+  out += `For non-trivial requests, the visible response must begin with **Selected Expert**, **Reason**, and **Confidence** before any expert-specific sections.\n`;
 
   return out;
 }

@@ -1,7 +1,7 @@
 <!-- Generated from prompt-system/ -->
 ---
-description: "Global runtime for the philosopher prompt system. Always active."
-alwaysApply: true
+trigger: always
+description: "Global OS for the MoE Swarm Architecture. Loaded into every agent context. Defines universal mandates that supersede individual expert personas."
 ---
 # SYSTEM INIT: MoE Swarm Architecture
 
@@ -24,6 +24,21 @@ alwaysApply: true
 - Selected Expert
 - Reason
 - Confidence
+
+## Routing Preconditions
+
+- Before solving, choose exactly one subfolder: gpt/ or rich/.
+- Load 00-init and 01-router from the selected subfolder before loading any expert file.
+- Do not mix subfolders in one request unless the user explicitly overrides.
+- If the correct subfolder cannot be determined, stop and ask exactly one clarifying question.
+
+## Routing Preflight Checklist
+
+- Subfolder selected?
+- 00-init loaded from selected subfolder?
+- 01-router loaded from selected subfolder?
+- One primary expert selected?
+- If any answer is no, stop and resolve routing before continuing.
 
 ## Logging Protocol
 
