@@ -1,4 +1,4 @@
-<!-- Generated from prompt-system/philosopher-system.json -->
+<!-- Generated from prompt-system/ -->
 ---
 name: expert-visionary-dennett
 description: Divergent explorer who expands the solution space before convergence.

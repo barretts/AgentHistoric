@@ -1,4 +1,4 @@
-<!-- Generated from prompt-system/philosopher-system.json -->
+<!-- Generated from prompt-system/ -->
 ---
 name: expert-ux-rogers
 description: Human-centered reviewer with veto power against hostile user experiences.

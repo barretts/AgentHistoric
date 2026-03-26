@@ -1,0 +1,99 @@
+import {
+  codeFence,
+  fileHeader,
+  humanizeExpertId,
+  renderSkillFrontmatter,
+  resolveRequiredSections
+} from "./prompt-system.mjs";
+
+export function renderAgents(system) {
+  const g = system.globalRuntime;
+  return (
+    fileHeader("Generated from prompt-system/") +
+    `# Project Runtime\n\n` +
+    `## Purpose\n\n` +
+    `Turn user requests into correct, verified work while preserving the philosopher-based routing system across Codex and Cursor targets.\n\n` +
+    `## Execution Protocol\n\n` +
+    toList([
+      "Classify the task before solving it.",
+      "Select exactly one primary expert skill unless a named pipeline handoff is required.",
+      "State the selection as Selected Expert, Reason, and Confidence for non-trivial tasks.",
+      "Apply only that expert skill while it is active.",
+      "If context is missing, keep the selected expert structure and use it to explain what evidence or inputs are missing.",
+      "Use the selected expert's required section headings verbatim.",
+      "When a request mixes exploration with architecture, debugging, or UX, prefer the expert with the highest impact on correctness and foundations.",
+      "If the user asks whether something should be built and only secondarily mentions UX or friendliness, prefer architecture before ideation.",
+      "If the user explicitly asks for multiple options, drafts, or redesign alternatives, keep ideation primary unless the prompt also requests concrete architecture artifacts such as schemas, trust boundaries, or contracts.",
+      "Verify logging rules, uncertainty labeling, and definition of done before finalizing.",
+      "If multiple experts could apply, choose the one with the highest impact on correctness, not completeness."
+    ]) +
+    `\n\n## Routing Order\n\n` +
+    toList(
+      system.router.routingHeuristics.map(
+        (h) =>
+          `${h.domain} -> ${h.experts
+            .map((id) => `.codex/skills/${skillPathForExpert(system, id)}`)
+            .join(" -> ")}`
+      )
+    ) +
+    `\n\n## Global Rules\n\n` +
+    toList(g.uncertaintyRules) +
+    `\n\n` +
+    toList(g.foundationalConstraints) +
+    `\n\n## Logging\n\n` +
+    toList(g.logging.required) +
+    `\n\n` +
+    codeFence(g.logging.pattern.join("\n"), "bash") +
+    `\n\n## Definition Of Done\n\n` +
+    toList(g.definitionOfDone) +
+    `\n\n## Available Expert Skills\n\n` +
+    toList(
+      system.experts.map(
+        (e) => `.codex/skills/${e.codexSkillDir}: ${humanizeExpertId(e.id)}`
+      )
+    ) +
+    `\n`
+  );
+}
+
+export function renderSkill(_system, expert) {
+  const {
+    defaultSections: defaultStructure,
+    complexSections: complexStructure
+  } = resolveRequiredSections(expert.requiredSections);
+  return (
+    fileHeader("Generated from prompt-system/") +
+    renderSkillFrontmatter({
+      name: expert.id,
+      description: expert.summary
+    }) +
+    `# ${humanizeExpertId(expert.id)}\n\n` +
+    `## Goal\n\n` +
+    `${expert.title}\n\n` +
+    `## Philosophy\n\n` +
+    `${expert.philosophy}\n\n` +
+    `## Method\n\n` +
+    toList(expert.methodSteps) +
+    `\n\n## Output Contract\n\n` +
+    `### Default Structure\n\n` +
+    toList(defaultStructure) +
+    `\n\n### Complex Structure\n\n` +
+    toList(complexStructure) +
+    `\n\n### Verbatim Heading Rule\n\n` +
+    "Use these headings exactly as written when they apply. Do not rename, merge, or paraphrase them.\n" +
+    "\n\nIf context is incomplete, preserve the selected structure and use the sections to explain what is missing rather than collapsing to a generic answer.\n" +
+    `\n\n## Failure Signals\n\n` +
+    toList(expert.failureSignals) +
+    `\n\n## Allowed Handoffs\n\n` +
+    toList(expert.handoffRules) +
+    `\n`
+  );
+}
+
+function toList(items) {
+  return items.map((item) => `- ${item}`).join("\n");
+}
+
+function skillPathForExpert(system, expertId) {
+  return system.experts.find((e) => e.id === expertId)?.codexSkillDir || expertId;
+}
