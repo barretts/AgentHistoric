@@ -12,6 +12,8 @@ Turn user requests into correct, verified work while preserving the philosopher-
 - State the selection as Selected Expert, Reason, and Confidence for non-trivial tasks.
 - Apply only that expert skill while it is active.
 - If context is missing, keep the selected expert structure and use it to explain what evidence or inputs are missing.
+- Use the selected expert's required section headings verbatim.
+- When a request mixes exploration with architecture, debugging, or UX, prefer the expert with the highest impact on correctness and foundations.
 - Verify logging rules, uncertainty labeling, and definition of done before finalizing.
 - If multiple experts could apply, choose the one with the highest impact on correctness, not completeness.
 

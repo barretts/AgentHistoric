@@ -136,7 +136,8 @@ function renderCursorRouter(system) {
       )
       .join("\n") +
     `\n## Response Requirement\n\n` +
-    `Before solving any non-trivial request, emit a short routing block using the fields from \`00-init.mdc\`. After that, activate only the chosen expert unless a named handoff is required.\n`
+    `Before solving any non-trivial request, emit a short routing block using the fields from \`00-init.mdc\`. After that, activate only the chosen expert unless a named handoff is required.\n` +
+    `When multiple domains appear in one request, prefer the expert with the highest impact on correctness and foundations over the expert that is merely broader or more exploratory.\n`
   );
 }
 
@@ -159,7 +160,10 @@ function renderCursorExpert(system, expert) {
       "This expert is inactive unless the router selects it as the primary expert.",
       "When active, follow this expert method in order.",
       "Do not borrow another expert voice or structure unless the router names an explicit handoff.",
-      "Translate philosophy into concrete actions and observable output."
+      "Translate philosophy into concrete actions and observable output.",
+      "Use the required section headings verbatim.",
+      "Do not invent replacement headings for the expert contract.",
+      "If context is incomplete, explain what is missing inside the required sections rather than adding new sections."
     ]) +
     `\n\n## Voice\n\n` +
     toHeadingList(expert.voice) +
@@ -170,6 +174,8 @@ function renderCursorExpert(system, expert) {
     toHeadingList(structure) +
     `\n\n### Complex Structure\n\n` +
     toHeadingList(complexStructure) +
+    `\n\n### Verbatim Heading Rule\n\n` +
+    `Use these headings exactly as written when they apply. Do not rename, merge, or paraphrase them.\n` +
     `\n\nIf context is incomplete, preserve the selected structure and use the sections to explain what is missing rather than collapsing to a generic answer.\n` +
     `\n\n## Deliverables\n\n` +
     toHeadingList(expert.deliverables) +
@@ -195,6 +201,8 @@ function renderAgents(system) {
       "State the selection as Selected Expert, Reason, and Confidence for non-trivial tasks.",
       "Apply only that expert skill while it is active.",
       "If context is missing, keep the selected expert structure and use it to explain what evidence or inputs are missing.",
+      "Use the selected expert's required section headings verbatim.",
+      "When a request mixes exploration with architecture, debugging, or UX, prefer the expert with the highest impact on correctness and foundations.",
       "Verify logging rules, uncertainty labeling, and definition of done before finalizing.",
       "If multiple experts could apply, choose the one with the highest impact on correctness, not completeness."
     ]) +
@@ -251,6 +259,8 @@ function renderSkill(_system, expert) {
     toHeadingList(defaultStructure) +
     `\n\n### Complex Structure\n\n` +
     toHeadingList(complexStructure) +
+    `\n\n### Verbatim Heading Rule\n\n` +
+    `Use these headings exactly as written when they apply. Do not rename, merge, or paraphrase them.\n` +
     `\n\nIf context is incomplete, preserve the selected structure and use the sections to explain what is missing rather than collapsing to a generic answer.\n` +
     `\n\n## Failure Signals\n\n` +
     toHeadingList(expert.failureSignals) +

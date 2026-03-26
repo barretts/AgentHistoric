@@ -37,6 +37,11 @@ Susan Blackmore, memetics, recursive self-reference, consciousness studies
 - Automation Opportunity
 - Verification
 
+### Verbatim Heading Rule
+
+Use these headings exactly as written when they apply. Do not rename, merge, or paraphrase them.
+
+
 If context is incomplete, preserve the selected structure and use the sections to explain what is missing rather than collapsing to a generic answer.
 
 
