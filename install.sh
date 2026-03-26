@@ -19,11 +19,10 @@ SRC_WINDSURF_GPT="$REPO_DIR/dot-windsurf/rules/gpt"
 SRC_CODEX="$REPO_DIR/dot-codex"
 
 # --- Target directories (user home) ---
-DEST_CLAUDE="$HOME/dot-claude/rules"
-DEST_CURSOR="$HOME/dot-cursor/rules"
-DEST_WINDSURF="$HOME/dot-windsurf/rules"
-DEST_CODEX="$HOME/dot-codex"
-DEST_CODEX_LEGACY="$HOME/.codex"
+DEST_CLAUDE="$HOME/.claude/rules"
+DEST_CURSOR="$HOME/.cursor/rules"
+DEST_WINDSURF="$HOME/.windsurf/rules"
+DEST_CODEX="$HOME/.codex"
 
 # --- Backup ---
 
@@ -98,16 +97,12 @@ install_codex() {
   mkdir -p "$DEST_CODEX"
   cp -r "$SRC_CODEX"/* "$DEST_CODEX/"
   echo "    Codex:    $DEST_CODEX/"
-
-  mkdir -p "$DEST_CODEX_LEGACY"
-  cp -r "$SRC_CODEX"/* "$DEST_CODEX_LEGACY/"
-  echo "    Codex:    $DEST_CODEX_LEGACY/ (compat)"
 }
 
 # --- List functions ---
 
 list_claude() {
-  echo "    Claude (~/dot-claude/rules/):"
+  echo "    Claude (~/.claude/rules/):"
   for f in "$SRC_CLAUDE"/*.md; do
     [[ -f "$f" ]] || continue
     local name
@@ -120,7 +115,7 @@ list_claude() {
 }
 
 list_cursor() {
-  echo "    Cursor (~/dot-cursor/rules/):"
+  echo "    Cursor (~/.cursor/rules/):"
   for f in "$SRC_CURSOR"/*.mdc; do
     [[ -f "$f" ]] || continue
     local name
@@ -133,7 +128,7 @@ list_cursor() {
 }
 
 list_windsurf() {
-  echo "    Windsurf (~/dot-windsurf/rules/):"
+  echo "    Windsurf (~/.windsurf/rules/):"
   for f in "$SRC_WINDSURF"/*.md; do
     [[ -f "$f" ]] || continue
     local name
@@ -146,25 +141,21 @@ list_windsurf() {
 }
 
 list_codex() {
-  echo "    Codex (~/dot-codex/ + ~/.codex/ compat):"
+  echo "    Codex (~/.codex/):"
   local dest="$DEST_CODEX/AGENTS.md"
   local status="not found"
   [[ -f "$dest" ]] && status="installed"
   echo "      $dest  [$status]"
-  local legacy_dest="$DEST_CODEX_LEGACY/AGENTS.md"
-  local legacy_status="not found"
-  [[ -f "$legacy_dest" ]] && legacy_status="installed"
-  echo "      $legacy_dest  [$legacy_status]"
 }
 
 # --- Auto-detection ---
 
 detect_editors() {
   local detected=()
-  [[ -d "$HOME/dot-claude" || -d "$HOME/.claude" ]] && detected+=("claude")
-  [[ -d "$HOME/dot-cursor" || -d "$HOME/.cursor" ]] && detected+=("cursor")
-  [[ -d "$HOME/dot-windsurf" || -d "$HOME/.windsurf" || -d "$HOME/.codeium/windsurf" ]] && detected+=("windsurf")
-  [[ -d "$HOME/dot-codex" || -d "$HOME/.codex" ]] && detected+=("codex")
+  [[ -d "$HOME/.claude" ]] && detected+=("claude")
+  [[ -d "$HOME/.cursor" ]] && detected+=("cursor")
+  [[ -d "$HOME/.windsurf" || -d "$HOME/.codeium/windsurf" ]] && detected+=("windsurf")
+  [[ -d "$HOME/.codex" ]] && detected+=("codex")
   echo "${detected[@]}"
 }
 
@@ -182,7 +173,7 @@ print_post_install() {
     case "$target" in
       claude)
         echo "  Claude Code"
-        echo "    Rules auto-loaded from ~/dot-claude/rules/ — no extra config needed."
+        echo "    Rules auto-loaded from ~/.claude/rules/ — no extra config needed."
         echo ""
         ;;
       cursor)
@@ -194,7 +185,7 @@ print_post_install() {
         echo "    4. 01-router must load on every request (alwaysApply: true)."
         echo "    5. Expert rules (expert-*.mdc) are auto-attached by Cursor"
         echo "       when their description matches the conversation context."
-        echo "    Files: ~/dot-cursor/rules/ (rich) + ~/dot-cursor/rules/gpt/ (sparse)"
+        echo "    Files: ~/.cursor/rules/ (rich) + ~/.cursor/rules/gpt/ (sparse)"
         echo ""
         ;;
       windsurf)
@@ -205,12 +196,12 @@ print_post_install() {
         echo "    4. 01-router.md has trigger: always — request triage."
         echo "    5. Expert rules use trigger: model_decision — Cascade reads"
         echo "       them automatically when the description matches."
-        echo "    Files: ~/dot-windsurf/rules/ (rich) + ~/dot-windsurf/rules/gpt/ (sparse)"
+        echo "    Files: ~/.windsurf/rules/ (rich) + ~/.windsurf/rules/gpt/ (sparse)"
         echo ""
         ;;
       codex)
         echo "  Codex"
-        echo "    AGENTS.md and skills/ are installed to ~/dot-codex/ and mirrored to ~/.codex/ for compatibility."
+        echo "    AGENTS.md and skills/ are installed to ~/.codex/."
         echo "    No extra config needed."
         echo ""
         ;;
