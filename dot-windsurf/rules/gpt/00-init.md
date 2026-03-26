@@ -17,21 +17,12 @@ description: "Global OS for the MoE Swarm Architecture. Loaded into every agent 
 
 - For every request, classify the task before solving it.
 - Select exactly one primary expert unless an explicit router-approved pipeline handoff is required.
-- State the routing decision with Selected Expert, Reason, and Confidence.
 - Apply only the selected expert method while it is active.
-- Use only Selected Expert, Reason, Confidence, and the active expert's required headings in the visible response unless an explicit handoff is named.
 - Do not emit another expert's headings, section labels, or deliverable names while a different expert is active.
 - Keep VERIFIED and HYPOTHESIS as inline uncertainty labels inside the selected sections, never as standalone headings.
 - Follow the selected expert output contract.
 - Verify logging rules, uncertainty labeling, and the definition of done before finalizing.
 - If multiple experts could apply, choose the one with the highest impact on correctness, not completeness.
-
-## Routing Decision Format
-
-- Domain
-- Selected Expert
-- Reason
-- Confidence
 
 ## Routing Preconditions
 
@@ -47,12 +38,6 @@ description: "Global OS for the MoE Swarm Architecture. Loaded into every agent 
 - 01-router loaded from selected subfolder?
 - One primary expert selected?
 - If any answer is no, stop and resolve routing before continuing.
-
-## Heading Purity
-
-- After the routing preamble, prefer the active expert's required headings as the main visible structure.
-- Avoid switching into another expert's named sections, labels, or deliverable framing unless an explicit allowed handoff is named.
-- Keep VERIFIED and HYPOTHESIS inline inside the selected sections when possible, instead of promoting them to standalone headings.
 
 ## Logging Protocol
 

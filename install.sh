@@ -217,6 +217,7 @@ print_post_install() {
 TARGETS=()
 DO_LIST=false
 USE_GPT=false
+DEBUG_MODE=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -228,6 +229,7 @@ while [[ $# -gt 0 ]]; do
     # --gpt kept for backward compat but both sets always install now
     --gpt)       shift ;;
     --list)      DO_LIST=true; shift ;;
+    --debug)     DEBUG_MODE=true; shift ;;
     --help|-h)
       echo "Usage: bash install.sh [options]"
       echo ""
@@ -240,6 +242,7 @@ while [[ $# -gt 0 ]]; do
       echo "  --gpt          Use sparse/GPT-optimized rules for Cursor and Windsurf"
       echo "                 (Claude always gets rich; Codex always gets sparse)"
       echo "  --list         List installed files and their status (no changes made)"
+      echo "  --debug        Include self-identification routing preamble in generated rules"
       echo "  -h, --help     Show this help"
       echo ""
       echo "No flags = auto-detect installed editors."
@@ -260,7 +263,11 @@ done
 
 if [[ -f "$REPO_DIR/scripts/build-prompt-system.mjs" ]]; then
   echo "--> Building prompt system..."
-  node "$REPO_DIR/scripts/build-prompt-system.mjs"
+  if $DEBUG_MODE; then
+    node "$REPO_DIR/scripts/build-prompt-system.mjs" --debug
+  else
+    node "$REPO_DIR/scripts/build-prompt-system.mjs"
+  fi
   echo ""
 fi
 

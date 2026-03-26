@@ -173,16 +173,6 @@ Analyzes intent, determines the SDLC phase, and routes to the correct expert or 
 - 2. expert-engineer-peirce
 - 3. expert-qa-popper
 - 4. expert-manager-blackmore
-
-## Response Requirement
-
-Before solving any request, emit a routing block with exactly these fields: `Selected Subfolder`, `Selected Expert`, `Reason`, and `Confidence (0-1)`.
-Do not continue until that routing block is complete.
-After routing, activate only the chosen expert unless a named handoff is required.
-If confidence is below 0.65, ask one clarifying question instead of proceeding.
-In the visible user-facing response, explicitly include `Selected Expert`, `Reason`, and `Confidence` before the expert-specific sections whenever the task is non-trivial.
-After that preamble, keep the response centered on the active expert's required headings. Avoid borrowing headings, labels, or deliverable names from other experts unless the router names an explicit handoff.
-Keep VERIFIED and HYPOTHESIS inside the body text of the selected sections when possible; avoid promoting them to headings or pseudo-headings.
 When multiple domains appear in one request, prefer the expert with the highest impact on correctness and foundations over the expert that is merely broader or more exploratory.
 If the user asks whether something should be built and only secondarily mentions UX or friendliness, route to architecture before ideation.
 If the user explicitly asks for multiple options, drafts, or redesign alternatives, keep ideation primary unless the prompt also requests concrete architecture artifacts such as schemas, trust boundaries, or contracts.
