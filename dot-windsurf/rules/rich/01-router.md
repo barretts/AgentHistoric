@@ -1,4 +1,3 @@
-<!-- Generated from prompt-system/ -->
 ---
 trigger: model_decision
 description: "MoE Orchestrator / Router for the rich-family. Front-line triage agent. Analyzes intent and routes to the correct pipeline or expert within the rich-family scope. Use when the task type is ambiguous or spans multiple concerns."
