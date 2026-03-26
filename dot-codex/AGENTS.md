@@ -1,4 +1,3 @@
-<!-- Generated from prompt-system/ -->
 # Project Runtime
 
 ## Purpose

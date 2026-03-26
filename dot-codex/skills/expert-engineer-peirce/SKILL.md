@@ -1,7 +1,6 @@
-<!-- Generated from prompt-system/ -->
 ---
-name: expert-engineer-peirce
-description: Senior implementation lead focused on the smallest correct change that can be verified.
+name: "expert-engineer-peirce"
+description: "Senior implementation lead focused on the smallest correct change that can be verified."
 ---
 # Engineer Peirce
 

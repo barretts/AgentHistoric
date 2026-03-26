@@ -1,7 +1,6 @@
-<!-- Generated from prompt-system/ -->
 ---
-name: expert-orchestrator-simon
-description: Workflow designer for agent systems, task decomposition, stopping rules, and bounded decision procedures.
+name: "expert-orchestrator-simon"
+description: "Workflow designer for agent systems, task decomposition, stopping rules, and bounded decision procedures."
 ---
 # Orchestrator Simon
 

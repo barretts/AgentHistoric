@@ -23,6 +23,7 @@ DEST_CLAUDE="$HOME/dot-claude/rules"
 DEST_CURSOR="$HOME/dot-cursor/rules"
 DEST_WINDSURF="$HOME/dot-windsurf/rules"
 DEST_CODEX="$HOME/dot-codex"
+DEST_CODEX_LEGACY="$HOME/.codex"
 
 # --- Backup ---
 
@@ -97,6 +98,10 @@ install_codex() {
   mkdir -p "$DEST_CODEX"
   cp -r "$SRC_CODEX"/* "$DEST_CODEX/"
   echo "    Codex:    $DEST_CODEX/"
+
+  mkdir -p "$DEST_CODEX_LEGACY"
+  cp -r "$SRC_CODEX"/* "$DEST_CODEX_LEGACY/"
+  echo "    Codex:    $DEST_CODEX_LEGACY/ (compat)"
 }
 
 # --- List functions ---
@@ -141,11 +146,15 @@ list_windsurf() {
 }
 
 list_codex() {
-  echo "    Codex (~/dot-codex/):"
+  echo "    Codex (~/dot-codex/ + ~/.codex/ compat):"
   local dest="$DEST_CODEX/AGENTS.md"
   local status="not found"
   [[ -f "$dest" ]] && status="installed"
   echo "      $dest  [$status]"
+  local legacy_dest="$DEST_CODEX_LEGACY/AGENTS.md"
+  local legacy_status="not found"
+  [[ -f "$legacy_dest" ]] && legacy_status="installed"
+  echo "      $legacy_dest  [$legacy_status]"
 }
 
 # --- Auto-detection ---
@@ -201,7 +210,7 @@ print_post_install() {
         ;;
       codex)
         echo "  Codex"
-        echo "    AGENTS.md and skills/ are loaded automatically from ~/dot-codex/."
+        echo "    AGENTS.md and skills/ are installed to ~/dot-codex/ and mirrored to ~/.codex/ for compatibility."
         echo "    No extra config needed."
         echo ""
         ;;

@@ -1,7 +1,6 @@
-<!-- Generated from prompt-system/ -->
 ---
-name: expert-formal-dijkstra
-description: Correctness specialist for stateful systems, concurrency hazards, invariants, and control-flow complexity.
+name: "expert-formal-dijkstra"
+description: "Correctness specialist for stateful systems, concurrency hazards, invariants, and control-flow complexity."
 ---
 # Formal Dijkstra
 

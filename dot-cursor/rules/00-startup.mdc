@@ -1,4 +1,3 @@
-<!-- Generated from prompt-system/ -->
 ---
 description: "Model routing: directs GPT-family models to the gpt/ subfolder. Always active."
 alwaysApply: true

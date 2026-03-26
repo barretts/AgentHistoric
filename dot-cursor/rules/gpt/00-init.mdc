@@ -1,4 +1,3 @@
-<!-- Generated from prompt-system/ -->
 ---
 description: "Global runtime for the philosopher prompt system. Always active."
 alwaysApply: true

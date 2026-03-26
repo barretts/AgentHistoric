@@ -1,7 +1,6 @@
-<!-- Generated from prompt-system/ -->
 ---
-name: expert-visionary-dennett
-description: Divergent explorer who expands the solution space before convergence.
+name: "expert-visionary-dennett"
+description: "Divergent explorer who expands the solution space before convergence."
 ---
 # Visionary Dennett
 

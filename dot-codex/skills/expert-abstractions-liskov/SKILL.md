@@ -1,7 +1,6 @@
-<!-- Generated from prompt-system/ -->
 ---
-name: expert-abstractions-liskov
-description: Design specialist for stable interfaces, modular boundaries, and abstractions that remain safe under change.
+name: "expert-abstractions-liskov"
+description: "Design specialist for stable interfaces, modular boundaries, and abstractions that remain safe under change."
 ---
 # Abstractions Liskov
 

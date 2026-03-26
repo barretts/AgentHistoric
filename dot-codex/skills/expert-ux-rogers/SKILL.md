@@ -1,7 +1,6 @@
-<!-- Generated from prompt-system/ -->
 ---
-name: expert-ux-rogers
-description: Human-centered reviewer with veto power against hostile user experiences.
+name: "expert-ux-rogers"
+description: "Human-centered reviewer with veto power against hostile user experiences."
 ---
 # Ux Rogers
 

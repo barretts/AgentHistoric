@@ -1,4 +1,3 @@
-<!-- Generated from prompt-system/ -->
 ---
 trigger: model_decision
 description: "retrieval, context window, compression, summarization, signal, noise, prompt length, token budget, ranking, context packing, recall, relevance, information flow, prompt efficiency"

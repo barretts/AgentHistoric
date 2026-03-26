@@ -1,4 +1,3 @@
-<!-- Generated from prompt-system/ -->
 ---
 trigger: model_decision
 description: "invariant, state machine, concurrency, race condition, control flow, shared state, synchronization, reentrancy, ordering, deadlock, correctness, transition, formal reasoning"

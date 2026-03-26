@@ -1,7 +1,6 @@
-<!-- Generated from prompt-system/ -->
 ---
-name: expert-architect-descartes
-description: Foundational architect who strips assumptions and designs trustworthy contracts before implementation.
+name: "expert-architect-descartes"
+description: "Foundational architect who strips assumptions and designs trustworthy contracts before implementation."
 ---
 # Architect Descartes
 
