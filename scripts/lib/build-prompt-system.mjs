@@ -5,7 +5,6 @@ import {
   renderMdFrontmatter
 } from "./prompt-system.mjs";
 import { renderRichInit, renderRichRouter, renderRichExpert } from "./render-rich.mjs";
-import { renderSparseInit, renderSparseRouter, renderSparseExpert } from "./render-sparse.mjs";
 import { renderAgents, renderSkill } from "./render-codex.mjs";
 
 const HEADER = fileHeader("Generated from prompt-system/");
@@ -22,12 +21,6 @@ export function generateArtifacts(system) {
 
   // Rich + cursor frontmatter → .cursor/rules/
   addSet(artifacts, system, path.join(".cursor", "rules"), ".mdc", cursorFm, renderRichInit, renderRichRouter, renderRichExpert);
-
-  // Sparse + cursor frontmatter → .cursor/rules-gpt/
-  addSet(artifacts, system, path.join(".cursor", "rules-gpt"), ".mdc", cursorFm, renderSparseInit, renderSparseRouter, renderSparseExpert);
-
-  // Sparse + md frontmatter → .windsurf/rules-gpt/
-  addSet(artifacts, system, path.join(".windsurf", "rules-gpt"), ".md", mdFm, renderSparseInit, renderSparseRouter, renderSparseExpert);
 
   // Codex (own format, sparse)
   artifacts.set(path.join(".codex", "AGENTS.md"), renderAgents(system));

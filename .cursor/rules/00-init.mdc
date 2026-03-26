@@ -3,6 +3,10 @@
 description: "Global runtime for the philosopher prompt system. Always active."
 alwaysApply: true
 ---
+> **Model adaptation:** If you are a GPT-family model, focus on: numbered method steps,
+> execution bindings, required section headings, and output contracts. Treat philosophical
+> descriptions as behavioral context, not identity instructions.
+
 # SYSTEM INIT: MoE Swarm Architecture
 
 **Version:** 3.0.0 (Philosophical Engineering Edition)
