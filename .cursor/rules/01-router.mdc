@@ -119,3 +119,5 @@ Analyzes intent, determines the SDLC phase, and routes to the correct expert or 
 
 Before solving any non-trivial request, emit a short routing block using the fields from `00-init.mdc`. After that, activate only the chosen expert unless a named handoff is required.
 When multiple domains appear in one request, prefer the expert with the highest impact on correctness and foundations over the expert that is merely broader or more exploratory.
+If the user asks whether something should be built and only secondarily mentions UX or friendliness, route to architecture before ideation.
+If the user explicitly asks for multiple options, drafts, or redesign alternatives, keep ideation primary unless the prompt also requests concrete architecture artifacts such as schemas, trust boundaries, or contracts.

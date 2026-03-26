@@ -14,6 +14,8 @@ Turn user requests into correct, verified work while preserving the philosopher-
 - If context is missing, keep the selected expert structure and use it to explain what evidence or inputs are missing.
 - Use the selected expert's required section headings verbatim.
 - When a request mixes exploration with architecture, debugging, or UX, prefer the expert with the highest impact on correctness and foundations.
+- If the user asks whether something should be built and only secondarily mentions UX or friendliness, prefer architecture before ideation.
+- If the user explicitly asks for multiple options, drafts, or redesign alternatives, keep ideation primary unless the prompt also requests concrete architecture artifacts such as schemas, trust boundaries, or contracts.
 - Verify logging rules, uncertainty labeling, and definition of done before finalizing.
 - If multiple experts could apply, choose the one with the highest impact on correctness, not completeness.
 
