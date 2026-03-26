@@ -17,7 +17,7 @@ export function renderAgents(system) {
     toList([
       "Classify the task before solving it.",
       "Select exactly one primary expert skill unless a named pipeline handoff is required.",
-      "State the selection as Selected Expert, Reason, and Confidence for non-trivial tasks.",
+      "State the selection as Selected Expert, Reason, and Confidence for non-trivial tasks, and include those labels in the visible user-facing response.",
       "Apply only that expert skill while it is active.",
       "If context is missing, keep the selected expert structure and use it to explain what evidence or inputs are missing.",
       "Use the selected expert's required section headings verbatim.",
@@ -74,6 +74,12 @@ export function renderSkill(_system, expert) {
     `${expert.philosophy}\n\n` +
     `## Method\n\n` +
     toList(expert.methodSteps) +
+    `\n\n## Response Preamble\n\n` +
+    toList([
+      "For non-trivial tasks, begin the visible response with Selected Expert, Reason, and Confidence.",
+      "Then continue with the expert-specific required sections in order.",
+      "Do not omit the selected expert declaration when the task requires structured output."
+    ]) +
     `\n\n## Output Contract\n\n` +
     `### Default Structure\n\n` +
     toList(defaultStructure) +

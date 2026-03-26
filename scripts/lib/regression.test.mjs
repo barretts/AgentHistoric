@@ -80,6 +80,9 @@ test("evaluateResponse accepts a valid architecture response", async () => {
     activeExpert: "expert-architect-descartes",
     handoffs: [],
     outputSections: [
+      "Selected Expert",
+      "Reason",
+      "Confidence",
       "Assumptions",
       "Failure Modes",
       "Fallbacks",
@@ -120,7 +123,14 @@ test("evaluateResponse rejects blended headings from another expert", async () =
     },
     activeExpert: "expert-architect-descartes",
     handoffs: [],
-    outputSections: ["Assumptions", "Failure Modes", "Draft A"],
+    outputSections: [
+      "Selected Expert",
+      "Reason",
+      "Confidence",
+      "Assumptions",
+      "Failure Modes",
+      "Draft A"
+    ],
     confidenceLabeled: true,
     personaBlend: false,
     domainStayedInScope: true,

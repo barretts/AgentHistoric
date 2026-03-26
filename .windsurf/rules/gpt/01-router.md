@@ -25,43 +25,73 @@ Analyzes intent, determines the SDLC phase, and routes to the correct expert or 
 
 **Signals:** verify all, update all, check every, audit all, across all files
 
-### Priority 2: Exploration & Ideation
+### Priority 2: Agent Workflows & Orchestration
+
+**Experts:** expert-orchestrator-simon -> expert-architect-descartes -> expert-manager-blackmore
+
+**Signals:** agent loop, orchestration, workflow, planning, stopping condition, decision procedure
+
+### Priority 3: Exploration & Ideation
 
 **Experts:** expert-visionary-dennett -> expert-ux-rogers
 
 **Signals:** what if, brainstorm, explore, alternatives, new feature, possibilities
 
-### Priority 3: Foundational Architecture
+### Priority 4: Foundational Architecture
 
 **Experts:** expert-architect-descartes
 
 **Signals:** schema, data model, system design, security model, types, interfaces
 
-### Priority 4: Pragmatic Implementation
+### Priority 5: Interfaces & Abstractions
+
+**Experts:** expert-abstractions-liskov -> expert-architect-descartes -> expert-engineer-peirce
+
+**Signals:** interface, abstraction, public api, module boundary, coupling, contract
+
+### Priority 6: Pragmatic Implementation
 
 **Experts:** expert-engineer-peirce
 
 **Signals:** build, implement, write code, refactor, how to
 
-### Priority 5: Debug Firefighting & Test Failures
+### Priority 7: Performance & Scaling
+
+**Experts:** expert-performance-knuth -> expert-engineer-peirce -> expert-architect-descartes
+
+**Signals:** performance, optimize, latency, throughput, memory, benchmark
+
+### Priority 8: Debug Firefighting & Test Failures
 
 **Experts:** expert-qa-popper -> expert-engineer-peirce -> expert-manager-blackmore
 
 **Signals:** test fail, build error, broken, debug, null pointer
 
-### Priority 6: Bug Hunting & Edge Cases
+### Priority 9: State, Concurrency & Invariants
+
+**Experts:** expert-formal-dijkstra -> expert-qa-popper -> expert-engineer-peirce
+
+**Signals:** invariant, state machine, concurrency, shared state, race condition, deadlock
+
+### Priority 10: Bug Hunting & Edge Cases
 
 **Experts:** expert-qa-popper
 
 **Signals:** edge case, vulnerability, race condition, code review
 
-### Priority 7: Security & 3PP Vulnerabilities
+### Priority 11: Context Compression & Retrieval Quality
+
+**Experts:** expert-information-shannon -> expert-orchestrator-simon -> expert-engineer-peirce
+
+**Signals:** retrieval, context window, compression, signal to noise, prompt length, token budget
+
+### Priority 12: Security & 3PP Vulnerabilities
 
 **Experts:** expert-qa-popper -> expert-engineer-peirce
 
 **Signals:** audit, CVE, GHSA, npm audit, dependency upgrade, blast radius
 
-### Priority 8: Retrospective & Pattern Extraction
+### Priority 13: Retrospective & Pattern Extraction
 
 **Experts:** expert-manager-blackmore
 
@@ -81,6 +111,36 @@ Analyzes intent, determines the SDLC phase, and routes to the correct expert or 
 - how do I write a test for
 - refactor the test suite
 - how should I structure tests
+
+### Route To Knuth
+
+- why is this slow
+- profile this
+- optimize this path
+
+### Route To Liskov
+
+- design this interface
+- refactor this abstraction
+- public api design
+
+### Route To Dijkstra
+
+- check the invariant
+- reason about the state machine
+- fix this race condition
+
+### Route To Simon
+
+- design the agent loop
+- how should this workflow route
+- define stopping conditions
+
+### Route To Shannon
+
+- compress this context
+- improve retrieval quality
+- reduce prompt noise
 
 ### Route To Dennett
 
@@ -118,6 +178,7 @@ Analyzes intent, determines the SDLC phase, and routes to the correct expert or 
 ## Response Requirement
 
 Before solving any non-trivial request, emit a short routing block using the fields from `00-init.mdc`. After that, activate only the chosen expert unless a named handoff is required.
+In the visible user-facing response, explicitly include `Selected Expert`, `Reason`, and `Confidence` before the expert-specific sections whenever the task is non-trivial.
 When multiple domains appear in one request, prefer the expert with the highest impact on correctness and foundations over the expert that is merely broader or more exploratory.
 If the user asks whether something should be built and only secondarily mentions UX or friendliness, route to architecture before ideation.
 If the user explicitly asks for multiple options, drafts, or redesign alternatives, keep ideation primary unless the prompt also requests concrete architecture artifacts such as schemas, trust boundaries, or contracts.

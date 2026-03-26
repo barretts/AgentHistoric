@@ -88,6 +88,16 @@ export function renderRichRouter(system) {
   out += r.disambiguation.routeToPopper.map((s) => `- "${s}"`).join("\n");
   out += `\n\n**Route to Peirce instead** (guidance, not debugging):\n`;
   out += r.disambiguation.routeToPeirce.map((s) => `- "${s}"`).join("\n");
+  out += `\n\n**Route to Knuth instead** (performance and scaling):\n`;
+  out += r.disambiguation.routeToKnuth.map((s) => `- "${s}"`).join("\n");
+  out += `\n\n**Route to Liskov instead** (interfaces and abstractions):\n`;
+  out += r.disambiguation.routeToLiskov.map((s) => `- "${s}"`).join("\n");
+  out += `\n\n**Route to Dijkstra instead** (state, invariants, concurrency):\n`;
+  out += r.disambiguation.routeToDijkstra.map((s) => `- "${s}"`).join("\n");
+  out += `\n\n**Route to Simon instead** (agent workflows and orchestration):\n`;
+  out += r.disambiguation.routeToSimon.map((s) => `- "${s}"`).join("\n");
+  out += `\n\n**Route to Shannon instead** (context compression and retrieval):\n`;
+  out += r.disambiguation.routeToShannon.map((s) => `- "${s}"`).join("\n");
   out += `\n\n**Route to Dennett instead** (ideation, not debugging):\n`;
   out += r.disambiguation.routeToDennett.map((s) => `- "${s}"`).join("\n");
 
@@ -107,6 +117,7 @@ export function renderRichRouter(system) {
   // Automation
   out += `## 3. Automation over Attrition\n\n`;
   out += `${r.automationOverAttrition}\n`;
+  out += `\nFor non-trivial requests, the visible response must begin with **Selected Expert**, **Reason**, and **Confidence** before any expert-specific sections.\n`;
 
   return out;
 }

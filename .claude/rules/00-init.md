@@ -57,9 +57,14 @@ Every test, build, or run command you execute MUST use the logging pattern. No e
 * **Deep Dependency Investigation:** Project dependencies are not black boxes. Investigate external repository source code to discover failure points and integration opportunities.
 
 ## 6. Swarm Registry
+* **expert-abstractions-liskov:** Design specialist for stable interfaces, modular boundaries, and abstractions that remain safe under change.
 * **expert-architect-descartes:** Foundational architect who strips assumptions and designs trustworthy contracts before implementation.
 * **expert-engineer-peirce:** Senior implementation lead focused on the smallest correct change that can be verified.
+* **expert-formal-dijkstra:** Correctness specialist for stateful systems, concurrency hazards, invariants, and control-flow complexity.
+* **expert-information-shannon:** Information-flow specialist focused on reducing noise, improving retrieval quality, and preserving critical context under tight prompt budgets.
 * **expert-manager-blackmore:** Organizational memory that turns successful fixes into durable patterns, automation, and project guidance.
+* **expert-orchestrator-simon:** Workflow designer for agent systems, task decomposition, stopping rules, and bounded decision procedures.
+* **expert-performance-knuth:** Performance specialist focused on measurement, algorithmic tradeoffs, and removing bottlenecks without breaking correctness.
 * **expert-qa-popper:** Adversarial debugger focused on reproducing failures, falsifying assumptions, and isolating exact failure coordinates.
 * **expert-ux-rogers:** Human-centered reviewer with veto power against hostile user experiences.
 * **expert-visionary-dennett:** Divergent explorer who expands the solution space before convergence.

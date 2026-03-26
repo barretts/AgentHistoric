@@ -27,6 +27,23 @@
     },
     {
       "priority": 2,
+      "domain": "Agent Workflows & Orchestration",
+      "experts": [
+        "expert-orchestrator-simon",
+        "expert-architect-descartes",
+        "expert-manager-blackmore"
+      ],
+      "signals": [
+        "agent loop",
+        "orchestration",
+        "workflow",
+        "planning",
+        "stopping condition",
+        "decision procedure"
+      ]
+    },
+    {
+      "priority": 3,
       "domain": "Exploration & Ideation",
       "experts": [
         "expert-visionary-dennett",
@@ -42,7 +59,7 @@
       ]
     },
     {
-      "priority": 3,
+      "priority": 4,
       "domain": "Foundational Architecture",
       "experts": [
         "expert-architect-descartes"
@@ -57,7 +74,24 @@
       ]
     },
     {
-      "priority": 4,
+      "priority": 5,
+      "domain": "Interfaces & Abstractions",
+      "experts": [
+        "expert-abstractions-liskov",
+        "expert-architect-descartes",
+        "expert-engineer-peirce"
+      ],
+      "signals": [
+        "interface",
+        "abstraction",
+        "public api",
+        "module boundary",
+        "coupling",
+        "contract"
+      ]
+    },
+    {
+      "priority": 6,
       "domain": "Pragmatic Implementation",
       "experts": [
         "expert-engineer-peirce"
@@ -71,7 +105,24 @@
       ]
     },
     {
-      "priority": 5,
+      "priority": 7,
+      "domain": "Performance & Scaling",
+      "experts": [
+        "expert-performance-knuth",
+        "expert-engineer-peirce",
+        "expert-architect-descartes"
+      ],
+      "signals": [
+        "performance",
+        "optimize",
+        "latency",
+        "throughput",
+        "memory",
+        "benchmark"
+      ]
+    },
+    {
+      "priority": 8,
       "domain": "Debug Firefighting & Test Failures",
       "experts": [
         "expert-qa-popper",
@@ -87,7 +138,24 @@
       ]
     },
     {
-      "priority": 6,
+      "priority": 9,
+      "domain": "State, Concurrency & Invariants",
+      "experts": [
+        "expert-formal-dijkstra",
+        "expert-qa-popper",
+        "expert-engineer-peirce"
+      ],
+      "signals": [
+        "invariant",
+        "state machine",
+        "concurrency",
+        "shared state",
+        "race condition",
+        "deadlock"
+      ]
+    },
+    {
+      "priority": 10,
       "domain": "Bug Hunting & Edge Cases",
       "experts": [
         "expert-qa-popper"
@@ -100,7 +168,24 @@
       ]
     },
     {
-      "priority": 7,
+      "priority": 11,
+      "domain": "Context Compression & Retrieval Quality",
+      "experts": [
+        "expert-information-shannon",
+        "expert-orchestrator-simon",
+        "expert-engineer-peirce"
+      ],
+      "signals": [
+        "retrieval",
+        "context window",
+        "compression",
+        "signal to noise",
+        "prompt length",
+        "token budget"
+      ]
+    },
+    {
+      "priority": 12,
       "domain": "Security & 3PP Vulnerabilities",
       "experts": [
         "expert-qa-popper",
@@ -116,7 +201,7 @@
       ]
     },
     {
-      "priority": 8,
+      "priority": 13,
       "domain": "Retrospective & Pattern Extraction",
       "experts": [
         "expert-manager-blackmore"
@@ -140,6 +225,31 @@
       "how do I write a test for",
       "refactor the test suite",
       "how should I structure tests"
+    ],
+    "routeToKnuth": [
+      "why is this slow",
+      "profile this",
+      "optimize this path"
+    ],
+    "routeToLiskov": [
+      "design this interface",
+      "refactor this abstraction",
+      "public api design"
+    ],
+    "routeToDijkstra": [
+      "check the invariant",
+      "reason about the state machine",
+      "fix this race condition"
+    ],
+    "routeToSimon": [
+      "design the agent loop",
+      "how should this workflow route",
+      "define stopping conditions"
+    ],
+    "routeToShannon": [
+      "compress this context",
+      "improve retrieval quality",
+      "reduce prompt noise"
     ],
     "routeToDennett": [
       "should we add tests for"

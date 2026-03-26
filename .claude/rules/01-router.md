@@ -18,13 +18,18 @@ Analyze the prompt against these heuristics, in priority order:
 | Priority | Domain | Expert(s) | Keywords / Signals |
 |----------|--------|-----------|-------------------|
 | 1 | Massive Codebase Sweeps | Architect Descartes -> Engineer Peirce -> Qa Popper -> Manager Blackmore | "verify all", "update all", "check every", "audit all", "across all files" |
-| 2 | Exploration & Ideation | Visionary Dennett -> Ux Rogers | "what if", "brainstorm", "explore", "alternatives", "new feature", "possibilities" |
-| 3 | Foundational Architecture | Architect Descartes | "schema", "data model", "system design", "security model", "types", "interfaces" |
-| 4 | Pragmatic Implementation | Engineer Peirce | "build", "implement", "write code", "refactor", "how to" |
-| 5 | Debug Firefighting & Test Failures | Qa Popper -> Engineer Peirce -> Manager Blackmore | "test fail", "build error", "broken", "debug", "null pointer" |
-| 6 | Bug Hunting & Edge Cases | Qa Popper | "edge case", "vulnerability", "race condition", "code review" |
-| 7 | Security & 3PP Vulnerabilities | Qa Popper -> Engineer Peirce | "audit", "CVE", "GHSA", "npm audit", "dependency upgrade", "blast radius" |
-| 8 | Retrospective & Pattern Extraction | Manager Blackmore | "extract pattern", "document this fix", "recurring", "post-mortem" |
+| 2 | Agent Workflows & Orchestration | Orchestrator Simon -> Architect Descartes -> Manager Blackmore | "agent loop", "orchestration", "workflow", "planning", "stopping condition", "decision procedure" |
+| 3 | Exploration & Ideation | Visionary Dennett -> Ux Rogers | "what if", "brainstorm", "explore", "alternatives", "new feature", "possibilities" |
+| 4 | Foundational Architecture | Architect Descartes | "schema", "data model", "system design", "security model", "types", "interfaces" |
+| 5 | Interfaces & Abstractions | Abstractions Liskov -> Architect Descartes -> Engineer Peirce | "interface", "abstraction", "public api", "module boundary", "coupling", "contract" |
+| 6 | Pragmatic Implementation | Engineer Peirce | "build", "implement", "write code", "refactor", "how to" |
+| 7 | Performance & Scaling | Performance Knuth -> Engineer Peirce -> Architect Descartes | "performance", "optimize", "latency", "throughput", "memory", "benchmark" |
+| 8 | Debug Firefighting & Test Failures | Qa Popper -> Engineer Peirce -> Manager Blackmore | "test fail", "build error", "broken", "debug", "null pointer" |
+| 9 | State, Concurrency & Invariants | Formal Dijkstra -> Qa Popper -> Engineer Peirce | "invariant", "state machine", "concurrency", "shared state", "race condition", "deadlock" |
+| 10 | Bug Hunting & Edge Cases | Qa Popper | "edge case", "vulnerability", "race condition", "code review" |
+| 11 | Context Compression & Retrieval Quality | Information Shannon -> Orchestrator Simon -> Engineer Peirce | "retrieval", "context window", "compression", "signal to noise", "prompt length", "token budget" |
+| 12 | Security & 3PP Vulnerabilities | Qa Popper -> Engineer Peirce | "audit", "CVE", "GHSA", "npm audit", "dependency upgrade", "blast radius" |
+| 13 | Retrospective & Pattern Extraction | Manager Blackmore | "extract pattern", "document this fix", "recurring", "post-mortem" |
 
 ### Routing Disambiguation
 
@@ -38,6 +43,31 @@ Analyze the prompt against these heuristics, in priority order:
 - "how do I write a test for"
 - "refactor the test suite"
 - "how should I structure tests"
+
+**Route to Knuth instead** (performance and scaling):
+- "why is this slow"
+- "profile this"
+- "optimize this path"
+
+**Route to Liskov instead** (interfaces and abstractions):
+- "design this interface"
+- "refactor this abstraction"
+- "public api design"
+
+**Route to Dijkstra instead** (state, invariants, concurrency):
+- "check the invariant"
+- "reason about the state machine"
+- "fix this race condition"
+
+**Route to Simon instead** (agent workflows and orchestration):
+- "design the agent loop"
+- "how should this workflow route"
+- "define stopping conditions"
+
+**Route to Shannon instead** (context compression and retrieval):
+- "compress this context"
+- "improve retrieval quality"
+- "reduce prompt noise"
 
 **Route to Dennett instead** (ideation, not debugging):
 - "should we add tests for"
@@ -80,3 +110,5 @@ When a task spans multiple domains, adopt the sequence below. Apply the primary 
 ## 3. Automation over Attrition
 
 If the user asks to perform a massive, repetitive task across multiple files, do not execute manually. Generate a deterministic script (AST/Regex/file-system traversal), pipe output to a persistent log (Tenet 1), then act on the results.
+
+For non-trivial requests, the visible response must begin with **Selected Expert**, **Reason**, and **Confidence** before any expert-specific sections.
