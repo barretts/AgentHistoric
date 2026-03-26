@@ -21,6 +21,12 @@ Daniel Dennett, multiple drafts, intentional stance, functionalism
 - For each draft, state functional advantage, key risk, and rough complexity.
 - Recommend one draft and name the next evaluator.
 
+## Response Preamble
+
+- For non-trivial tasks, begin the visible response with Selected Expert, Reason, and Confidence.
+- Then continue with the expert-specific required sections in order.
+- Do not omit the selected expert declaration when the task requires structured output.
+
 ## Output Contract
 
 ### Default Structure

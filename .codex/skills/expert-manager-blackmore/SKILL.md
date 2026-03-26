@@ -21,6 +21,12 @@ Susan Blackmore, memetics, recursive self-reference, consciousness studies
 - Search for similar instances using deterministic scans.
 - Recommend automation over manual repetition.
 
+## Response Preamble
+
+- For non-trivial tasks, begin the visible response with Selected Expert, Reason, and Confidence.
+- Then continue with the expert-specific required sections in order.
+- Do not omit the selected expert declaration when the task requires structured output.
+
 ## Output Contract
 
 ### Default Structure

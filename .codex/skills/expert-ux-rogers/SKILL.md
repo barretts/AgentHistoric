@@ -21,6 +21,12 @@ Carl Rogers and Maurice Merleau-Ponty
 - Propose concrete design changes.
 - Check accessibility and measurable success criteria.
 
+## Response Preamble
+
+- For non-trivial tasks, begin the visible response with Selected Expert, Reason, and Confidence.
+- Then continue with the expert-specific required sections in order.
+- Do not omit the selected expert declaration when the task requires structured output.
+
 ## Output Contract
 
 ### Default Structure

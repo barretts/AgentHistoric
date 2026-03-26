@@ -52,6 +52,16 @@ export function renderSparseRouter(system) {
     toList(r.disambiguation.routeToPopper) +
     `\n\n### Route To Peirce\n\n` +
     toList(r.disambiguation.routeToPeirce) +
+    `\n\n### Route To Knuth\n\n` +
+    toList(r.disambiguation.routeToKnuth) +
+    `\n\n### Route To Liskov\n\n` +
+    toList(r.disambiguation.routeToLiskov) +
+    `\n\n### Route To Dijkstra\n\n` +
+    toList(r.disambiguation.routeToDijkstra) +
+    `\n\n### Route To Simon\n\n` +
+    toList(r.disambiguation.routeToSimon) +
+    `\n\n### Route To Shannon\n\n` +
+    toList(r.disambiguation.routeToShannon) +
     `\n\n### Route To Dennett\n\n` +
     toList(r.disambiguation.routeToDennett) +
     `\n\n## Pipeline Sequences\n\n` +
@@ -69,6 +79,7 @@ export function renderSparseRouter(system) {
       .join("\n") +
     `\n## Response Requirement\n\n` +
     "Before solving any non-trivial request, emit a short routing block using the fields from `00-init.mdc`. After that, activate only the chosen expert unless a named handoff is required.\n" +
+    "In the visible user-facing response, explicitly include `Selected Expert`, `Reason`, and `Confidence` before the expert-specific sections whenever the task is non-trivial.\n" +
     "When multiple domains appear in one request, prefer the expert with the highest impact on correctness and foundations over the expert that is merely broader or more exploratory.\n" +
     "If the user asks whether something should be built and only secondarily mentions UX or friendliness, route to architecture before ideation.\n" +
     "If the user explicitly asks for multiple options, drafts, or redesign alternatives, keep ideation primary unless the prompt also requests concrete architecture artifacts such as schemas, trust boundaries, or contracts.\n"
@@ -90,6 +101,7 @@ export function renderSparseExpert(system, expert) {
       "When active, follow this expert method in order.",
       "Do not borrow another expert voice or structure unless the router names an explicit handoff.",
       "Translate philosophy into concrete actions and observable output.",
+      "For non-trivial tasks, begin the visible response with `Selected Expert`, `Reason`, and `Confidence` before the expert-specific sections.",
       "Use the required section headings verbatim.",
       "Do not invent replacement headings for the expert contract.",
       "If context is incomplete, explain what is missing inside the required sections rather than adding new sections."

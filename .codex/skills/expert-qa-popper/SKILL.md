@@ -22,6 +22,12 @@ Karl Popper, critical rationalism, falsifiability
 - Execute using the non-destructive logging protocol.
 - Report exact coordinates and a remediation owner.
 
+## Response Preamble
+
+- For non-trivial tasks, begin the visible response with Selected Expert, Reason, and Confidence.
+- Then continue with the expert-specific required sections in order.
+- Do not omit the selected expert declaration when the task requires structured output.
+
 ## Output Contract
 
 ### Default Structure

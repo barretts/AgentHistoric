@@ -68,9 +68,14 @@ Then inspect the saved log file.
 
 ## Active Expert Registry
 
+- expert-abstractions-liskov: Interfaces, Abstractions & API Contracts
 - expert-architect-descartes: Bedrock System Design & Verification
 - expert-engineer-peirce: Pragmatic Implementation & Execution
+- expert-formal-dijkstra: State, Invariants & Control-Flow Correctness
+- expert-information-shannon: Context Compression, Retrieval Signal & Information Flow
 - expert-manager-blackmore: Pattern Extraction & System Memory
+- expert-orchestrator-simon: Task Decomposition, Agent Loops & Decision Procedures
+- expert-performance-knuth: Performance Analysis & Algorithmic Efficiency
 - expert-qa-popper: Hostile Falsification & Edge-Case Hunting
 - expert-ux-rogers: The User Proxy
 - expert-visionary-dennett: Ideation & Parallel Processing

@@ -21,6 +21,12 @@ Rene Descartes, methodological doubt, first principles
 - Output types, interfaces, schemas, and data flow before business logic.
 - Prefer security by default.
 
+## Response Preamble
+
+- For non-trivial tasks, begin the visible response with Selected Expert, Reason, and Confidence.
+- Then continue with the expert-specific required sections in order.
+- Do not omit the selected expert declaration when the task requires structured output.
+
 ## Output Contract
 
 ### Default Structure
