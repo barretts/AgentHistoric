@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 
 import {
   buildWrappedPrompt,
-  expectedResponseSections
+  expectedResponseSections,
+  parseArgs
 } from "./regression.mjs";
 
 test("expectedResponseSections prepends routing headings", () => {
@@ -30,4 +31,10 @@ test("buildWrappedPrompt includes exact required headings guidance", () => {
     prompt,
     /Use these exact response headings for this case when they apply: Selected Expert, Reason, Confidence, Assumptions, Failure Modes, Fallbacks\./
   );
+});
+
+test("parseArgs supports case filters", () => {
+  const options = parseArgs(["--case", "R1,C2"]);
+
+  assert.deepEqual(options.caseIds, ["R1", "C2"]);
 });

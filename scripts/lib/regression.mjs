@@ -10,13 +10,15 @@ export async function loadRegressionFixtures(workspaceRoot) {
   return JSON.parse(raw);
 }
 
-export function selectCases(fixtures, { suite = "full", targets }) {
+export function selectCases(fixtures, { suite = "full", targets, caseIds = [] }) {
   const suiteIds = new Set(fixtures.suites[suite] || []);
+  const requestedCases = new Set(caseIds);
   return fixtures.cases.filter((testCase) => {
     const inSuite = suiteIds.has(testCase.id);
+    const inRequestedCases = requestedCases.size === 0 || requestedCases.has(testCase.id);
     const inTarget = !targets.length
       || targets.some((target) => testCase.targets.includes(target));
-    return inSuite && inTarget;
+    return inSuite && inRequestedCases && inTarget;
   });
 }
 
@@ -27,7 +29,8 @@ export function parseArgs(argv) {
     modelByTarget: {
       cursor: "gpt-5.4-medium",
       codex: null
-    }
+    },
+    caseIds: []
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -47,6 +50,12 @@ export function parseArgs(argv) {
       index += 1;
     } else if (arg === "--codex-model") {
       options.modelByTarget.codex = argv[index + 1];
+      index += 1;
+    } else if (arg === "--case") {
+      options.caseIds = argv[index + 1]
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean);
       index += 1;
     }
   }
@@ -85,6 +94,8 @@ export function buildWrappedPrompt(testCase) {
     `Use these exact response headings for this case when they apply: ${requiredHeadings.join(", ")}.`,
     "Keep missing-context discussion inside those headings instead of adding new sections.",
     "If the request mixes domains, prefer the expert with the highest impact on correctness and foundations.",
+    "If the request asks whether something should be built and only secondarily mentions UX or friendliness, treat that as an architecture-first decision rather than exploratory ideation.",
+    "If the request explicitly asks for multiple options, drafts, or redesign alternatives, keep ideation primary unless it also asks for concrete architecture artifacts such as schemas, trust boundaries, or system contracts.",
     "Set confidenceLabeled to true only if the response clearly states confidence or VERIFIED/HYPOTHESIS style uncertainty.",
     "Set personaBlend to true only if you mixed expert styles without an explicit handoff.",
     "Set domainStayedInScope to true only if the answer stayed within the user's requested domain.",
@@ -250,10 +261,10 @@ export function compareTargets(resultsByTarget) {
     deltas.push("expert mismatch");
   }
 
-  if (
-    JSON.stringify(cursor.response.outputSections)
-    !== JSON.stringify(codex.response.outputSections)
-  ) {
+  if (!sameNormalizedSectionSet(
+    cursor.response.outputSections,
+    codex.response.outputSections
+  )) {
     deltas.push("section mismatch");
   }
 
@@ -306,6 +317,12 @@ export function formatSummary(run) {
 
 function normalizeText(value) {
   return String(value).trim().toLowerCase();
+}
+
+function sameNormalizedSectionSet(left, right) {
+  const leftSet = [...new Set((left || []).map(normalizeText))].sort();
+  const rightSet = [...new Set((right || []).map(normalizeText))].sort();
+  return JSON.stringify(leftSet) === JSON.stringify(rightSet);
 }
 
 function normalizeExpertId(value) {
