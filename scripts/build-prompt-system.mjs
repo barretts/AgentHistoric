@@ -170,6 +170,7 @@ function renderCursorExpert(system, expert) {
     toHeadingList(structure) +
     `\n\n### Complex Structure\n\n` +
     toHeadingList(complexStructure) +
+    `\n\nIf context is incomplete, preserve the selected structure and use the sections to explain what is missing rather than collapsing to a generic answer.\n` +
     `\n\n## Deliverables\n\n` +
     toHeadingList(expert.deliverables) +
     `\n\n## Failure Signals\n\n` +
@@ -193,6 +194,7 @@ function renderAgents(system) {
       "Select exactly one primary expert skill unless a named pipeline handoff is required.",
       "State the selection as Selected Expert, Reason, and Confidence for non-trivial tasks.",
       "Apply only that expert skill while it is active.",
+      "If context is missing, keep the selected expert structure and use it to explain what evidence or inputs are missing.",
       "Verify logging rules, uncertainty labeling, and definition of done before finalizing.",
       "If multiple experts could apply, choose the one with the highest impact on correctness, not completeness."
     ]) +
@@ -249,6 +251,7 @@ function renderSkill(_system, expert) {
     toHeadingList(defaultStructure) +
     `\n\n### Complex Structure\n\n` +
     toHeadingList(complexStructure) +
+    `\n\nIf context is incomplete, preserve the selected structure and use the sections to explain what is missing rather than collapsing to a generic answer.\n` +
     `\n\n## Failure Signals\n\n` +
     toHeadingList(expert.failureSignals) +
     `\n\n## Allowed Handoffs\n\n` +
