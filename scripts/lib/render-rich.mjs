@@ -1,6 +1,6 @@
 import { codeFence, humanizeExpertId, resolveRequiredSections } from "./prompt-system.mjs";
 
-export function renderRichInit(system) {
+export function renderRichInit(system, options = {}) {
   const g = system.globalRuntime;
   const reasons = {
     "your_test_command | grep": "destroys context",
@@ -15,6 +15,12 @@ export function renderRichInit(system) {
   out += `# ${g.name}\n\n`;
   out += `**Version:** ${g.version} (Philosophical Engineering Edition)\n`;
   out += `**Context:** ${g.context}\n\n`;
+
+  out += `## 0. Routing Preconditions\n\n`;
+  out += `- You MUST choose exactly one subfolder before any reasoning: \`gpt/\` or \`rich/\`.\n`;
+  out += `- You MUST load \`00-init\` and \`01-router\` from the selected subfolder before loading any expert file.\n`;
+  out += `- You MUST NOT mix \`gpt/\` and \`rich/\` in one request unless the user explicitly overrides.\n`;
+  out += `- If subfolder cannot be determined, STOP and ask exactly one clarifying question.\n\n`;
 
   // Section 1: Logging
   out += `## 1. The Non-Destructive Logging Protocol\n\n`;
@@ -62,7 +68,7 @@ export function renderRichInit(system) {
   return out;
 }
 
-export function renderRichRouter(system) {
+export function renderRichRouter(system, options = {}) {
   const r = system.router;
 
   let out = "";
@@ -70,6 +76,9 @@ export function renderRichRouter(system) {
   out += `**Role:** Front-line Triage and Pipeline Controller\n\n`;
   out += `${r.personaIntro}\n\n`;
   out += `**CRITICAL OVERRIDE:** If the user asks to perform a massive, repetitive task across multiple files ("verify all components," "update all imports," "check all stories"), do NOT route this as a manual task. Route to the \`automation_generation\` sequence to build a tool or script to delegate the work systematically.\n\n`;
+  if (options.debug) {
+    out += `**Heading Purity Rule:** Once a primary expert is selected, the visible response may contain only **Selected Expert**, **Reason**, **Confidence**, and that expert's required headings unless an explicit allowed handoff is named. VERIFIED and HYPOTHESIS are inline uncertainty labels, never headings.\n\n`;
+  }
 
   // Routing heuristics table
   out += `## 1. Routing Heuristics\n\n`;
@@ -107,12 +116,19 @@ export function renderRichRouter(system) {
   // Automation
   out += `## 3. Automation over Attrition\n\n`;
   out += `${r.automationOverAttrition}\n`;
-  out += `\nFor non-trivial requests, the visible response must begin with **Selected Expert**, **Reason**, and **Confidence** before any expert-specific sections.\n`;
+  if (options.debug) {
+    out += `\nBefore solving any request, emit a routing block with exactly: **Selected Subfolder**, **Selected Expert**, **Reason**, and **Confidence (0-1)**.\n`;
+    out += `Do not continue until that routing block is complete.\n`;
+    out += `If confidence is below 0.65, ask one clarifying question instead of proceeding.\n`;
+    out += `For non-trivial requests, the visible response must begin with **Selected Expert**, **Reason**, and **Confidence** before any expert-specific sections.\n`;
+    out += `After that preamble, use only the active expert's required headings. Do not emit headings, labels, or deliverable names from any other expert unless the router names an explicit handoff.\n`;
+    out += `Keep VERIFIED and HYPOTHESIS inside the body text of the selected sections; do not promote them to headings or pseudo-headings.\n`;
+  }
 
   return out;
 }
 
-export function renderRichExpert(system, expert) {
+export function renderRichExpert(system, expert, options = {}) {
   let out = "";
   let section = 0;
 
@@ -219,7 +235,14 @@ export function renderRichExpert(system, expert) {
       out += `- ${s}\n`;
     }
     out += `\nUse these headings exactly as written. Do not rename, merge, or paraphrase them.\n`;
+    out += `Every required heading must still appear even when context is incomplete. Use the heading to state the missing evidence, provisional assumption, or next verification step.\n`;
     out += `If context is incomplete, preserve the selected structure and explain what is missing.\n\n`;
+    if (options.debug) {
+      out += `Visible headings are limited to Selected Expert, Reason, Confidence, and this expert's required headings unless an allowed handoff is explicitly named.\n`;
+      out += `Do not emit another expert's headings, section labels, or deliverable names while this expert is active.\n`;
+      out += `Keep VERIFIED and HYPOTHESIS inline within those sections rather than as standalone headings.\n`;
+    }
+    out += `\n`;
   }
 
   // Failure Signals

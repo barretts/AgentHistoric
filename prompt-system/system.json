@@ -1,16 +1,16 @@
 {
   "version": "1.0.0",
-  "title": "Dual-Target Philosopher Prompt System",
+  "title": "Agent Historic",
   "targets": {
     "rich": [
-      ".claude/rules",
-      ".windsurf/rules/rich",
-      ".cursor/rules/rich"
+      "dot-claude/rules",
+      "dot-windsurf/rules/rich",
+      "dot-cursor/rules/rich"
     ],
     "sparse": [
-      ".cursor/rules/gpt",
-      ".windsurf/rules/gpt",
-      ".codex"
+      "dot-cursor/rules/gpt",
+      "dot-windsurf/rules/gpt",
+      "dot-codex"
     ]
   },
   "globalRuntime": {
@@ -22,6 +22,9 @@
       "Select exactly one primary expert unless an explicit router-approved pipeline handoff is required.",
       "State the routing decision with Selected Expert, Reason, and Confidence.",
       "Apply only the selected expert method while it is active.",
+      "Use only Selected Expert, Reason, Confidence, and the active expert's required headings in the visible response unless an explicit handoff is named.",
+      "Do not emit another expert's headings, section labels, or deliverable names while a different expert is active.",
+      "Keep VERIFIED and HYPOTHESIS as inline uncertainty labels inside the selected sections, never as standalone headings.",
       "Follow the selected expert output contract.",
       "Verify logging rules, uncertainty labeling, and the definition of done before finalizing.",
       "If multiple experts could apply, choose the one with the highest impact on correctness, not completeness."
