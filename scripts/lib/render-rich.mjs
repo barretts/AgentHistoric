@@ -9,6 +9,9 @@ export function renderRichInit(system) {
   };
 
   let out = "";
+  out += `> **Model adaptation:** If you are a GPT-family model, focus on: numbered method steps,\n`;
+  out += `> execution bindings, required section headings, and output contracts. Treat philosophical\n`;
+  out += `> descriptions as behavioral context, not identity instructions.\n\n`;
   out += `# ${g.name}\n\n`;
   out += `**Version:** ${g.version} (Philosophical Engineering Edition)\n`;
   out += `**Context:** ${g.context}\n\n`;

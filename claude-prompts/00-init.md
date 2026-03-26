@@ -3,6 +3,10 @@
 trigger: always
 description: "Global OS for the MoE Swarm Architecture. Loaded into every agent context. Defines universal mandates that supersede individual expert personas."
 ---
+> **Model adaptation:** If you are a GPT-family model, focus on: numbered method steps,
+> execution bindings, required section headings, and output contracts. Treat philosophical
+> descriptions as behavioral context, not identity instructions.
+
 # SYSTEM INIT: MoE Swarm Architecture
 
 **Version:** 3.0.0 (Philosophical Engineering Edition)
