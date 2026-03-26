@@ -10,24 +10,40 @@ import { renderAgents, renderSkill } from "./render-codex.mjs";
 
 const HEADER = fileHeader("Generated from prompt-system/");
 
+const STARTUP_BODY =
+  `If you are a GPT-family model, use the gpt/ subfolder for all rules.\n` +
+  `If you prefer sparse, structured rules, use the gpt/ subfolder.\n` +
+  `All other models (Claude, etc.) should use the rich/ subfolder.\n`;
+
 // ── Public Entry Point ──────────────────────────────────────────────
 
 export function generateArtifacts(system) {
   const artifacts = new Map();
 
-  // Rich + md frontmatter → .claude/rules/ and .windsurf/rules/
-  for (const dir of [path.join(".claude", "rules"), path.join(".windsurf", "rules")]) {
-    addSet(artifacts, system, dir, ".md", mdFm, renderRichInit, renderRichRouter, renderRichExpert);
-  }
+  // Rich + md frontmatter → .claude/rules/ (no startup needed, Claude auto-loads)
+  addSet(artifacts, system, path.join(".claude", "rules"), ".md", mdFm, renderRichInit, renderRichRouter, renderRichExpert);
 
-  // Rich + cursor frontmatter → .cursor/rules/
-  addSet(artifacts, system, path.join(".cursor", "rules"), ".mdc", cursorFm, renderRichInit, renderRichRouter, renderRichExpert);
+  // Rich + md frontmatter → .windsurf/rules/rich/
+  addSet(artifacts, system, path.join(".windsurf", "rules", "rich"), ".md", mdFm, renderRichInit, renderRichRouter, renderRichExpert);
 
-  // Sparse + cursor frontmatter → .cursor/rules-gpt/
-  addSet(artifacts, system, path.join(".cursor", "rules-gpt"), ".mdc", cursorFm, renderSparseInit, renderSparseRouter, renderSparseExpert);
+  // Rich + cursor frontmatter → .cursor/rules/rich/
+  addSet(artifacts, system, path.join(".cursor", "rules", "rich"), ".mdc", cursorFm, renderRichInit, renderRichRouter, renderRichExpert);
 
-  // Sparse + md frontmatter → .windsurf/rules-gpt/
-  addSet(artifacts, system, path.join(".windsurf", "rules-gpt"), ".md", mdFm, renderSparseInit, renderSparseRouter, renderSparseExpert);
+  // Startup loader → .cursor/rules/ and .windsurf/rules/
+  artifacts.set(
+    path.join(".cursor", "rules", "00-startup.mdc"),
+    HEADER + cursorFm("startup", system) + STARTUP_BODY
+  );
+  artifacts.set(
+    path.join(".windsurf", "rules", "00-startup.md"),
+    HEADER + mdFm("startup", system) + STARTUP_BODY
+  );
+
+  // Sparse + cursor frontmatter → .cursor/rules/gpt/
+  addSet(artifacts, system, path.join(".cursor", "rules", "gpt"), ".mdc", cursorFm, renderSparseInit, renderSparseRouter, renderSparseExpert);
+
+  // Sparse + md frontmatter → .windsurf/rules/gpt/
+  addSet(artifacts, system, path.join(".windsurf", "rules", "gpt"), ".md", mdFm, renderSparseInit, renderSparseRouter, renderSparseExpert);
 
   // Codex (own format, sparse)
   artifacts.set(path.join(".codex", "AGENTS.md"), renderAgents(system));
@@ -63,6 +79,12 @@ function addSet(artifacts, system, dir, ext, fmFn, initFn, routerFn, expertFn) {
 // ── Frontmatter Factories ───────────────────────────────────────────
 
 function mdFm(kind, _system, expert) {
+  if (kind === "startup") {
+    return renderMdFrontmatter({
+      trigger: "always",
+      description: "Model routing: directs GPT-family models to the gpt/ subfolder."
+    });
+  }
   if (kind === "init") {
     return renderMdFrontmatter({
       trigger: "always",
@@ -82,6 +104,12 @@ function mdFm(kind, _system, expert) {
 }
 
 function cursorFm(kind, _system, expert) {
+  if (kind === "startup") {
+    return renderCursorFrontmatter({
+      description: "Model routing: directs GPT-family models to the gpt/ subfolder. Always active.",
+      alwaysApply: true
+    });
+  }
   if (kind === "init") {
     return renderCursorFrontmatter({
       description: "Global runtime for the philosopher prompt system. Always active.",
