@@ -2,6 +2,7 @@
 
 import path from "node:path";
 import { writeFile } from "node:fs/promises";
+import { loadPromptSystemSpec } from "./lib/prompt-system.mjs";
 import {
   buildWrappedPrompt,
   compareTargets,
@@ -18,6 +19,7 @@ import {
 } from "./lib/regression.mjs";
 
 const workspaceRoot = process.cwd();
+const system = await loadPromptSystemSpec(workspaceRoot);
 const options = parseArgs(process.argv.slice(2));
 const timestamp = createTimestamp();
 const fixtures = await loadRegressionFixtures(workspaceRoot);
@@ -51,7 +53,7 @@ for (const testCase of cases) {
       rawLogPath
     });
 
-    const score = scoreCase(testCase, response);
+    const score = scoreCase(system, testCase, response);
     const result = {
       caseId: testCase.id,
       caseName: testCase.name,

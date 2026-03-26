@@ -6,8 +6,8 @@ This repo maintains a philosopher-based prompt system that can be rendered to bo
 
 - `prompt-system/philosopher-system.json`: canonical source of truth
 - `.cursor/rules/*.mdc`: generated Cursor rules
-- `AGENTS.md`: generated Codex runtime
-- `skills/*/SKILL.md`: generated Codex skills
+- `.codex/AGENTS.md`: generated Codex runtime
+- `.codex/skills/*/SKILL.md`: generated Codex skills
 - `regression/fixtures/cases.json`: machine-readable regression cases
 - `regression/output-schema.json`: enforced structured output contract for Codex runs
 - `scripts/build-prompt-system.mjs`: generator for Cursor and Codex bundles
@@ -23,10 +23,26 @@ npm run build:prompts
 This regenerates:
 
 - `.cursor/rules/`
-- `AGENTS.md`
-- `skills/`
+- `.codex/AGENTS.md`
+- `.codex/skills/`
 
 Make prompt-system changes in the canonical JSON first, then regenerate.
+
+## Fast Verification
+
+Run the deterministic verification layer before any live target regressions:
+
+```bash
+npm run test:unit
+```
+
+This covers:
+
+- generated artifact drift for `.codex/AGENTS.md`, `.cursor/rules/*.mdc`, and `.codex/skills/*/SKILL.md`
+- fixture-driven routing expectations
+- evaluator behavior against canned responses
+
+Use this to prove prompt-layer changes are structurally safe before running expensive Cursor or Codex regressions.
 
 ## Run Regressions
 
@@ -57,7 +73,7 @@ node scripts/run-regressions.mjs --suite smoke --cursor-model gpt-5.4-medium --c
 
 ## What The Runner Checks
 
-For each case and target, the runner records:
+For each case and target, the runner records and evaluates:
 
 - selected expert
 - output sections used
@@ -65,6 +81,9 @@ For each case and target, the runner records:
 - whether persona blending occurred
 - whether the answer stayed in scope
 - a 0/1/2 score
+- explicit evaluator findings such as wrong expert selection, missing sections, invalid handoffs, and blended headings
+
+Structured output validity is still required, but the final score is now backed by an evaluator that checks the actual response body against fixture expectations and expert contracts.
 
 It also produces a parity comparison between Cursor and Codex for the same case.
 
@@ -110,7 +129,8 @@ Then include the case id in `suites.smoke` or `suites.full`.
 ## Current Verification Workflow
 
 1. Regenerate prompt bundles from the canonical spec.
-2. Run the smoke suite first.
-3. Inspect `.logs/regression-summary-*.md`.
-4. Run the full suite.
-5. Compare parity deltas and adjust the prompt layer if drift is systematic.
+2. Run `npm run test:unit`.
+3. Run the smoke suite first.
+4. Inspect `.logs/regression-summary-*.md`.
+5. Run the full suite.
+6. Compare parity deltas and adjust the prompt layer if drift is systematic.

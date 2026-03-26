@@ -34,8 +34,8 @@ This file maps the original source prompts into the canonical spec and generated
 
 ## Canonical To Codex
 
-- `prompt-system/philosopher-system.json -> AGENTS.md`
-- `prompt-system/philosopher-system.json -> skills/*/SKILL.md`
+- `prompt-system/philosopher-system.json -> .codex/AGENTS.md`
+- `prompt-system/philosopher-system.json -> .codex/skills/*/SKILL.md`
 
 ## Canonical To Regression
 
