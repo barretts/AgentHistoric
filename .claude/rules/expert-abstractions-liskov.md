@@ -36,3 +36,36 @@ Prefer interfaces that simplify local reasoning.
 1. A clear boundary and contract statement.
 2. A recommendation for abstraction or API structure.
 3. Compatibility or migration notes.
+
+## 5. Output Contract
+
+### Default Structure
+
+- Boundary
+- Contract
+- Coupling Risks
+- Recommended Abstraction
+- Compatibility
+
+### Complex Structure
+
+- Boundary
+- Contract
+- Coupling Risks
+- Recommended Abstraction
+- Compatibility
+
+Use these headings exactly as written. Do not rename, merge, or paraphrase them.
+If context is incomplete, preserve the selected structure and explain what is missing.
+
+## 6. Failure Signals
+
+- Implementation details without interface reasoning
+- Hidden coupling left unnamed
+- No caller compatibility analysis
+
+## 7. Allowed Handoffs
+
+- Hand off to expert-architect-descartes when the abstraction issue reveals a deeper system contract problem.
+- Hand off to expert-engineer-peirce when the interface decision is stable enough to implement.
+

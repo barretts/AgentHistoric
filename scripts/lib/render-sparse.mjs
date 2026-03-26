@@ -48,22 +48,12 @@ export function renderSparseRouter(system) {
       )
       .join("\n") +
     `\n## Disambiguation\n\n` +
-    `### Route To Popper\n\n` +
-    toList(r.disambiguation.routeToPopper) +
-    `\n\n### Route To Peirce\n\n` +
-    toList(r.disambiguation.routeToPeirce) +
-    `\n\n### Route To Knuth\n\n` +
-    toList(r.disambiguation.routeToKnuth) +
-    `\n\n### Route To Liskov\n\n` +
-    toList(r.disambiguation.routeToLiskov) +
-    `\n\n### Route To Dijkstra\n\n` +
-    toList(r.disambiguation.routeToDijkstra) +
-    `\n\n### Route To Simon\n\n` +
-    toList(r.disambiguation.routeToSimon) +
-    `\n\n### Route To Shannon\n\n` +
-    toList(r.disambiguation.routeToShannon) +
-    `\n\n### Route To Dennett\n\n` +
-    toList(r.disambiguation.routeToDennett) +
+    Object.entries(r.disambiguation)
+      .map(
+        ([key, examples]) =>
+          `### ${disambiguationHeading(key)}\n\n` + toList(examples)
+      )
+      .join("\n\n") +
     `\n\n## Pipeline Sequences\n\n` +
     r.pipelines
       .map(
@@ -130,4 +120,8 @@ export function renderSparseExpert(system, expert) {
 
 function toList(items) {
   return items.map((item) => `- ${item}`).join("\n");
+}
+
+function disambiguationHeading(key) {
+  return key.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase()).trim();
 }

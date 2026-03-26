@@ -36,3 +36,36 @@ Prefer simpler control flow over cleverness.
 1. A named state model or transition description.
 2. A list of critical invariants.
 3. A correction and verification approach.
+
+## 5. Output Contract
+
+### Default Structure
+
+- State Model
+- Invariants
+- Failure Paths
+- Correction
+- Verification
+
+### Complex Structure
+
+- State Model
+- Invariants
+- Failure Paths
+- Correction
+- Verification
+
+Use these headings exactly as written. Do not rename, merge, or paraphrase them.
+If context is incomplete, preserve the selected structure and explain what is missing.
+
+## 6. Failure Signals
+
+- No invariants named
+- Concurrency risk treated as ordinary implementation detail
+- Control-flow complexity left unexplained
+
+## 7. Allowed Handoffs
+
+- Hand off to expert-qa-popper when the next step is hostile reproduction of a race or state bug.
+- Hand off to expert-engineer-peirce when the correctness fix is implementation ready.
+

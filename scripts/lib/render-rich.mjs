@@ -1,4 +1,4 @@
-import { codeFence, humanizeExpertId } from "./prompt-system.mjs";
+import { codeFence, humanizeExpertId, resolveRequiredSections } from "./prompt-system.mjs";
 
 export function renderRichInit(system) {
   const g = system.globalRuntime;
@@ -84,22 +84,12 @@ export function renderRichRouter(system) {
 
   // Disambiguation
   out += `\n### Routing Disambiguation\n\n`;
-  out += `**Route TO Popper** (active failure investigation):\n`;
-  out += r.disambiguation.routeToPopper.map((s) => `- "${s}"`).join("\n");
-  out += `\n\n**Route to Peirce instead** (guidance, not debugging):\n`;
-  out += r.disambiguation.routeToPeirce.map((s) => `- "${s}"`).join("\n");
-  out += `\n\n**Route to Knuth instead** (performance and scaling):\n`;
-  out += r.disambiguation.routeToKnuth.map((s) => `- "${s}"`).join("\n");
-  out += `\n\n**Route to Liskov instead** (interfaces and abstractions):\n`;
-  out += r.disambiguation.routeToLiskov.map((s) => `- "${s}"`).join("\n");
-  out += `\n\n**Route to Dijkstra instead** (state, invariants, concurrency):\n`;
-  out += r.disambiguation.routeToDijkstra.map((s) => `- "${s}"`).join("\n");
-  out += `\n\n**Route to Simon instead** (agent workflows and orchestration):\n`;
-  out += r.disambiguation.routeToSimon.map((s) => `- "${s}"`).join("\n");
-  out += `\n\n**Route to Shannon instead** (context compression and retrieval):\n`;
-  out += r.disambiguation.routeToShannon.map((s) => `- "${s}"`).join("\n");
-  out += `\n\n**Route to Dennett instead** (ideation, not debugging):\n`;
-  out += r.disambiguation.routeToDennett.map((s) => `- "${s}"`).join("\n");
+  for (const [key, examples] of Object.entries(r.disambiguation)) {
+    const heading = key.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase()).trim();
+    out += `**${heading}:**\n`;
+    out += examples.map((s) => `- "${s}"`).join("\n");
+    out += `\n\n`;
+  }
 
   // Pipeline tables
   out += `\n\n## 2. Pipeline Sequences\n\n`;
@@ -144,16 +134,8 @@ export function renderRichExpert(system, expert) {
   // Method
   section++;
   out += `## ${section}. Method\n\n`;
-  if (expert.id === "expert-architect-descartes") {
-    out += `When given a feature request, a visionary draft, or a system design task:\n\n`;
-  } else if (expert.id === "expert-qa-popper") {
-    // No intro text needed
-  } else if (expert.id === "expert-ux-rogers") {
-    out += `Evaluate all drafts and implementations for:\n\n`;
-  } else if (expert.id === "expert-manager-blackmore") {
-    out += `When a bug is fixed, a feature is completed, or an automation is created:\n\n`;
-  } else if (expert.id === "expert-visionary-dennett") {
-    out += `When asked to brainstorm, explore, or solve an ambiguous problem:\n\n`;
+  if (expert.methodIntro) {
+    out += `${expert.methodIntro}\n\n`;
   }
   for (let i = 0; i < expert.methodSteps.length; i++) {
     out += `${i + 1}. **${expert.methodSteps[i]}**\n`;
@@ -220,6 +202,44 @@ export function renderRichExpert(system, expert) {
   out += `## ${section}. Deliverables\n`;
   for (let i = 0; i < expert.deliverables.length; i++) {
     out += `${i + 1}. ${expert.deliverables[i]}\n`;
+  }
+  out += `\n`;
+
+  // Output Contract
+  if (expert.requiredSections) {
+    const { defaultSections, complexSections } = resolveRequiredSections(expert.requiredSections);
+    section++;
+    out += `## ${section}. Output Contract\n\n`;
+    out += `### Default Structure\n\n`;
+    for (const s of defaultSections) {
+      out += `- ${s}\n`;
+    }
+    out += `\n### Complex Structure\n\n`;
+    for (const s of complexSections) {
+      out += `- ${s}\n`;
+    }
+    out += `\nUse these headings exactly as written. Do not rename, merge, or paraphrase them.\n`;
+    out += `If context is incomplete, preserve the selected structure and explain what is missing.\n\n`;
+  }
+
+  // Failure Signals
+  if (expert.failureSignals?.length) {
+    section++;
+    out += `## ${section}. Failure Signals\n\n`;
+    for (const f of expert.failureSignals) {
+      out += `- ${f}\n`;
+    }
+    out += `\n`;
+  }
+
+  // Allowed Handoffs
+  if (expert.handoffRules?.length) {
+    section++;
+    out += `## ${section}. Allowed Handoffs\n\n`;
+    for (const h of expert.handoffRules) {
+      out += `- ${h}\n`;
+    }
+    out += `\n`;
   }
 
   return out;

@@ -1,18 +1,15 @@
 {
   "version": "1.0.0",
   "title": "Dual-Target Philosopher Prompt System",
-  "source": {
-    "notes": "notes.txt"
-  },
   "targets": {
     "rich": [
-      "claude-prompts",
-      ".windsurf/rules",
-      ".cursor/rules"
+      ".claude/rules",
+      ".windsurf/rules/rich",
+      ".cursor/rules/rich"
     ],
     "sparse": [
-      ".cursor/rules-gpt",
-      ".windsurf/rules-gpt",
+      ".cursor/rules/gpt",
+      ".windsurf/rules/gpt",
       ".codex"
     ]
   },
