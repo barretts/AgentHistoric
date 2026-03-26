@@ -1,0 +1,11 @@
+{
+  "name": "dual-target-philosopher-prompt-system",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:prompts": "node scripts/build-prompt-system.mjs",
+    "test:regressions": "node scripts/run-regressions.mjs",
+    "test:regressions:smoke": "node scripts/run-regressions.mjs --suite smoke"
+  }
+}
