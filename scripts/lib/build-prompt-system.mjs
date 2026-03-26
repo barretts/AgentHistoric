@@ -5,6 +5,7 @@ import {
   renderMdFrontmatter
 } from "./prompt-system.mjs";
 import { renderRichInit, renderRichRouter, renderRichExpert } from "./render-rich.mjs";
+import { renderSparseInit, renderSparseRouter, renderSparseExpert } from "./render-sparse.mjs";
 import { renderAgents, renderSkill } from "./render-codex.mjs";
 
 const HEADER = fileHeader("Generated from prompt-system/");
@@ -14,13 +15,19 @@ const HEADER = fileHeader("Generated from prompt-system/");
 export function generateArtifacts(system) {
   const artifacts = new Map();
 
-  // Rich + md frontmatter → claude-prompts/ and .windsurf/rules/
-  for (const dir of ["claude-prompts", path.join(".windsurf", "rules")]) {
+  // Rich + md frontmatter → .claude/rules/ and .windsurf/rules/
+  for (const dir of [path.join(".claude", "rules"), path.join(".windsurf", "rules")]) {
     addSet(artifacts, system, dir, ".md", mdFm, renderRichInit, renderRichRouter, renderRichExpert);
   }
 
   // Rich + cursor frontmatter → .cursor/rules/
   addSet(artifacts, system, path.join(".cursor", "rules"), ".mdc", cursorFm, renderRichInit, renderRichRouter, renderRichExpert);
+
+  // Sparse + cursor frontmatter → .cursor/rules-gpt/
+  addSet(artifacts, system, path.join(".cursor", "rules-gpt"), ".mdc", cursorFm, renderSparseInit, renderSparseRouter, renderSparseExpert);
+
+  // Sparse + md frontmatter → .windsurf/rules-gpt/
+  addSet(artifacts, system, path.join(".windsurf", "rules-gpt"), ".md", mdFm, renderSparseInit, renderSparseRouter, renderSparseExpert);
 
   // Codex (own format, sparse)
   artifacts.set(path.join(".codex", "AGENTS.md"), renderAgents(system));

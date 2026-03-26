@@ -1,18 +1,99 @@
-# Dual-Target Philosopher Prompt System
+# Philosopher Prompt System
 
-This repo maintains a philosopher-based prompt system that can be rendered to both Cursor and Codex targets from one canonical source, then regression-tested against both runtimes.
+A Mixture-of-Experts (MoE) prompt system for AI coding assistants. Six philosopher-inspired expert personas are routed by a single orchestrator, generating rules for **Claude**, **Cursor**, **Windsurf**, and **Codex** from one canonical source.
+
+## Experts
+
+| Expert | Role | Philosophy |
+|--------|------|------------|
+| **Quinn** | Implementation & Execution | Pragmatism, Cartesian Doubt, Stoic Discipline |
+| **Descartes** | Architecture & System Design | Methodological Skepticism |
+| **Popper** | QA & Falsification | Critical Rationalism |
+| **Rogers** | UX & Accessibility | User-Centered Design |
+| **Blackmore** | Automation & Patterns | Memetics, DRY Principle |
+| **Dennett** | Ideation & Exploration | Cognitive Science, Design Space |
+
+## Quick Start
+
+```bash
+# 1. Generate all target artifacts
+npm run build:prompts
+
+# 2. Install rules into your editors (auto-detects installed editors)
+bash install.sh
+
+# 3. Or install for specific editors
+bash install.sh --cursor --windsurf
+
+# 4. Use GPT-optimized sparse rules instead of rich
+bash install.sh --gpt
+```
 
 ## Layout
 
-- `prompt-system/philosopher-system.json`: canonical source of truth
-- `.cursor/rules/*.mdc`: generated Cursor rules
-- `.codex/AGENTS.md`: generated Codex runtime
-- `.codex/skills/*/SKILL.md`: generated Codex skills
-- `regression/fixtures/cases.json`: machine-readable regression cases
-- `regression/output-schema.json`: enforced structured output contract for Codex runs
-- `scripts/build-prompt-system.mjs`: generator for Cursor and Codex bundles
-- `scripts/run-regressions.mjs`: shared regression runner
-- `.logs/`: raw run logs and generated summaries
+```
+prompt-system/
+  system.json              # Global runtime, constraints, logging
+  router.json              # Routing heuristics, pipelines, disambiguation
+  experts/*.json           # One file per expert persona
+
+scripts/
+  build-prompt-system.mjs  # Entry point: node scripts/build-prompt-system.mjs
+  lib/
+    prompt-system.mjs      # Loader, frontmatter, helpers
+    build-prompt-system.mjs # Artifact generator + frontmatter factories
+    render-rich.mjs        # Rich renderers (Claude-optimized)
+    render-sparse.mjs      # Sparse renderers (GPT-optimized)
+    render-codex.mjs       # Codex renderers (AGENTS.md + SKILL.md)
+
+Generated output:
+  .claude/rules/           # Rich rules for Claude Code
+  .windsurf/rules/         # Rich rules for Windsurf
+  .cursor/rules/           # Rich rules for Cursor (.mdc)
+  .windsurf/rules-gpt/     # Sparse rules for GPT-exclusive Windsurf users
+  .cursor/rules-gpt/       # Sparse rules for GPT-exclusive Cursor users
+  .codex/                  # Sparse AGENTS.md + skills/
+
+regression/
+  fixtures/cases.json      # Regression test cases
+  output-schema.json       # Structured output contract
+```
+
+## Install
+
+```bash
+bash install.sh [options]
+```
+
+| Flag | Effect |
+|------|--------|
+| `--claude` | Install to `~/.claude/rules/` |
+| `--cursor` | Install to `~/.cursor/rules/` |
+| `--windsurf` | Install to `~/.windsurf/rules/` |
+| `--codex` | Install to `~/.codex/` |
+| `--all` | All editors |
+| `--gpt` | Use sparse/GPT-optimized rules for Cursor and Windsurf |
+| `--list` | Show installed files without modifying anything |
+| *(no flags)* | Auto-detect installed editors |
+
+### Post-Install IDE Configuration
+
+**Cursor:** Open Settings > Rules for AI. Ensure `00-init` is the **first rule** with `alwaysApply: true`, followed by `01-router`. Expert rules are auto-attached by description match.
+
+**Windsurf:** Open Customizations > Rules. `00-init.md` and `01-router.md` use `trigger: always` and load on every request. Expert rules use `trigger: model_decision` and are invoked automatically when relevant.
+
+**Claude Code:** Rules auto-load from `~/.claude/rules/`. No configuration needed.
+
+**Codex:** `AGENTS.md` and `skills/` auto-load from `~/.codex/`. No configuration needed.
+
+## Rich vs Sparse
+
+| Style | Targets | Description |
+|-------|---------|-------------|
+| **Rich** | Claude, Cursor, Windsurf | Full narrative, philosophy, voice. Includes a GPT adaptation preamble so GPT models can still follow them. |
+| **Sparse** | Codex, `rules-gpt/` | Numbered steps, execution bindings, output contracts. Optimized for models that prefer explicit structure. |
+
+Rich rules are the default. Use `bash install.sh --gpt` if you exclusively use GPT models and want the sparse variant.
 
 ## Generate Targets
 
@@ -20,117 +101,60 @@ This repo maintains a philosopher-based prompt system that can be rendered to bo
 npm run build:prompts
 ```
 
-This regenerates:
+Regenerates all six output directories from the canonical JSON in `prompt-system/`.
 
-- `.cursor/rules/`
-- `.codex/AGENTS.md`
-- `.codex/skills/`
+## Testing
 
-Make prompt-system changes in the canonical JSON first, then regenerate.
-
-## Fast Verification
-
-Run the deterministic verification layer before any live target regressions:
+### Unit Tests
 
 ```bash
 npm run test:unit
 ```
 
-This covers:
+Covers artifact drift detection, routing expectations, and evaluator behavior.
 
-- generated artifact drift for `.codex/AGENTS.md`, `.cursor/rules/*.mdc`, and `.codex/skills/*/SKILL.md`
-- fixture-driven routing expectations
-- evaluator behavior against canned responses
-
-Use this to prove prompt-layer changes are structurally safe before running expensive Cursor or Codex regressions.
-
-## Run Regressions
-
-Smoke suite:
+### Regression Suites
 
 ```bash
-npm run test:regressions:smoke
+npm run test:regressions:smoke   # Quick smoke suite
+npm run test:regressions         # Full suite
 ```
 
-Full suite:
-
-```bash
-npm run test:regressions
-```
-
-Target filtering:
+Target filtering and model overrides:
 
 ```bash
 node scripts/run-regressions.mjs --suite smoke --targets cursor
 node scripts/run-regressions.mjs --suite full --targets codex
+node scripts/run-regressions.mjs --suite smoke --cursor-model gpt-5.4-medium
 ```
 
-Model overrides:
+### Scores
 
-```bash
-node scripts/run-regressions.mjs --suite smoke --cursor-model gpt-5.4-medium --codex-model gpt-5.3-codex-low
-```
+- **2:** Correct expert, correct structure, correct depth
+- **1:** Mostly correct, minor drift
+- **0:** Wrong expert or wrong structure
 
-## What The Runner Checks
+## Adding a New Expert
 
-For each case and target, the runner records and evaluates:
+1. Create `prompt-system/experts/<expert-id>.json`.
+2. Register the expert in `prompt-system/system.json`.
+3. Run `npm run build:prompts`.
+4. Add regression cases to `regression/fixtures/cases.json`.
+5. Run `npm run test:unit` and the smoke suite.
 
-- selected expert
-- output sections used
-- confidence or uncertainty labeling
-- whether persona blending occurred
-- whether the answer stayed in scope
-- a 0/1/2 score
-- explicit evaluator findings such as wrong expert selection, missing sections, invalid handoffs, and blended headings
+## Adding a Regression Case
 
-Structured output validity is still required, but the final score is now backed by an evaluator that checks the actual response body against fixture expectations and expert contracts.
+Add an object to `regression/fixtures/cases.json` with `id`, `category`, `name`, `targets`, `prompt`, `expectedPrimaryExpert`, `expectedSections`, `allowedHandoffs`, and `forbiddenBehaviors`. Include the case id in `suites.smoke` or `suites.full`.
 
-It also produces a parity comparison between Cursor and Codex for the same case.
+## Verification Workflow
 
-## Output
-
-Each run writes:
-
-- raw per-case logs to `.logs/regression-*.log`
-- a machine-readable summary to `.logs/regression-summary-*.json`
-- a human-readable summary to `.logs/regression-summary-*.md`
-
-## Interpreting Scores
-
-- `2`: correct expert, correct structure, correct depth
-- `1`: mostly correct but drifted
-- `0`: wrong expert or wrong structure
-
-Failures should generally be fixed in the prompt layer first, not by weakening the regression expectations.
-
-## Adding A New Expert
-
-1. Add the expert to `prompt-system/philosopher-system.json`.
-2. Regenerate the target artifacts with `npm run build:prompts`.
-3. Add or update regression cases in `regression/fixtures/cases.json`.
-4. Run at least the smoke suite.
-
-## Adding A New Regression Case
-
-Add a new object to `regression/fixtures/cases.json` with:
-
-- `id`
-- `category`
-- `name`
-- `targets`
-- `prompt`
-- `expectedPrimaryExpert`
-- `expectedSections`
-- `allowedHandoffs`
-- `forbiddenBehaviors`
-
-Then include the case id in `suites.smoke` or `suites.full`.
-
-## Current Verification Workflow
-
-1. Regenerate prompt bundles from the canonical spec.
-2. Run `npm run test:unit`.
-3. Run the smoke suite first.
-4. Inspect `.logs/regression-summary-*.md`.
-5. Run the full suite.
+1. `npm run build:prompts`
+2. `npm run test:unit`
+3. `npm run test:regressions:smoke`
+4. Inspect `.logs/regression-summary-*.md`
+5. `npm run test:regressions`
 6. Compare parity deltas and adjust the prompt layer if drift is systematic.
+
+## License
+
+MIT
