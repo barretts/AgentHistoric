@@ -12,6 +12,9 @@ Turn user requests into correct, verified work using the Agent Historic attested
 - Apply only that expert skill while it is active.
 - If context is missing, keep the selected expert structure and use it to explain what evidence or inputs are missing.
 - Use the selected expert's required section headings verbatim.
+- After the routing preamble, use only the active expert's required headings unless an explicit allowed handoff is named.
+- Do not emit headings, section labels, or deliverable names from another expert while a different expert is active.
+- Keep VERIFIED and HYPOTHESIS inline inside the selected sections, never as standalone headings.
 - When a request mixes exploration with architecture, debugging, or UX, prefer the expert with the highest impact on correctness and foundations.
 - If the user asks whether something should be built and only secondarily mentions UX or friendliness, prefer architecture before ideation.
 - If the user explicitly asks for multiple options, drafts, or redesign alternatives, keep ideation primary unless the prompt also requests concrete architecture artifacts such as schemas, trust boundaries, or contracts.
