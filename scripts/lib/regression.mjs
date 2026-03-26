@@ -84,7 +84,7 @@ export function buildWrappedPrompt(testCase) {
     "Answer the user request directly, but return JSON only.",
     "The JSON object must contain exactly these keys:",
     "routingDecision, activeExpert, handoffs, outputSections, confidenceLabeled, personaBlend, domainStayedInScope, summary, response.",
-    "Use canonical expert ids like expert-engineer-quinn, not skill paths.",
+    "Use canonical expert ids like expert-engineer-peirce, not skill paths.",
     "Include routingDecision.domain as a short domain label.",
     "Set routingDecision.selectedExpert to the primary expert you chose.",
     "Set activeExpert to the expert currently producing the answer.",
@@ -197,8 +197,8 @@ export function routePrompt(system, prompt) {
     return "expert-qa-popper";
   }
 
-  if (matchesAny(text, system.router.disambiguation.routeToQuinn)) {
-    return "expert-engineer-quinn";
+  if (matchesAny(text, system.router.disambiguation.routeToPeirce)) {
+    return "expert-engineer-peirce";
   }
 
   if (matchesAny(text, system.router.disambiguation.routeToDennett)) {
@@ -244,7 +244,7 @@ export function routePrompt(system, prompt) {
     }
   }
 
-  return "expert-engineer-quinn";
+  return "expert-engineer-peirce";
 }
 
 export function evaluateResponse(system, testCase, response) {

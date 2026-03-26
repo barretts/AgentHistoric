@@ -13,7 +13,7 @@
       "domain": "Massive Codebase Sweeps",
       "experts": [
         "expert-architect-descartes",
-        "expert-engineer-quinn",
+        "expert-engineer-peirce",
         "expert-qa-popper",
         "expert-manager-blackmore"
       ],
@@ -60,7 +60,7 @@
       "priority": 4,
       "domain": "Pragmatic Implementation",
       "experts": [
-        "expert-engineer-quinn"
+        "expert-engineer-peirce"
       ],
       "signals": [
         "build",
@@ -75,7 +75,7 @@
       "domain": "Debug Firefighting & Test Failures",
       "experts": [
         "expert-qa-popper",
-        "expert-engineer-quinn",
+        "expert-engineer-peirce",
         "expert-manager-blackmore"
       ],
       "signals": [
@@ -104,7 +104,7 @@
       "domain": "Security & 3PP Vulnerabilities",
       "experts": [
         "expert-qa-popper",
-        "expert-engineer-quinn"
+        "expert-engineer-peirce"
       ],
       "signals": [
         "audit",
@@ -136,7 +136,7 @@
       "build error in payment service",
       "help debug this test failure"
     ],
-    "routeToQuinn": [
+    "routeToPeirce": [
       "how do I write a test for",
       "refactor the test suite",
       "how should I structure tests"
@@ -150,7 +150,7 @@
       "name": "Debug Firefighting",
       "steps": [
         { "expert": "expert-qa-popper", "task": "Execute tests with Non-Destructive Logging. Capture FULL output. Parse failures." },
-        { "expert": "expert-engineer-quinn", "task": "Read source files from errors. Match against known patterns. Propose fix." },
+        { "expert": "expert-engineer-peirce", "task": "Read source files from errors. Match against known patterns. Propose fix." },
         { "expert": "expert-qa-popper", "task": "Apply fix. Re-run tests. Verify resolution." },
         { "expert": "expert-manager-blackmore", "task": "Extract pattern if novel. Update project rules." }
       ]
@@ -161,14 +161,14 @@
         { "expert": "expert-visionary-dennett", "task": "Generate 3 competing architectural drafts." },
         { "expert": "expert-ux-rogers", "task": "Review drafts for cognitive load and friction. Veto hostile UI." },
         { "expert": "expert-architect-descartes", "task": "Strip assumptions. Define bedrock data layer, types, schemas." },
-        { "expert": "expert-engineer-quinn", "task": "Implement pragmatically. Code + tests + verified." }
+        { "expert": "expert-engineer-peirce", "task": "Implement pragmatically. Code + tests + verified." }
       ]
     },
     {
       "name": "Bug Triage & Resolution",
       "steps": [
         { "expert": "expert-qa-popper", "task": "Replicate the failure. Hunt the edge case. Use Non-Destructive Logging." },
-        { "expert": "expert-engineer-quinn", "task": "Write the patch. Pass the tests." },
+        { "expert": "expert-engineer-peirce", "task": "Write the patch. Pass the tests." },
         { "expert": "expert-manager-blackmore", "task": "Extract root cause pattern. Update rules to prevent recurrence." }
       ]
     },
@@ -176,7 +176,7 @@
       "name": "Automation Generation",
       "steps": [
         { "expert": "expert-architect-descartes", "task": "Deconstruct the task. Deterministic script (AST/Regex) or semantic sub-agent? Output blueprint." },
-        { "expert": "expert-engineer-quinn", "task": "Implement the blueprint with strict engineering constraints." },
+        { "expert": "expert-engineer-peirce", "task": "Implement the blueprint with strict engineering constraints." },
         { "expert": "expert-qa-popper", "task": "Run automation against a known failure point. Prove it works." },
         { "expert": "expert-manager-blackmore", "task": "Register the automation in project rules." }
       ]

@@ -34,7 +34,7 @@
         "codex"
       ],
       "prompt": "Refactor this function to remove duplication and add tests.",
-      "expectedPrimaryExpert": "expert-engineer-quinn",
+      "expectedPrimaryExpert": "expert-engineer-peirce",
       "expectedSections": [
         "Answer"
       ],
@@ -85,7 +85,7 @@
         "Verification"
       ],
       "allowedHandoffs": [
-        "expert-engineer-quinn"
+        "expert-engineer-peirce"
       ],
       "forbiddenBehaviors": [
         "Generic advice",
@@ -163,13 +163,13 @@
     {
       "id": "Q1",
       "category": "expert",
-      "name": "Quinn behavior",
+      "name": "Peirce behavior",
       "targets": [
         "cursor",
         "codex"
       ],
       "prompt": "Implement this change.",
-      "expectedPrimaryExpert": "expert-engineer-quinn",
+      "expectedPrimaryExpert": "expert-engineer-peirce",
       "expectedSections": [
         "Answer"
       ],
@@ -301,7 +301,7 @@
         "codex"
       ],
       "prompt": "Give me a fast fix, but also explain every assumption and all edge cases.",
-      "expectedPrimaryExpert": "expert-engineer-quinn",
+      "expectedPrimaryExpert": "expert-engineer-peirce",
       "expectedSections": [
         "Answer"
       ],

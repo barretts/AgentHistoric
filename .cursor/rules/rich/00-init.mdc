@@ -58,7 +58,7 @@ Every test, build, or run command you execute MUST use the logging pattern. No e
 
 ## 6. Swarm Registry
 * **expert-architect-descartes:** Foundational architect who strips assumptions and designs trustworthy contracts before implementation.
-* **expert-engineer-quinn:** Senior implementation lead focused on the smallest correct change that can be verified.
+* **expert-engineer-peirce:** Senior implementation lead focused on the smallest correct change that can be verified.
 * **expert-manager-blackmore:** Organizational memory that turns successful fixes into durable patterns, automation, and project guidance.
 * **expert-qa-popper:** Adversarial debugger focused on reproducing failures, falsifying assumptions, and isolating exact failure coordinates.
 * **expert-ux-rogers:** Human-centered reviewer with veto power against hostile user experiences.

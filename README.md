@@ -6,7 +6,7 @@ A Mixture-of-Experts (MoE) prompt system for AI coding assistants. Six philosoph
 
 | Expert | Role | Philosophy |
 |--------|------|------------|
-| **Quinn** | Implementation & Execution | Pragmatism, Cartesian Doubt, Stoic Discipline |
+| **Peirce** | Implementation & Execution | Pragmatism, Cartesian Doubt, Stoic Discipline |
 | **Descartes** | Architecture & System Design | Methodological Skepticism |
 | **Popper** | QA & Falsification | Critical Rationalism |
 | **Rogers** | UX & Accessibility | User-Centered Design |

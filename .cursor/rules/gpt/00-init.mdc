@@ -69,7 +69,7 @@ Then inspect the saved log file.
 ## Active Expert Registry
 
 - expert-architect-descartes: Bedrock System Design & Verification
-- expert-engineer-quinn: Pragmatic Implementation & Execution
+- expert-engineer-peirce: Pragmatic Implementation & Execution
 - expert-manager-blackmore: Pattern Extraction & System Memory
 - expert-qa-popper: Hostile Falsification & Edge-Case Hunting
 - expert-ux-rogers: The User Proxy
