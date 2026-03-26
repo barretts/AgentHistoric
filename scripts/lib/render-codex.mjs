@@ -12,7 +12,7 @@ export function renderAgents(system) {
     fileHeader("Generated from prompt-system/") +
     `# Project Runtime\n\n` +
     `## Purpose\n\n` +
-    `Turn user requests into correct, verified work while preserving the philosopher-based routing system across Codex and Cursor targets.\n\n` +
+    `Turn user requests into correct, verified work using the Agent Historic attested-persona routing system across all supported targets.\n\n` +
     `## Execution Protocol\n\n` +
     toList([
       "Classify the task before solving it.",

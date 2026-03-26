@@ -1,17 +1,26 @@
-# Philosopher Prompt System
+# Agent Historic
 
-A Mixture-of-Experts (MoE) prompt system for AI coding assistants. Six philosopher-inspired expert personas are routed by a single orchestrator, generating rules for **Claude**, **Cursor**, **Windsurf**, and **Codex** from one canonical source.
+> **Translating the world's most documented lives into high-fidelity agentic personas.**
 
-## Experts
+Agent Historic is an open library of persona architectures for Large Language Models. It bridges primary historical records and modern prompt engineering by distilling the reasoning, rhetoric, and decision-making frameworks of well-attested figures into actionable system prompts.
 
-| Expert | Role | Philosophy |
-|--------|------|------------|
+A Mixture-of-Experts (MoE) routing layer assigns the right persona to every request, generating rules for **Claude**, **Cursor**, **Windsurf**, and **Codex** from one canonical source.
+
+## Attested Personas
+
+| Persona | Role | Grounding |
+|---------|------|-----------|
 | **Peirce** | Implementation & Execution | Pragmatism, Cartesian Doubt, Stoic Discipline |
 | **Descartes** | Architecture & System Design | Methodological Skepticism |
 | **Popper** | QA & Falsification | Critical Rationalism |
 | **Rogers** | UX & Accessibility | User-Centered Design |
 | **Blackmore** | Automation & Patterns | Memetics, DRY Principle |
 | **Dennett** | Ideation & Exploration | Cognitive Science, Design Space |
+| **Liskov** | Interfaces & Abstractions | Substitution Principle, Contract Design |
+| **Dijkstra** | State & Formal Reasoning | Structured Programming, Invariants |
+| **Knuth** | Performance & Scaling | Algorithmic Analysis, Literate Programming |
+| **Shannon** | Context & Information Quality | Information Theory, Signal-to-Noise |
+| **Simon** | Agent Orchestration | Bounded Rationality, Satisficing |
 
 ## Quick Start
 

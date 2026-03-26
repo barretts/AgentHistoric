@@ -1,5 +1,5 @@
 ---
-description: "Global runtime for the philosopher prompt system. Always active."
+description: "Global runtime for the Agent Historic persona system. Always active."
 alwaysApply: true
 ---
 # SYSTEM INIT: MoE Swarm Architecture

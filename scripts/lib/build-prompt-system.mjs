@@ -118,13 +118,13 @@ function cursorFm(kind, _system, expert) {
   }
   if (kind === "init") {
     return renderCursorFrontmatter({
-      description: "Global runtime for the philosopher prompt system. Always active.",
+      description: "Global runtime for the Agent Historic persona system. Always active.",
       alwaysApply: true
     });
   }
   if (kind === "router") {
     return renderCursorFrontmatter({
-      description: "MoE router for selecting one primary philosopher expert or an explicit pipeline.",
+      description: "MoE router for selecting one primary attested persona or an explicit pipeline.",
       alwaysApply: true
     });
   }

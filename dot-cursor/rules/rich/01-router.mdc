@@ -1,5 +1,5 @@
 ---
-description: "MoE router for selecting one primary philosopher expert or an explicit pipeline."
+description: "MoE router for selecting one primary attested persona or an explicit pipeline."
 alwaysApply: true
 ---
 # The MoE Router
