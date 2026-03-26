@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import path from "node:path";
+import { resolveRequiredSections } from "./prompt-system.mjs";
 
 export async function loadRegressionFixtures(workspaceRoot) {
   const raw = await readFile(
@@ -189,52 +190,120 @@ export function parseCodexJsonlResult(rawText) {
   return JSON.parse(agentMessage.item.text);
 }
 
-export function scoreCase(testCase, response) {
+export function routePrompt(system, prompt) {
+  const text = normalizeText(prompt);
+
+  if (matchesAny(text, system.router.disambiguation.routeToPopper)) {
+    return "expert-qa-popper";
+  }
+
+  if (matchesAny(text, system.router.disambiguation.routeToQuinn)) {
+    return "expert-engineer-quinn";
+  }
+
+  if (matchesAny(text, system.router.disambiguation.routeToDennett)) {
+    return "expert-visionary-dennett";
+  }
+
+  if (
+    text.includes("feels confusing")
+    || text.includes("improve the flow")
+    || text.includes("users keep misclicking")
+    || text.includes("modal")
+  ) {
+    return "expert-ux-rogers";
+  }
+
+  if (text.includes("three different ways")) {
+    return "expert-visionary-dennett";
+  }
+
+  if (text.includes("reusable pattern") || text.includes("keep hitting the same bug")) {
+    return "expert-manager-blackmore";
+  }
+
+  if (text.includes("capture the lesson")) {
+    return "expert-manager-blackmore";
+  }
+
+  if (text.includes("should we build this")) {
+    return "expert-architect-descartes";
+  }
+
+  if (text.includes("design the system")) {
+    return "expert-architect-descartes";
+  }
+
+  const orderedHeuristics = [...system.router.routingHeuristics].sort(
+    (left, right) => left.priority - right.priority
+  );
+
+  for (const heuristic of orderedHeuristics) {
+    if (matchesAny(text, heuristic.signals)) {
+      return heuristic.experts[0];
+    }
+  }
+
+  return "expert-engineer-quinn";
+}
+
+export function evaluateResponse(system, testCase, response) {
+  const responseText = String(response.response || "").trim();
+  const explicitSelection = extractSelection(responseText);
   const selectedExpert = normalizeExpertId(
-    response.routingDecision?.selectedExpert || response.activeExpert || ""
+    explicitSelection
+      || response.routingDecision?.selectedExpert
+      || response.activeExpert
+      || ""
   );
-  const sectionSet = new Set((response.outputSections || []).map(normalizeText));
-  const expectedSections = (testCase.expectedSections || []).map(normalizeText);
+  const expectedSections = resolveExpectedSections(system, testCase);
+  const outputSections = (response.outputSections || []).map(normalizeText);
   const missingSections = expectedSections.filter(
-    (section) => !sectionSet.has(section)
+    (section) => !sectionPresent(section, responseText, outputSections)
   );
-  const unexpectedBlend = Boolean(response.personaBlend);
-  const wrongExpert = selectedExpert !== testCase.expectedPrimaryExpert;
+  const confidenceLabeled =
+    Boolean(response.confidenceLabeled)
+    || /(\bVERIFIED\b|\bHYPOTHESIS\b|\bconfidence\b)/i.test(responseText);
+  const unexpectedBlend =
+    Boolean(response.personaBlend)
+    || hasForbiddenExpertHeadings(system, testCase, responseText);
   const stayedInScope = Boolean(response.domainStayedInScope);
-  const confidenceLabeled = Boolean(response.confidenceLabeled);
+  const invalidHandoffs = (response.handoffs || []).filter(
+    (handoff) => !testCase.allowedHandoffs.includes(normalizeExpertId(handoff))
+  );
+  const findings = [];
 
-  let score = 2;
-  const failures = [];
-
-  if (wrongExpert || missingSections.length > 0) {
-    score = 0;
-  }
-
-  if (!stayedInScope || unexpectedBlend || !confidenceLabeled) {
-    score = Math.min(score, 1);
-  }
-
-  if (wrongExpert) {
-    failures.push(
-      `Expected expert ${testCase.expectedPrimaryExpert} but got ${selectedExpert || "none"}.`
+  if (!selectedExpert) {
+    findings.push("Missing explicit selected expert.");
+  } else if (selectedExpert !== normalizeExpertId(testCase.expectedPrimaryExpert)) {
+    findings.push(
+      `Expected expert ${testCase.expectedPrimaryExpert} but got ${selectedExpert}.`
     );
   }
 
   if (missingSections.length > 0) {
-    failures.push(`Missing sections: ${missingSections.join(", ")}.`);
+    findings.push(`Missing sections: ${missingSections.join(", ")}.`);
   }
 
   if (unexpectedBlend) {
-    failures.push("Undeclared persona blending detected.");
+    findings.push("Undeclared persona blending detected.");
   }
 
   if (!stayedInScope) {
-    failures.push("Response drifted outside the requested domain.");
+    findings.push("Response drifted outside the requested domain.");
   }
 
   if (!confidenceLabeled) {
-    failures.push("Confidence or uncertainty labeling missing.");
+    findings.push("Confidence or uncertainty labeling missing.");
   }
+
+  if (invalidHandoffs.length > 0) {
+    findings.push(`Invalid handoffs: ${invalidHandoffs.join(", ")}.`);
+  }
+
+  const routingMatch =
+    selectedExpert === normalizeExpertId(testCase.expectedPrimaryExpert);
+  const score = findings.length === 0 ? 2 : routingMatch ? 1 : 0;
 
   return {
     score,
@@ -242,9 +311,17 @@ export function scoreCase(testCase, response) {
     formatCompliance: missingSections.length === 0,
     verificationQuality: confidenceLabeled,
     confidenceLabeling: confidenceLabeled,
-    notableDrift: failures,
-    missingSections
+    notableDrift: findings,
+    missingSections,
+    routingMatch,
+    invalidHandoffs,
+    stayedInScope,
+    personaBlend: unexpectedBlend
   };
+}
+
+export function scoreCase(system, testCase, response) {
+  return evaluateResponse(system, testCase, response);
 }
 
 export function compareTargets(resultsByTarget) {
@@ -319,10 +396,89 @@ function normalizeText(value) {
   return String(value).trim().toLowerCase();
 }
 
+function matchesAny(text, candidates) {
+  return candidates.some((candidate) => text.includes(normalizeText(candidate)));
+}
+
+function resolveExpectedSections(system, testCase) {
+  if (Array.isArray(testCase.expectedSections) && testCase.expectedSections.length > 0) {
+    return testCase.expectedSections.map(normalizeText);
+  }
+
+  const expert = system.experts.find(
+    (item) => normalizeExpertId(item.id) === normalizeExpertId(testCase.expectedPrimaryExpert)
+  );
+
+  if (!expert) {
+    return [];
+  }
+
+  const { defaultSections } = resolveRequiredSections(expert.requiredSections || {});
+  return defaultSections.map(normalizeText);
+}
+
+function sectionPresent(section, responseText, outputSections) {
+  if (section === "answer") {
+    return outputSections.includes("answer") || Boolean(responseText.trim());
+  }
+
+  if (outputSections.includes(section)) {
+    return true;
+  }
+
+  const pattern = new RegExp(
+    `^\\s*(?:#+\\s*)?${escapeRegex(section)}(?=\\s*:|\\s*$)`,
+    "im"
+  );
+  return pattern.test(responseText);
+}
+
+function hasForbiddenExpertHeadings(system, testCase, responseText) {
+  const allowedExperts = new Set(
+    [testCase.expectedPrimaryExpert, ...(testCase.allowedHandoffs || [])].map(normalizeExpertId)
+  );
+
+  return system.experts.some((expert) => {
+    if (allowedExperts.has(normalizeExpertId(expert.id))) {
+      return false;
+    }
+
+    const { defaultSections, complexSections } = resolveRequiredSections(
+      expert.requiredSections || {}
+    );
+    const forbiddenSections = [...new Set([...defaultSections, ...complexSections])]
+      .map(normalizeText)
+      .filter((section) => section !== "answer");
+
+    return forbiddenSections.some((section) => sectionPresent(section, responseText, []));
+  });
+}
+
+function extractSelection(responseText) {
+  const patterns = [
+    /^\s*Selected Expert\s*:\s*(.+?)\s*$/im,
+    /^\s*Selected Skill\s*:\s*(.+?)\s*$/im,
+    /^\s*-\s*Selected Expert\s*:\s*(.+?)\s*$/im
+  ];
+
+  for (const pattern of patterns) {
+    const match = pattern.exec(responseText);
+    if (match) {
+      return match[1].trim();
+    }
+  }
+
+  return null;
+}
+
 function sameNormalizedSectionSet(left, right) {
   const leftSet = [...new Set((left || []).map(normalizeText))].sort();
   const rightSet = [...new Set((right || []).map(normalizeText))].sort();
   return JSON.stringify(leftSet) === JSON.stringify(rightSet);
+}
+
+function escapeRegex(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function normalizeExpertId(value) {

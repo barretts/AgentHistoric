@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:unit": "node --test scripts/lib/*.test.mjs",
     "build:prompts": "node scripts/build-prompt-system.mjs",
     "test:regressions": "node scripts/run-regressions.mjs",
     "test:regressions:smoke": "node scripts/run-regressions.mjs --suite smoke"
