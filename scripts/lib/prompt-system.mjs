@@ -1,13 +1,24 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 export async function loadPromptSystemSpec(workspaceRoot) {
-  const specPath = path.join(
-    workspaceRoot,
-    "prompt-system",
-    "philosopher-system.json"
+  const baseDir = path.join(workspaceRoot, "prompt-system");
+
+  const system = await loadJson(path.join(baseDir, "system.json"));
+  system.router = await loadJson(path.join(baseDir, "router.json"));
+
+  const expertsDir = path.join(baseDir, "experts");
+  const entries = await readdir(expertsDir);
+  const expertFiles = entries.filter((f) => f.endsWith(".json")).sort();
+  system.experts = await Promise.all(
+    expertFiles.map((f) => loadJson(path.join(expertsDir, f)))
   );
-  const raw = await readFile(specPath, "utf8");
+
+  return system;
+}
+
+async function loadJson(filePath) {
+  const raw = await readFile(filePath, "utf8");
   return JSON.parse(raw);
 }
 
@@ -33,6 +44,16 @@ export function renderCursorFrontmatter({ description, alwaysApply = true }) {
     "---",
     `description: "${escapeDoubleQuotes(description)}"`,
     `alwaysApply: ${alwaysApply ? "true" : "false"}`,
+    "---",
+    ""
+  ].join("\n");
+}
+
+export function renderMdFrontmatter({ trigger, description }) {
+  return [
+    "---",
+    `trigger: ${trigger}`,
+    `description: "${escapeDoubleQuotes(description)}"`,
     "---",
     ""
   ].join("\n");

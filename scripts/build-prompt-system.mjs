@@ -10,10 +10,7 @@ const spec = await loadPromptSystemSpec(workspaceRoot);
 await writeGeneratedArtifacts();
 
 console.log(
-  `Generated Cursor and Codex prompt bundles from ${path.join(
-    "prompt-system",
-    "philosopher-system.json"
-  )}`
+  `Generated prompt bundles (rich + sparse) from ${path.join("prompt-system", "/")}`
 );
 
 async function writeGeneratedArtifacts() {

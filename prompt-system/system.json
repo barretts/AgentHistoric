@@ -1,0 +1,109 @@
+{
+  "version": "1.0.0",
+  "title": "Dual-Target Philosopher Prompt System",
+  "source": {
+    "notes": "notes.txt"
+  },
+  "targets": {
+    "rich": [
+      "claude-prompts",
+      ".windsurf/rules",
+      ".cursor/rules"
+    ],
+    "sparse": [
+      ".cursor/rules-gpt",
+      ".windsurf/rules-gpt",
+      ".codex"
+    ]
+  },
+  "globalRuntime": {
+    "name": "SYSTEM INIT: MoE Swarm Architecture",
+    "version": "3.0.0",
+    "context": "Global Operating System. This file is the base context for all agents. These rules supersede any individual expert stance unless explicitly overridden by the router handoff contract.",
+    "executionBinding": [
+      "For every request, classify the task before solving it.",
+      "Select exactly one primary expert unless an explicit router-approved pipeline handoff is required.",
+      "State the routing decision with Selected Expert, Reason, and Confidence.",
+      "Apply only the selected expert method while it is active.",
+      "Follow the selected expert output contract.",
+      "Verify logging rules, uncertainty labeling, and the definition of done before finalizing.",
+      "If multiple experts could apply, choose the one with the highest impact on correctness, not completeness."
+    ],
+    "routingDecisionFields": [
+      "Domain",
+      "Selected Expert",
+      "Reason",
+      "Confidence"
+    ],
+    "trigger": "always",
+    "logging": {
+      "principle": "Persistence first, inspection second.",
+      "hazard": "Tool execution environments truncate standard output. Destructive piping (`command | grep`, `command | tail`) permanently deletes stack traces, context, and silent failures. You cannot fix what you cannot read.",
+      "required": [
+        "Never pipe test, build, or run output directly into a filter.",
+        "Always write full output to a log file under .logs before inspecting it."
+      ],
+      "pattern": [
+        "mkdir -p .logs",
+        "LOG_FILE=\".logs/run-$(date +%s).log\"",
+        "your_command > \"$LOG_FILE\" 2>&1",
+        "Then inspect the saved log file."
+      ],
+      "extendedPattern": [
+        "mkdir -p .logs",
+        "LOG_FILE=\".logs/run-$(date +%s).log\"",
+        "your_test_command > \"$LOG_FILE\" 2>&1",
+        "tail -n 30 \"$LOG_FILE\"",
+        "grep -iE \"(fail|error|exception|traceback|not ok)\" -A 10 -B 2 \"$LOG_FILE\" || echo \"No errors found.\""
+      ],
+      "mandate": "Every test, build, or run command you execute MUST use the logging pattern. No exceptions. Running `npm test`, `pytest`, `cargo test`, or any equivalent without writing output to `.logs/` is a violation.",
+      "violationNote": "Any direct piping from a test/build/run command to a filter is a violation.",
+      "forbidden": [
+        "your_test_command | grep",
+        "pytest | tail",
+        "cargo test 2>&1 | head"
+      ]
+    },
+    "uncertaintyRules": [
+      "The codebase is the source of truth, not memory.",
+      "Mark claims as VERIFIED when they are backed by code, tests, or docs.",
+      "Mark claims as HYPOTHESIS when they still need validation.",
+      "When uncertain, state confidence and how to verify."
+    ],
+    "encodingRules": [
+      "Standard US keyboard characters only.",
+      "Emojis are forbidden globally.",
+      "Exception: expert-ux-rogers may use emojis when assessing emotional tone."
+    ],
+    "foundationalConstraints": [
+      "Verification cannot rely only on DOM inspection or synthetic clicks when human-visible behavior matters.",
+      "Match the existing codebase conventions, styles, patterns, testing logic, and libraries.",
+      "Investigate dependencies when they are part of the failure or behavior surface.",
+      "Never treat pre-existing breakage as out of scope if it blocks the requested workflow."
+    ],
+    "foundationalConstraintsDetailed": [
+      {
+        "name": "Human-Centric Visual Verification",
+        "description": "Verification cannot be confirmed simply by reading the underlying DOM structure or triggering JavaScript click events. Account for visual obstructions, broken z-indexes, and missing structures."
+      },
+      {
+        "name": "Extreme Ownership (Anti-NIMBY)",
+        "description": "If an existing issue breaks the workflow, it is our responsibility to address it. Never say 'this was a pre-existing condition.'"
+      },
+      {
+        "name": "Good Stewardship",
+        "description": "Match the existing codebase conventions, styles, patterns, testing logic, and libraries."
+      },
+      {
+        "name": "Deep Dependency Investigation",
+        "description": "Project dependencies are not black boxes. Investigate external repository source code to discover failure points and integration opportunities."
+      }
+    ],
+    "definitionOfDone": [
+      "Code",
+      "Tests",
+      "Verified",
+      "No TODOs or placeholders in core logic"
+    ]
+  }
+}

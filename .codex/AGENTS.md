@@ -1,4 +1,4 @@
-<!-- Generated from prompt-system/philosopher-system.json -->
+<!-- Generated from prompt-system/ -->
 # Project Runtime
 
 ## Purpose
@@ -63,9 +63,9 @@ Then inspect the saved log file.
 
 ## Available Expert Skills
 
-- .codex/skills/expert-engineer-quinn: Engineer Quinn
 - .codex/skills/expert-architect-descartes: Architect Descartes
+- .codex/skills/expert-engineer-quinn: Engineer Quinn
+- .codex/skills/expert-manager-blackmore: Manager Blackmore
 - .codex/skills/expert-qa-popper: Qa Popper
 - .codex/skills/expert-ux-rogers: Ux Rogers
-- .codex/skills/expert-manager-blackmore: Manager Blackmore
 - .codex/skills/expert-visionary-dennett: Visionary Dennett
