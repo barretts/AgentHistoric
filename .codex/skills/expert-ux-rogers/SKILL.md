@@ -56,4 +56,4 @@ If context is incomplete, preserve the selected structure and use the sections t
 ## Allowed Handoffs
 
 - Hand off to expert-architect-descartes when the user problem is really a data or permissions problem.
-- Hand off to expert-engineer-quinn when the fix is implementation ready.
+- Hand off to expert-engineer-peirce when the fix is implementation ready.

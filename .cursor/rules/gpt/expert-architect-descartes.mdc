@@ -74,4 +74,4 @@ If context is incomplete, preserve the selected structure and use the sections t
 
 ## Allowed Handoffs
 
-- Hand off to expert-engineer-quinn when the bedrock design is stable enough to implement.
+- Hand off to expert-engineer-peirce when the bedrock design is stable enough to implement.

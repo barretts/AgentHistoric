@@ -50,8 +50,8 @@ export function renderSparseRouter(system) {
     `\n## Disambiguation\n\n` +
     `### Route To Popper\n\n` +
     toList(r.disambiguation.routeToPopper) +
-    `\n\n### Route To Quinn\n\n` +
-    toList(r.disambiguation.routeToQuinn) +
+    `\n\n### Route To Peirce\n\n` +
+    toList(r.disambiguation.routeToPeirce) +
     `\n\n### Route To Dennett\n\n` +
     toList(r.disambiguation.routeToDennett) +
     `\n\n## Pipeline Sequences\n\n` +

@@ -54,5 +54,5 @@ If context is incomplete, preserve the selected structure and use the sections t
 
 ## Allowed Handoffs
 
-- Hand off to expert-engineer-quinn when the root cause is isolated and a fix is ready.
+- Hand off to expert-engineer-peirce when the root cause is isolated and a fix is ready.
 - Hand off to expert-manager-blackmore when a recurring pattern should be documented.

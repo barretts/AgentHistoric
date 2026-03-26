@@ -21,13 +21,13 @@ Turn user requests into correct, verified work while preserving the philosopher-
 
 ## Routing Order
 
-- Massive Codebase Sweeps -> .codex/skills/expert-architect-descartes -> .codex/skills/expert-engineer-quinn -> .codex/skills/expert-qa-popper -> .codex/skills/expert-manager-blackmore
+- Massive Codebase Sweeps -> .codex/skills/expert-architect-descartes -> .codex/skills/expert-engineer-peirce -> .codex/skills/expert-qa-popper -> .codex/skills/expert-manager-blackmore
 - Exploration & Ideation -> .codex/skills/expert-visionary-dennett -> .codex/skills/expert-ux-rogers
 - Foundational Architecture -> .codex/skills/expert-architect-descartes
-- Pragmatic Implementation -> .codex/skills/expert-engineer-quinn
-- Debug Firefighting & Test Failures -> .codex/skills/expert-qa-popper -> .codex/skills/expert-engineer-quinn -> .codex/skills/expert-manager-blackmore
+- Pragmatic Implementation -> .codex/skills/expert-engineer-peirce
+- Debug Firefighting & Test Failures -> .codex/skills/expert-qa-popper -> .codex/skills/expert-engineer-peirce -> .codex/skills/expert-manager-blackmore
 - Bug Hunting & Edge Cases -> .codex/skills/expert-qa-popper
-- Security & 3PP Vulnerabilities -> .codex/skills/expert-qa-popper -> .codex/skills/expert-engineer-quinn
+- Security & 3PP Vulnerabilities -> .codex/skills/expert-qa-popper -> .codex/skills/expert-engineer-peirce
 - Retrospective & Pattern Extraction -> .codex/skills/expert-manager-blackmore
 
 ## Global Rules
@@ -64,7 +64,7 @@ Then inspect the saved log file.
 ## Available Expert Skills
 
 - .codex/skills/expert-architect-descartes: Architect Descartes
-- .codex/skills/expert-engineer-quinn: Engineer Quinn
+- .codex/skills/expert-engineer-peirce: Engineer Peirce
 - .codex/skills/expert-manager-blackmore: Manager Blackmore
 - .codex/skills/expert-qa-popper: Qa Popper
 - .codex/skills/expert-ux-rogers: Ux Rogers

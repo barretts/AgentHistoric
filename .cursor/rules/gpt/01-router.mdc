@@ -21,7 +21,7 @@ Analyzes intent, determines the SDLC phase, and routes to the correct expert or 
 
 ### Priority 1: Massive Codebase Sweeps
 
-**Experts:** expert-architect-descartes -> expert-engineer-quinn -> expert-qa-popper -> expert-manager-blackmore
+**Experts:** expert-architect-descartes -> expert-engineer-peirce -> expert-qa-popper -> expert-manager-blackmore
 
 **Signals:** verify all, update all, check every, audit all, across all files
 
@@ -39,13 +39,13 @@ Analyzes intent, determines the SDLC phase, and routes to the correct expert or 
 
 ### Priority 4: Pragmatic Implementation
 
-**Experts:** expert-engineer-quinn
+**Experts:** expert-engineer-peirce
 
 **Signals:** build, implement, write code, refactor, how to
 
 ### Priority 5: Debug Firefighting & Test Failures
 
-**Experts:** expert-qa-popper -> expert-engineer-quinn -> expert-manager-blackmore
+**Experts:** expert-qa-popper -> expert-engineer-peirce -> expert-manager-blackmore
 
 **Signals:** test fail, build error, broken, debug, null pointer
 
@@ -57,7 +57,7 @@ Analyzes intent, determines the SDLC phase, and routes to the correct expert or 
 
 ### Priority 7: Security & 3PP Vulnerabilities
 
-**Experts:** expert-qa-popper -> expert-engineer-quinn
+**Experts:** expert-qa-popper -> expert-engineer-peirce
 
 **Signals:** audit, CVE, GHSA, npm audit, dependency upgrade, blast radius
 
@@ -76,7 +76,7 @@ Analyzes intent, determines the SDLC phase, and routes to the correct expert or 
 - build error in payment service
 - help debug this test failure
 
-### Route To Quinn
+### Route To Peirce
 
 - how do I write a test for
 - refactor the test suite
@@ -91,7 +91,7 @@ Analyzes intent, determines the SDLC phase, and routes to the correct expert or 
 ### Debug Firefighting
 
 - 1. expert-qa-popper
-- 2. expert-engineer-quinn
+- 2. expert-engineer-peirce
 - 3. expert-qa-popper
 - 4. expert-manager-blackmore
 
@@ -100,18 +100,18 @@ Analyzes intent, determines the SDLC phase, and routes to the correct expert or 
 - 1. expert-visionary-dennett
 - 2. expert-ux-rogers
 - 3. expert-architect-descartes
-- 4. expert-engineer-quinn
+- 4. expert-engineer-peirce
 
 ### Bug Triage & Resolution
 
 - 1. expert-qa-popper
-- 2. expert-engineer-quinn
+- 2. expert-engineer-peirce
 - 3. expert-manager-blackmore
 
 ### Automation Generation
 
 - 1. expert-architect-descartes
-- 2. expert-engineer-quinn
+- 2. expert-engineer-peirce
 - 3. expert-qa-popper
 - 4. expert-manager-blackmore
 

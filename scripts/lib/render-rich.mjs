@@ -86,8 +86,8 @@ export function renderRichRouter(system) {
   out += `\n### Routing Disambiguation\n\n`;
   out += `**Route TO Popper** (active failure investigation):\n`;
   out += r.disambiguation.routeToPopper.map((s) => `- "${s}"`).join("\n");
-  out += `\n\n**Route to Quinn instead** (guidance, not debugging):\n`;
-  out += r.disambiguation.routeToQuinn.map((s) => `- "${s}"`).join("\n");
+  out += `\n\n**Route to Peirce instead** (guidance, not debugging):\n`;
+  out += r.disambiguation.routeToPeirce.map((s) => `- "${s}"`).join("\n");
   out += `\n\n**Route to Dennett instead** (ideation, not debugging):\n`;
   out += r.disambiguation.routeToDennett.map((s) => `- "${s}"`).join("\n");
 
