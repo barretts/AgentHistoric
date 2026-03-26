@@ -1,7 +1,7 @@
 {
   "manifest_version": "2.0",
-  "run_id": "persona-prompting-model-comparison",
-  "prompt": "Design the data model and trust boundaries for this feature.",
+  "run_id": "persona-prompting-model-comparison-v2",
+  "prompt": "Design the data model and trust boundaries for a user notification system that supports email, SMS, and push channels with per-user preferences and rate limiting.",
   "models": [
     "gpt-5.4-medium",
     "grok-4-20",
@@ -12,9 +12,9 @@
   ],
   "conditions": ["sparse", "rich-preamble", "rich-pure"],
   "tasks": [
-    { "id": "gpt-5.4-medium__sparse",        "model": "gpt-5.4-medium",    "condition": "sparse",        "depends_on": [], "timeout_sec": 120, "verify_profile": "output-exists", "status": "DONE" },
-    { "id": "gpt-5.4-medium__rich-preamble",  "model": "gpt-5.4-medium",    "condition": "rich-preamble", "depends_on": [], "timeout_sec": 120, "verify_profile": "output-exists", "status": "DONE" },
-    { "id": "gpt-5.4-medium__rich-pure",      "model": "gpt-5.4-medium",    "condition": "rich-pure",     "depends_on": [], "timeout_sec": 120, "verify_profile": "output-exists", "status": "DONE" },
+    { "id": "gpt-5.4-medium__sparse",        "model": "gpt-5.4-medium",    "condition": "sparse",        "depends_on": [], "timeout_sec": 120, "verify_profile": "output-exists" },
+    { "id": "gpt-5.4-medium__rich-preamble",  "model": "gpt-5.4-medium",    "condition": "rich-preamble", "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
+    { "id": "gpt-5.4-medium__rich-pure",      "model": "gpt-5.4-medium",    "condition": "rich-pure",     "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
     { "id": "grok-4-20__sparse",              "model": "grok-4-20",         "condition": "sparse",        "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
     { "id": "grok-4-20__rich-preamble",       "model": "grok-4-20",         "condition": "rich-preamble", "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
     { "id": "grok-4-20__rich-pure",           "model": "grok-4-20",         "condition": "rich-pure",     "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },

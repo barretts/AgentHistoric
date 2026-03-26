@@ -7,7 +7,7 @@ const ROOT = resolve(import.meta.dirname);
 const MANIFEST_PATH = join(ROOT, "manifest.json");
 const STATE_PATH = join(ROOT, ".state.json");
 const OUTPUT_DIR = join(ROOT, ".output");
-const PROMPT = "Design the data model and trust boundaries for this feature.";
+const PROMPT = "Design the data model and trust boundaries for a user notification system that supports email, SMS, and push channels with per-user preferences and rate limiting.";
 
 // ── Load manifest ──────────────────────────────────────────────────
 const manifest = JSON.parse(readFileSync(MANIFEST_PATH, "utf8"));
