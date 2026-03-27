@@ -1,5 +1,5 @@
 ---
-description: "Global runtime for the philosopher prompt system. Always active."
+description: "Global runtime for the Agent Historic persona system. Always active."
 alwaysApply: true
 ---
 > **Model adaptation:** If you are a GPT-family model, focus on: numbered method steps,

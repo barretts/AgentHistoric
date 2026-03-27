@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Turn user requests into correct, verified work while preserving the philosopher-based routing system across Codex and Cursor targets.
+Turn user requests into correct, verified work using the Agent Historic attested-persona routing system across all supported targets.
 
 ## Execution Protocol
 

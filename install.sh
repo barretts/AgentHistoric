@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# install.sh -- Install philosopher prompt system rules into AI coding editors
+# install.sh -- Install Agent Historic persona rules into AI coding editors
 # Run from the project root: bash install.sh [--claude] [--cursor] [--windsurf] [--codex] [--all]
 # Use --gpt to install sparse/GPT-optimized rules for Cursor and Windsurf instead of rich
 # No flags = auto-detect installed editors
@@ -286,7 +286,7 @@ fi
 # --- List path ---
 
 if [[ "$DO_LIST" == true ]]; then
-  echo "==> philosopher-system installed files"
+  echo "==> agent-historic installed files"
   echo "    Targets: ${TARGETS[*]}"
   echo ""
   for target in "${TARGETS[@]}"; do
@@ -299,7 +299,7 @@ fi
 
 # --- Install path ---
 
-echo "==> philosopher-system prompt install"
+echo "==> agent-historic persona install"
 echo "    Source:  $REPO_DIR"
 echo "    Targets: ${TARGETS[*]}"
 echo "    Style:   rich + gpt/ subfolder (00-startup routes GPT models automatically)"

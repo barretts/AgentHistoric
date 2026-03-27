@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "title": "Dual-Target Philosopher Prompt System",
+  "title": "Agent Historic",
   "targets": {
     "rich": [
       "dot-claude/rules",
