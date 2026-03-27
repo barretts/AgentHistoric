@@ -256,10 +256,16 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# --- Pre-flight: ensure build output exists ---
+# --- Build ---
+
+if [[ -f "$REPO_DIR/scripts/build-prompt-system.mjs" ]]; then
+  echo "--> Building prompt system..."
+  node "$REPO_DIR/scripts/build-prompt-system.mjs"
+  echo ""
+fi
 
 if [[ ! -d "$SRC_CLAUDE" ]]; then
-  echo "ERROR: Generated files not found. Run 'node scripts/build-prompt-system.mjs' first."
+  echo "ERROR: Generated files not found and no build script available."
   exit 1
 fi
 
