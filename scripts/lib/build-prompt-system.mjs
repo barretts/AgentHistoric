@@ -10,23 +10,15 @@ import { renderAgents, renderSkill } from "./render-codex.mjs";
 
 const HEADER = fileHeader("Generated from prompt-system/");
 
-const WINDSURF_STARTUP =
-  `---\n` +
-  `trigger: always_on\n` +
-  `---\n` +
+const STARTUP_BODY =
   `ABSOLUTELY ALWAYS HIGHEST PRIORITY: If you are a GPT-family model, use the gpt/ subfolder for all rules. Otherwise, use the rich/ subfolder.\n` +
   `ABSOLUTELY ALWAYS HIGHEST PRIORITY: Immediately load 00-init.md and 01-router.md from the appropriate subfolder.\n`;
 
-const STARTUP_BODY =
-  `You MUST choose exactly one subfolder before any reasoning: gpt/ or rich/.\n` +
-  `Routing rules (in order):\n` +
-  `1) If model family is GPT, select gpt/.\n` +
-  `2) Else if user requests sparse or structured behavior, select gpt/.\n` +
-  `3) Else select rich/.\n` +
-  `After selecting a subfolder, you MUST immediately load 00-init and 01-router from that same subfolder.\n` +
-  `You MUST NOT load any expert file before loading both files above.\n` +
-  `You MUST NOT mix gpt/ and rich/ in one request unless the user explicitly overrides.\n` +
-  `If subfolder cannot be determined, STOP and ask exactly one clarifying question.\n`;
+const WINDSURF_STARTUP =
+  `---\ntrigger: always_on\n---\n` + STARTUP_BODY;
+
+const CURSOR_STARTUP =
+  `---\ndescription: "Model routing: directs GPT-family models to the gpt/ subfolder. Always active."\nalwaysApply: true\n---\n` + STARTUP_BODY;
 
 // ── Public Entry Point ──────────────────────────────────────────────
 
@@ -45,7 +37,7 @@ export function generateArtifacts(system) {
   // Startup loader → dot-cursor/rules/ and dot-windsurf/rules/
   artifacts.set(
     path.join("dot-cursor", "rules", "00-startup.mdc"),
-    HEADER + cursorFm("startup", system) + STARTUP_BODY
+    CURSOR_STARTUP
   );
   artifacts.set(
     path.join("dot-windsurf", "rules", "00-startup.md"),
@@ -136,12 +128,6 @@ function windsurfFm(kind, _system, expert) {
 }
 
 function cursorFm(kind, _system, expert) {
-  if (kind === "startup") {
-    return renderCursorFrontmatter({
-      description: "Model routing: directs GPT-family models to the gpt/ subfolder. Always active.",
-      alwaysApply: true
-    });
-  }
   if (kind === "init") {
     return renderCursorFrontmatter({
       description: "Global runtime for the Agent Historic persona system. Always active.",
