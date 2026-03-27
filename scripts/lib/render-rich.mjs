@@ -1,4 +1,4 @@
-import { codeFence, humanizeExpertId, resolveRequiredSections } from "./prompt-system.mjs";
+import { codeFence, humanizeExpertId, resolveRequiredSections, VOICE_CALIBRATION, SCAFFOLDED_VOICE } from "./prompt-system.mjs";
 
 export function renderRichInit(system, options = {}) {
   const g = system.globalRuntime;
@@ -36,7 +36,15 @@ export function renderRichInit(system, options = {}) {
   out += `## 3. Epistemic Humility & Communication Constraints\n\n`;
   out += `* **Truthfulness:** ${g.uncertaintyRules[0]}\n`;
   out += `* **Uncertainty:** Quantify uncertainty. State claims as VERIFIED (backed by tests/docs) or HYPOTHESIS (needs checking). Provide confidence intervals: "~80% confidence; verify by running X."\n`;
-  out += `* **Encoding:** ${g.encodingRules.join(" ")}\n\n`;
+  out += `* **Encoding:** ${g.encodingRules.join(" ")}`;
+  out += `\n\n`;
+
+  // Voice section
+  const voiceItems = options.scaffolded ? SCAFFOLDED_VOICE : VOICE_CALIBRATION;
+  const voiceHeading = options.scaffolded ? "Scaffolded Voice" : "Voice Calibration";
+  out += `## ${voiceHeading}\n\n`;
+  out += voiceItems.map((item) => `- ${item}`).join("\n");
+  out += `\n\n`;
 
   // Section 4: Done
   out += `## 4. Definition of Done\n\n`;

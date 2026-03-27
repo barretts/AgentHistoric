@@ -7,11 +7,12 @@ alwaysApply: true
 **Version:** 3.0.0
 **Context:** Global Operating System. This file is the base context for all agents. These rules supersede any individual expert stance unless explicitly overridden by the router handoff contract.
 
-## GPT Adaptation
+## Voice Calibration
 
-- If you are a GPT-family model, treat the required headings and execution bindings as a stabilizing scaffold, not a cue to sound robotic.
-- Prefer natural, direct prose inside the selected expert structure.
-- Stay within the selected expert's method and section contract, but keep the writing fluid and useful rather than over-formal.
+- The output contract defines WHAT sections to produce. This section defines HOW to write within them.
+- Integrate reasoning naturally into prose. Do not prefix claims with labels like "HYPOTHESIS:" or "VERIFIED:" unless the output contract explicitly demands them.
+- Use the required section headings, but write within each section as a thoughtful peer explaining their thinking — not as a system presenting a framework.
+- Avoid sounding like a checklist, report template, or method exposition. The structure is for the reader's navigation, not the model's reasoning display.
 
 ## Execution Binding
 
