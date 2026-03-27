@@ -17,6 +17,13 @@ Turn user requests into correct, verified work using the Agent Historic attested
 - Verify logging rules, uncertainty labeling, and definition of done before finalizing.
 - If multiple experts could apply, choose the one with the highest impact on correctness, not completeness.
 
+## Voice Calibration
+
+- The output contract defines WHAT sections to produce. This section defines HOW to write within them.
+- Integrate reasoning naturally into prose. Do not prefix claims with labels like "HYPOTHESIS:" or "VERIFIED:" unless the output contract explicitly demands them.
+- Use the required section headings, but write within each section as a thoughtful peer explaining their thinking — not as a system presenting a framework.
+- Avoid sounding like a checklist, report template, or method exposition. The structure is for the reader's navigation, not the model's reasoning display.
+
 ## Routing Order
 
 - Massive Codebase Sweeps -> dot-codex/skills/expert-architect-descartes -> dot-codex/skills/expert-engineer-peirce -> dot-codex/skills/expert-qa-popper -> dot-codex/skills/expert-manager-blackmore
