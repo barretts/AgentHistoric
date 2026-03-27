@@ -1,9 +1,9 @@
 {
   "state_version": "2.0",
-  "run_id": "persona-prompting-model-comparison-v2",
+  "run_id": "persona-prompting-v3",
   "run_status": "COMPLETED",
   "abort_reason": null,
-  "manifest_digest": "dbluv7f",
+  "manifest_digest": "dqy3vi2",
   "policy": {
     "heal_schedule": "off",
     "batch_strategy": "fixed",
@@ -15,7 +15,7 @@
     "signature_repeat_limit": 1
   },
   "tasks": {
-    "gpt-5.4-medium__sparse": {
+    "gpt-5.4-medium__rich-old": {
       "status": "DONE",
       "worker_attempts": 1,
       "healer_attempts": 0,
@@ -24,21 +24,21 @@
       "applied_patch_ids": [],
       "history": [
         {
-          "task_id": "gpt-5.4-medium__sparse",
+          "task_id": "gpt-5.4-medium__rich-old",
           "phase": "worker",
           "attempt_number": 1,
-          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/gpt-5.4-medium/sparse.jsonl",
+          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/gpt-5.4-medium/rich-old.jsonl",
           "verify_log_path": null,
           "exit_code": 0,
           "failure_class": null,
           "failure_signature": null,
           "applied_patch_ids": [],
-          "duration_sec": 63.5,
-          "timestamp": "2026-03-26T22:56:59.805Z"
+          "duration_sec": 46.9,
+          "timestamp": "2026-03-26T23:36:33.876Z"
         }
       ]
     },
-    "gpt-5.4-medium__rich-preamble": {
+    "gpt-5.4-medium__rich-new": {
       "status": "DONE",
       "worker_attempts": 1,
       "healer_attempts": 0,
@@ -47,21 +47,21 @@
       "applied_patch_ids": [],
       "history": [
         {
-          "task_id": "gpt-5.4-medium__rich-preamble",
+          "task_id": "gpt-5.4-medium__rich-new",
           "phase": "worker",
           "attempt_number": 1,
-          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/gpt-5.4-medium/rich-preamble.jsonl",
+          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/gpt-5.4-medium/rich-new.jsonl",
           "verify_log_path": null,
           "exit_code": 0,
           "failure_class": null,
           "failure_signature": null,
           "applied_patch_ids": [],
-          "duration_sec": 70,
-          "timestamp": "2026-03-26T22:58:09.830Z"
+          "duration_sec": 55.2,
+          "timestamp": "2026-03-26T23:37:29.056Z"
         }
       ]
     },
-    "gpt-5.4-medium__rich-pure": {
+    "claude-4.6-opus-high__rich-old": {
       "status": "DONE",
       "worker_attempts": 1,
       "healer_attempts": 0,
@@ -70,21 +70,21 @@
       "applied_patch_ids": [],
       "history": [
         {
-          "task_id": "gpt-5.4-medium__rich-pure",
+          "task_id": "claude-4.6-opus-high__rich-old",
           "phase": "worker",
           "attempt_number": 1,
-          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/gpt-5.4-medium/rich-pure.jsonl",
+          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/claude-4.6-opus-high/rich-old.jsonl",
           "verify_log_path": null,
           "exit_code": 0,
           "failure_class": null,
           "failure_signature": null,
           "applied_patch_ids": [],
-          "duration_sec": 68.3,
-          "timestamp": "2026-03-26T22:59:18.093Z"
+          "duration_sec": 63.2,
+          "timestamp": "2026-03-26T23:38:32.207Z"
         }
       ]
     },
-    "grok-4-20__sparse": {
+    "claude-4.6-opus-high__rich-new": {
       "status": "DONE",
       "worker_attempts": 1,
       "healer_attempts": 0,
@@ -93,21 +93,21 @@
       "applied_patch_ids": [],
       "history": [
         {
-          "task_id": "grok-4-20__sparse",
+          "task_id": "claude-4.6-opus-high__rich-new",
           "phase": "worker",
           "attempt_number": 1,
-          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/grok-4-20/sparse.jsonl",
+          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/claude-4.6-opus-high/rich-new.jsonl",
           "verify_log_path": null,
           "exit_code": 0,
           "failure_class": null,
           "failure_signature": null,
           "applied_patch_ids": [],
-          "duration_sec": 37.8,
-          "timestamp": "2026-03-26T22:59:55.906Z"
+          "duration_sec": 64.7,
+          "timestamp": "2026-03-26T23:39:36.874Z"
         }
       ]
     },
-    "grok-4-20__rich-preamble": {
+    "grok-4-20__rich-old": {
       "status": "DONE",
       "worker_attempts": 1,
       "healer_attempts": 0,
@@ -116,21 +116,21 @@
       "applied_patch_ids": [],
       "history": [
         {
-          "task_id": "grok-4-20__rich-preamble",
+          "task_id": "grok-4-20__rich-old",
           "phase": "worker",
           "attempt_number": 1,
-          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/grok-4-20/rich-preamble.jsonl",
+          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/grok-4-20/rich-old.jsonl",
           "verify_log_path": null,
           "exit_code": 0,
           "failure_class": null,
           "failure_signature": null,
           "applied_patch_ids": [],
-          "duration_sec": 33.8,
-          "timestamp": "2026-03-26T23:00:29.751Z"
+          "duration_sec": 23.6,
+          "timestamp": "2026-03-26T23:40:00.431Z"
         }
       ]
     },
-    "grok-4-20__rich-pure": {
+    "grok-4-20__rich-new": {
       "status": "DONE",
       "worker_attempts": 1,
       "healer_attempts": 0,
@@ -139,21 +139,21 @@
       "applied_patch_ids": [],
       "history": [
         {
-          "task_id": "grok-4-20__rich-pure",
+          "task_id": "grok-4-20__rich-new",
           "phase": "worker",
           "attempt_number": 1,
-          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/grok-4-20/rich-pure.jsonl",
+          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/grok-4-20/rich-new.jsonl",
           "verify_log_path": null,
           "exit_code": 0,
           "failure_class": null,
           "failure_signature": null,
           "applied_patch_ids": [],
-          "duration_sec": 26.2,
-          "timestamp": "2026-03-26T23:00:55.977Z"
+          "duration_sec": 35.9,
+          "timestamp": "2026-03-26T23:40:36.303Z"
         }
       ]
     },
-    "gemini-3.1-pro__sparse": {
+    "gemini-3.1-pro__rich-old": {
       "status": "DONE",
       "worker_attempts": 1,
       "healer_attempts": 0,
@@ -162,21 +162,21 @@
       "applied_patch_ids": [],
       "history": [
         {
-          "task_id": "gemini-3.1-pro__sparse",
+          "task_id": "gemini-3.1-pro__rich-old",
           "phase": "worker",
           "attempt_number": 1,
-          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/gemini-3.1-pro/sparse.jsonl",
+          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/gemini-3.1-pro/rich-old.jsonl",
           "verify_log_path": null,
           "exit_code": 0,
           "failure_class": null,
           "failure_signature": null,
           "applied_patch_ids": [],
-          "duration_sec": 28.4,
-          "timestamp": "2026-03-26T23:01:24.415Z"
+          "duration_sec": 23.9,
+          "timestamp": "2026-03-26T23:41:00.205Z"
         }
       ]
     },
-    "gemini-3.1-pro__rich-preamble": {
+    "gemini-3.1-pro__rich-new": {
       "status": "DONE",
       "worker_attempts": 1,
       "healer_attempts": 0,
@@ -185,247 +185,17 @@
       "applied_patch_ids": [],
       "history": [
         {
-          "task_id": "gemini-3.1-pro__rich-preamble",
+          "task_id": "gemini-3.1-pro__rich-new",
           "phase": "worker",
           "attempt_number": 1,
-          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/gemini-3.1-pro/rich-preamble.jsonl",
+          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/gemini-3.1-pro/rich-new.jsonl",
           "verify_log_path": null,
           "exit_code": 0,
           "failure_class": null,
           "failure_signature": null,
           "applied_patch_ids": [],
-          "duration_sec": 28.6,
-          "timestamp": "2026-03-26T23:01:53.058Z"
-        }
-      ]
-    },
-    "gemini-3.1-pro__rich-pure": {
-      "status": "DONE",
-      "worker_attempts": 1,
-      "healer_attempts": 0,
-      "last_failure_class": null,
-      "last_failure_signature": null,
-      "applied_patch_ids": [],
-      "history": [
-        {
-          "task_id": "gemini-3.1-pro__rich-pure",
-          "phase": "worker",
-          "attempt_number": 1,
-          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/gemini-3.1-pro/rich-pure.jsonl",
-          "verify_log_path": null,
-          "exit_code": 0,
-          "failure_class": null,
-          "failure_signature": null,
-          "applied_patch_ids": [],
-          "duration_sec": 28.2,
-          "timestamp": "2026-03-26T23:02:21.244Z"
-        }
-      ]
-    },
-    "claude-4-sonnet__sparse": {
-      "status": "DONE",
-      "worker_attempts": 1,
-      "healer_attempts": 0,
-      "last_failure_class": null,
-      "last_failure_signature": null,
-      "applied_patch_ids": [],
-      "history": [
-        {
-          "task_id": "claude-4-sonnet__sparse",
-          "phase": "worker",
-          "attempt_number": 1,
-          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/claude-4-sonnet/sparse.jsonl",
-          "verify_log_path": null,
-          "exit_code": 0,
-          "failure_class": null,
-          "failure_signature": null,
-          "applied_patch_ids": [],
-          "duration_sec": 36.1,
-          "timestamp": "2026-03-26T23:02:57.389Z"
-        }
-      ]
-    },
-    "claude-4-sonnet__rich-preamble": {
-      "status": "DONE",
-      "worker_attempts": 1,
-      "healer_attempts": 0,
-      "last_failure_class": null,
-      "last_failure_signature": null,
-      "applied_patch_ids": [],
-      "history": [
-        {
-          "task_id": "claude-4-sonnet__rich-preamble",
-          "phase": "worker",
-          "attempt_number": 1,
-          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/claude-4-sonnet/rich-preamble.jsonl",
-          "verify_log_path": null,
-          "exit_code": 0,
-          "failure_class": null,
-          "failure_signature": null,
-          "applied_patch_ids": [],
-          "duration_sec": 30.6,
-          "timestamp": "2026-03-26T23:03:28.033Z"
-        }
-      ]
-    },
-    "claude-4-sonnet__rich-pure": {
-      "status": "DONE",
-      "worker_attempts": 1,
-      "healer_attempts": 0,
-      "last_failure_class": null,
-      "last_failure_signature": null,
-      "applied_patch_ids": [],
-      "history": [
-        {
-          "task_id": "claude-4-sonnet__rich-pure",
-          "phase": "worker",
-          "attempt_number": 1,
-          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/claude-4-sonnet/rich-pure.jsonl",
-          "verify_log_path": null,
-          "exit_code": 0,
-          "failure_class": null,
-          "failure_signature": null,
-          "applied_patch_ids": [],
-          "duration_sec": 25.6,
-          "timestamp": "2026-03-26T23:03:53.664Z"
-        }
-      ]
-    },
-    "gpt-5.1__sparse": {
-      "status": "DONE",
-      "worker_attempts": 1,
-      "healer_attempts": 0,
-      "last_failure_class": null,
-      "last_failure_signature": null,
-      "applied_patch_ids": [],
-      "history": [
-        {
-          "task_id": "gpt-5.1__sparse",
-          "phase": "worker",
-          "attempt_number": 1,
-          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/gpt-5.1/sparse.jsonl",
-          "verify_log_path": null,
-          "exit_code": 0,
-          "failure_class": null,
-          "failure_signature": null,
-          "applied_patch_ids": [],
-          "duration_sec": 52.6,
-          "timestamp": "2026-03-26T23:04:46.245Z"
-        }
-      ]
-    },
-    "gpt-5.1__rich-preamble": {
-      "status": "DONE",
-      "worker_attempts": 1,
-      "healer_attempts": 0,
-      "last_failure_class": null,
-      "last_failure_signature": null,
-      "applied_patch_ids": [],
-      "history": [
-        {
-          "task_id": "gpt-5.1__rich-preamble",
-          "phase": "worker",
-          "attempt_number": 1,
-          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/gpt-5.1/rich-preamble.jsonl",
-          "verify_log_path": null,
-          "exit_code": 0,
-          "failure_class": null,
-          "failure_signature": null,
-          "applied_patch_ids": [],
-          "duration_sec": 46,
-          "timestamp": "2026-03-26T23:05:32.235Z"
-        }
-      ]
-    },
-    "gpt-5.1__rich-pure": {
-      "status": "DONE",
-      "worker_attempts": 1,
-      "healer_attempts": 0,
-      "last_failure_class": null,
-      "last_failure_signature": null,
-      "applied_patch_ids": [],
-      "history": [
-        {
-          "task_id": "gpt-5.1__rich-pure",
-          "phase": "worker",
-          "attempt_number": 1,
-          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/gpt-5.1/rich-pure.jsonl",
-          "verify_log_path": null,
-          "exit_code": 0,
-          "failure_class": null,
-          "failure_signature": null,
-          "applied_patch_ids": [],
-          "duration_sec": 52.3,
-          "timestamp": "2026-03-26T23:06:24.506Z"
-        }
-      ]
-    },
-    "gpt-5.4-nano-medium__sparse": {
-      "status": "DONE",
-      "worker_attempts": 1,
-      "healer_attempts": 0,
-      "last_failure_class": null,
-      "last_failure_signature": null,
-      "applied_patch_ids": [],
-      "history": [
-        {
-          "task_id": "gpt-5.4-nano-medium__sparse",
-          "phase": "worker",
-          "attempt_number": 1,
-          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/gpt-5.4-nano-medium/sparse.jsonl",
-          "verify_log_path": null,
-          "exit_code": 0,
-          "failure_class": null,
-          "failure_signature": null,
-          "applied_patch_ids": [],
-          "duration_sec": 18.8,
-          "timestamp": "2026-03-26T23:06:43.280Z"
-        }
-      ]
-    },
-    "gpt-5.4-nano-medium__rich-preamble": {
-      "status": "DONE",
-      "worker_attempts": 1,
-      "healer_attempts": 0,
-      "last_failure_class": null,
-      "last_failure_signature": null,
-      "applied_patch_ids": [],
-      "history": [
-        {
-          "task_id": "gpt-5.4-nano-medium__rich-preamble",
-          "phase": "worker",
-          "attempt_number": 1,
-          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/gpt-5.4-nano-medium/rich-preamble.jsonl",
-          "verify_log_path": null,
-          "exit_code": 0,
-          "failure_class": null,
-          "failure_signature": null,
-          "applied_patch_ids": [],
-          "duration_sec": 19.3,
-          "timestamp": "2026-03-26T23:07:02.616Z"
-        }
-      ]
-    },
-    "gpt-5.4-nano-medium__rich-pure": {
-      "status": "DONE",
-      "worker_attempts": 1,
-      "healer_attempts": 0,
-      "last_failure_class": null,
-      "last_failure_signature": null,
-      "applied_patch_ids": [],
-      "history": [
-        {
-          "task_id": "gpt-5.4-nano-medium__rich-pure",
-          "phase": "worker",
-          "attempt_number": 1,
-          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/gpt-5.4-nano-medium/rich-pure.jsonl",
-          "verify_log_path": null,
-          "exit_code": 0,
-          "failure_class": null,
-          "failure_signature": null,
-          "applied_patch_ids": [],
-          "duration_sec": 19.2,
-          "timestamp": "2026-03-26T23:07:21.818Z"
+          "duration_sec": 30.2,
+          "timestamp": "2026-03-26T23:41:30.456Z"
         }
       ]
     }
