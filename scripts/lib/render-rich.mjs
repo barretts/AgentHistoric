@@ -9,18 +9,9 @@ export function renderRichInit(system, options = {}) {
   };
 
   let out = "";
-  out += `> **Model adaptation:** If you are a GPT-family model, focus on: numbered method steps,\n`;
-  out += `> execution bindings, required section headings, and output contracts. Treat philosophical\n`;
-  out += `> descriptions as behavioral context, not identity instructions.\n\n`;
   out += `# ${g.name}\n\n`;
   out += `**Version:** ${g.version} (Philosophical Engineering Edition)\n`;
   out += `**Context:** ${g.context}\n\n`;
-
-  out += `## 0. Routing Preconditions\n\n`;
-  out += `- You MUST choose exactly one subfolder before any reasoning: \`gpt/\` or \`rich/\`.\n`;
-  out += `- You MUST load \`00-init\` and \`01-router\` from the selected subfolder before loading any expert file.\n`;
-  out += `- You MUST NOT mix \`gpt/\` and \`rich/\` in one request unless the user explicitly overrides.\n`;
-  out += `- If subfolder cannot be determined, STOP and ask exactly one clarifying question.\n\n`;
 
   // Section 1: Logging
   out += `## 1. The Non-Destructive Logging Protocol\n\n`;

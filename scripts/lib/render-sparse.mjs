@@ -22,22 +22,6 @@ export function renderSparseInit(system, options = {}) {
       `\n\n## Routing Decision Format\n\n` +
       toList(g.routingDecisionFields);
   }
-  out +=
-    `\n\n## Routing Preconditions\n\n` +
-    toList([
-      "Before solving, choose exactly one subfolder: gpt/ or rich/.",
-      "Load 00-init and 01-router from the selected subfolder before loading any expert file.",
-      "Do not mix subfolders in one request unless the user explicitly overrides.",
-      "If the correct subfolder cannot be determined, stop and ask exactly one clarifying question."
-    ]) +
-    `\n\n## Routing Preflight Checklist\n\n` +
-    toList([
-      "Subfolder selected?",
-      "00-init loaded from selected subfolder?",
-      "01-router loaded from selected subfolder?",
-      "One primary expert selected?",
-      "If any answer is no, stop and resolve routing before continuing."
-    ]);
   if (options.debug) {
     out +=
       `\n\n## Heading Purity\n\n` +

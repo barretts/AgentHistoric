@@ -10,16 +10,6 @@ import { renderAgents, renderSkill } from "./render-codex.mjs";
 
 const HEADER = fileHeader("Generated from prompt-system/");
 
-const STARTUP_BODY =
-  `ABSOLUTELY ALWAYS HIGHEST PRIORITY: If you are a GPT-family model, use the gpt/ subfolder for all rules. Otherwise, use the rich/ subfolder.\n` +
-  `ABSOLUTELY ALWAYS HIGHEST PRIORITY: Immediately load 00-init.md and 01-router.md from the appropriate subfolder.\n`;
-
-const WINDSURF_STARTUP =
-  `---\ntrigger: always_on\n---\n` + STARTUP_BODY;
-
-const CURSOR_STARTUP =
-  `---\ndescription: "Model routing: directs GPT-family models to the gpt/ subfolder. Always active."\nalwaysApply: true\n---\n` + STARTUP_BODY;
-
 // ── Public Entry Point ──────────────────────────────────────────────
 
 export function generateArtifacts(system, options = {}) {
@@ -28,21 +18,11 @@ export function generateArtifacts(system, options = {}) {
   // Rich + md frontmatter → dot-claude/rules/ (no startup needed, Claude auto-loads)
   addSet(artifacts, system, path.join("dot-claude", "rules"), ".md", mdFm, renderRichInit, renderRichRouter, renderRichExpert, options);
 
-  // Rich + windsurf frontmatter → dot-windsurf/rules/rich/
-  addSet(artifacts, system, path.join("dot-windsurf", "rules", "rich"), ".md", windsurfFm, renderRichInit, renderRichRouter, renderRichExpert, options);
+  // Rich + windsurf frontmatter → dot-windsurf/rules/ (root)
+  addSet(artifacts, system, path.join("dot-windsurf", "rules"), ".md", windsurfFm, renderRichInit, renderRichRouter, renderRichExpert, options);
 
-  // Rich + cursor frontmatter → dot-cursor/rules/rich/
-  addSet(artifacts, system, path.join("dot-cursor", "rules", "rich"), ".mdc", cursorFm, renderRichInit, renderRichRouter, renderRichExpert, options);
-
-  // Startup loader → dot-cursor/rules/ and dot-windsurf/rules/
-  artifacts.set(
-    path.join("dot-cursor", "rules", "00-startup.mdc"),
-    CURSOR_STARTUP
-  );
-  artifacts.set(
-    path.join("dot-windsurf", "rules", "00-startup.md"),
-    WINDSURF_STARTUP
-  );
+  // Rich + cursor frontmatter → dot-cursor/rules/ (root)
+  addSet(artifacts, system, path.join("dot-cursor", "rules"), ".mdc", cursorFm, renderRichInit, renderRichRouter, renderRichExpert, options);
 
   // Sparse + cursor frontmatter → dot-cursor/rules/gpt/
   addSet(artifacts, system, path.join("dot-cursor", "rules", "gpt"), ".mdc", cursorFm, renderSparseInit, renderSparseRouter, renderSparseExpert, options);
