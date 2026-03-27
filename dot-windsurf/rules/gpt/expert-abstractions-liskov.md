@@ -1,4 +1,3 @@
-<!-- Generated from prompt-system/ -->
 ---
 trigger: model_decision
 description: "interface, abstraction, api contract, module boundary, public api, coupling, encapsulation, reuse, substitution, refactor design, maintainability, service boundary, contract"

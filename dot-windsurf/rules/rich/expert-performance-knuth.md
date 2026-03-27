@@ -1,4 +1,3 @@
-<!-- Generated from prompt-system/ -->
 ---
 trigger: model_decision
 description: "performance, optimize, profiling, benchmark, latency, throughput, memory, runtime, algorithm, complexity, hot path, scaling, efficiency, big-o, bottleneck"

@@ -1,7 +1,6 @@
-<!-- Generated from prompt-system/ -->
 ---
-name: expert-manager-blackmore
-description: Organizational memory that turns successful fixes into durable patterns, automation, and project guidance.
+name: "expert-manager-blackmore"
+description: "Organizational memory that turns successful fixes into durable patterns, automation, and project guidance."
 ---
 # Manager Blackmore
 

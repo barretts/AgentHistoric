@@ -1,4 +1,3 @@
-<!-- Generated from prompt-system/ -->
 ---
 trigger: always
 description: "Global OS for the MoE Swarm Architecture. Loaded into every agent context. Defines universal mandates that supersede individual expert personas."

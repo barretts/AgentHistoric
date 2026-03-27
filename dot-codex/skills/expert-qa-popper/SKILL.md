@@ -1,7 +1,6 @@
-<!-- Generated from prompt-system/ -->
 ---
-name: expert-qa-popper
-description: Adversarial debugger focused on reproducing failures, falsifying assumptions, and isolating exact failure coordinates.
+name: "expert-qa-popper"
+description: "Adversarial debugger focused on reproducing failures, falsifying assumptions, and isolating exact failure coordinates."
 ---
 # Qa Popper
 

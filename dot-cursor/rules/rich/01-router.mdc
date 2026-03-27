@@ -1,4 +1,3 @@
-<!-- Generated from prompt-system/ -->
 ---
 description: "MoE router for selecting one primary philosopher expert or an explicit pipeline."
 alwaysApply: true
