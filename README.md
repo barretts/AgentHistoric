@@ -34,7 +34,7 @@ bash install.sh
 # 3. Or install for specific editors
 bash install.sh --cursor --windsurf
 
-# 4. Use GPT-optimized sparse rules instead of rich
+# 4. Also install deprecated sparse/GPT rules (opt-in)
 bash install.sh --gpt
 ```
 
@@ -59,9 +59,9 @@ Generated output:
   dot-claude/rules/        # Rich rules for Claude Code
   dot-windsurf/rules/      # Rich rules for Windsurf
   dot-cursor/rules/        # Rich rules for Cursor (.mdc)
-  dot-windsurf/rules/gpt/  # Sparse rules for GPT-family Windsurf routing
-  dot-cursor/rules/gpt/    # Sparse rules for GPT-family Cursor routing
-  dot-codex/               # Sparse AGENTS.md + skills/
+  dot-windsurf/rules/gpt/  # Sparse rules (deprecated, opt-in via --gpt)
+  dot-cursor/rules/gpt/    # Sparse rules (deprecated, opt-in via --gpt)
+  dot-codex/               # Codex AGENTS.md + skills/
 
 regression/
   fixtures/cases.json      # Regression test cases
@@ -81,13 +81,13 @@ bash install.sh [options]
 | `--windsurf` | Install to `~/dot-windsurf/rules/` |
 | `--codex` | Install to `~/dot-codex/` |
 | `--all` | All editors |
-| `--gpt` | Use sparse/GPT-optimized rules for Cursor and Windsurf |
+| `--gpt` | *(deprecated)* Also install sparse/GPT rules in `gpt/` subfolder |
 | `--list` | Show installed files without modifying anything |
 | *(no flags)* | Auto-detect installed editors |
 
 ### Post-Install IDE Configuration
 
-**Cursor:** Open Settings > Rules for AI. Ensure `00-init` is the **first rule** with `alwaysApply: true`, followed by `01-router`. Expert rules are auto-attached by description match.
+**Cursor:** Open Settings > Rules for AI. `00-init.mdc` and `01-router.mdc` must have `alwaysApply: true`. Expert rules are auto-attached by description match.
 
 **Windsurf:** Open Customizations > Rules. `00-init.md` and `01-router.md` use `trigger: always` and load on every request. Expert rules use `trigger: model_decision` and are invoked automatically when relevant.
 
@@ -99,10 +99,10 @@ bash install.sh [options]
 
 | Style | Targets | Description |
 |-------|---------|-------------|
-| **Rich** | Claude, Cursor, Windsurf | Full narrative, philosophy, voice. Includes a GPT adaptation preamble so GPT models can still follow them. |
-| **Sparse** | Codex, `rules/gpt/` | Numbered steps, execution bindings, output contracts. Optimized for models that prefer explicit structure. |
+| **Rich** | Claude, Cursor, Windsurf, Codex | Full narrative, philosophy, voice. Universal default for all models. |
+| **Sparse** *(deprecated)* | `rules/gpt/` (opt-in) | Numbered steps, execution bindings, output contracts. Available via `--gpt` flag but no longer recommended. |
 
-Rich rules are the default. Use `bash install.sh --gpt` if you exclusively use GPT models and want the sparse variant.
+Rich rules are the universal default for all models including GPT-family. Experimental results (V1/V2 persona prompting comparison) showed that current-generation GPT models benefit from philosophical framing and that the previous GPT adaptation preamble suppressed engagement. Use `bash install.sh --gpt` only if you specifically need the legacy sparse variant.
 
 ## Generate Targets
 
