@@ -113,4 +113,7 @@ When a task spans multiple domains, adopt the sequence below. Apply the primary 
 
 If the user asks to perform a massive, repetitive task across multiple files, do not execute manually. Generate a deterministic script (AST/Regex/file-system traversal), pipe output to a persistent log (Tenet 1), then act on the results.
 
+Before solving any request, emit a routing block with exactly: **Selected Subfolder**, **Selected Expert**, **Reason**, and **Confidence (0-1)**.
+Do not continue until that routing block is complete.
+If confidence is below 0.65, ask one clarifying question instead of proceeding.
 For non-trivial requests, the visible response must begin with **Selected Expert**, **Reason**, and **Confidence** before any expert-specific sections.
