@@ -22,17 +22,17 @@ const CURSOR_STARTUP =
 
 // ── Public Entry Point ──────────────────────────────────────────────
 
-export function generateArtifacts(system) {
+export function generateArtifacts(system, options = {}) {
   const artifacts = new Map();
 
   // Rich + md frontmatter → dot-claude/rules/ (no startup needed, Claude auto-loads)
-  addSet(artifacts, system, path.join("dot-claude", "rules"), ".md", mdFm, renderRichInit, renderRichRouter, renderRichExpert);
+  addSet(artifacts, system, path.join("dot-claude", "rules"), ".md", mdFm, renderRichInit, renderRichRouter, renderRichExpert, options);
 
   // Rich + windsurf frontmatter → dot-windsurf/rules/rich/
-  addSet(artifacts, system, path.join("dot-windsurf", "rules", "rich"), ".md", windsurfFm, renderRichInit, renderRichRouter, renderRichExpert);
+  addSet(artifacts, system, path.join("dot-windsurf", "rules", "rich"), ".md", windsurfFm, renderRichInit, renderRichRouter, renderRichExpert, options);
 
   // Rich + cursor frontmatter → dot-cursor/rules/rich/
-  addSet(artifacts, system, path.join("dot-cursor", "rules", "rich"), ".mdc", cursorFm, renderRichInit, renderRichRouter, renderRichExpert);
+  addSet(artifacts, system, path.join("dot-cursor", "rules", "rich"), ".mdc", cursorFm, renderRichInit, renderRichRouter, renderRichExpert, options);
 
   // Startup loader → dot-cursor/rules/ and dot-windsurf/rules/
   artifacts.set(
@@ -45,17 +45,17 @@ export function generateArtifacts(system) {
   );
 
   // Sparse + cursor frontmatter → dot-cursor/rules/gpt/
-  addSet(artifacts, system, path.join("dot-cursor", "rules", "gpt"), ".mdc", cursorFm, renderSparseInit, renderSparseRouter, renderSparseExpert);
+  addSet(artifacts, system, path.join("dot-cursor", "rules", "gpt"), ".mdc", cursorFm, renderSparseInit, renderSparseRouter, renderSparseExpert, options);
 
   // Sparse + windsurf frontmatter → dot-windsurf/rules/gpt/
-  addSet(artifacts, system, path.join("dot-windsurf", "rules", "gpt"), ".md", windsurfFm, renderSparseInit, renderSparseRouter, renderSparseExpert);
+  addSet(artifacts, system, path.join("dot-windsurf", "rules", "gpt"), ".md", windsurfFm, renderSparseInit, renderSparseRouter, renderSparseExpert, options);
 
   // Codex (own format, sparse)
-  artifacts.set(path.join("dot-codex", "AGENTS.md"), renderAgents(system));
+  artifacts.set(path.join("dot-codex", "AGENTS.md"), renderAgents(system, options));
   for (const expert of system.experts) {
     artifacts.set(
       path.join("dot-codex", "skills", expert.codexSkillDir, "SKILL.md"),
-      renderSkill(system, expert)
+      renderSkill(system, expert, options)
     );
   }
 
@@ -64,19 +64,19 @@ export function generateArtifacts(system) {
 
 // ── Set Generator ───────────────────────────────────────────────────
 
-function addSet(artifacts, system, dir, ext, fmFn, initFn, routerFn, expertFn) {
+function addSet(artifacts, system, dir, ext, fmFn, initFn, routerFn, expertFn, options = {}) {
   artifacts.set(
     path.join(dir, `00-init${ext}`),
-    HEADER + fmFn("init", system) + initFn(system)
+    HEADER + fmFn("init", system) + initFn(system, options)
   );
   artifacts.set(
     path.join(dir, `01-router${ext}`),
-    HEADER + fmFn("router", system) + routerFn(system)
+    HEADER + fmFn("router", system) + routerFn(system, options)
   );
   for (const expert of system.experts) {
     artifacts.set(
       path.join(dir, `${expert.id}${ext}`),
-      HEADER + fmFn("expert", system, expert) + expertFn(system, expert)
+      HEADER + fmFn("expert", system, expert) + expertFn(system, expert, options)
     );
   }
 }
