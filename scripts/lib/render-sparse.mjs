@@ -25,6 +25,12 @@ export function renderSparseInit(system) {
       "One primary expert selected?",
       "If any answer is no, stop and resolve routing before continuing."
     ]) +
+    `\n\n## Heading Purity\n\n` +
+    toList([
+      "After the routing preamble, the visible response may contain only the active expert's required headings.",
+      "Do not emit headings, section labels, or deliverable names from another expert unless an explicit allowed handoff is named.",
+      "Keep VERIFIED and HYPOTHESIS inline inside the selected sections, never as standalone headings."
+    ]) +
     `\n\n## Logging Protocol\n\n` +
     `**Principle:** ${g.logging.principle}\n\n` +
     toList(g.logging.required) +
@@ -88,6 +94,8 @@ export function renderSparseRouter(system) {
     "After routing, activate only the chosen expert unless a named handoff is required.\n" +
     "If confidence is below 0.65, ask one clarifying question instead of proceeding.\n" +
     "In the visible user-facing response, explicitly include `Selected Expert`, `Reason`, and `Confidence` before the expert-specific sections whenever the task is non-trivial.\n" +
+    "After that preamble, use only the active expert's required headings. Do not emit headings, labels, or deliverable names from any other expert unless the router names an explicit handoff.\n" +
+    "Keep VERIFIED and HYPOTHESIS inside the body text of the selected sections; do not promote them to headings or pseudo-headings.\n" +
     "When multiple domains appear in one request, prefer the expert with the highest impact on correctness and foundations over the expert that is merely broader or more exploratory.\n" +
     "If the user asks whether something should be built and only secondarily mentions UX or friendliness, route to architecture before ideation.\n" +
     "If the user explicitly asks for multiple options, drafts, or redesign alternatives, keep ideation primary unless the prompt also requests concrete architecture artifacts such as schemas, trust boundaries, or contracts.\n"
@@ -111,7 +119,10 @@ export function renderSparseExpert(system, expert) {
       "Translate philosophy into concrete actions and observable output.",
       "For non-trivial tasks, begin the visible response with `Selected Expert`, `Reason`, and `Confidence` before the expert-specific sections.",
       "Use the required section headings verbatim.",
+      "Visible headings are limited to `Selected Expert`, `Reason`, `Confidence`, and this expert's required headings unless an explicit allowed handoff is named.",
+      "Do not emit another expert's headings, section labels, or deliverable names while this expert is active.",
       "Do not invent replacement headings for the expert contract.",
+      "Keep VERIFIED and HYPOTHESIS inline within those sections rather than as standalone headings.",
       "If context is incomplete, explain what is missing inside the required sections rather than adding new sections."
     ]) +
     `\n\n## Voice\n\n` +

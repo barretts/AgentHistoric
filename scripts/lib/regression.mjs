@@ -433,9 +433,67 @@ function sectionPresent(section, responseText, outputSections) {
   return pattern.test(responseText);
 }
 
+function extractExplicitSectionHeadings(system, responseText) {
+  const knownSections = new Set([
+    "selected expert",
+    "selected skill",
+    "selected subfolder",
+    "reason",
+    "confidence",
+    ...system.experts.flatMap((expert) => {
+      const { defaultSections, complexSections } = resolveRequiredSections(
+        expert.requiredSections || {}
+      );
+      return [...defaultSections, ...complexSections].map(normalizeText);
+    })
+  ]);
+
+  const headings = new Set();
+  const lines = String(responseText || "").split("\n");
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      continue;
+    }
+
+    const withoutMarkdown = trimmed
+      .replace(/^#+\s*/, "")
+      .replace(/^[-*]\s+/, "")
+      .replace(/^\*\*(.+)\*\*$/, "$1")
+      .replace(/^`(.+)`$/, "$1");
+    const exact = normalizeText(withoutMarkdown);
+    const colonOnly = normalizeText(withoutMarkdown.replace(/:\s*$/, ""));
+
+    if (knownSections.has(exact)) {
+      headings.add(exact);
+      continue;
+    }
+
+    if (knownSections.has(colonOnly) && /:\s*$/.test(withoutMarkdown)) {
+      headings.add(colonOnly);
+    }
+  }
+
+  return headings;
+}
+
 function hasForbiddenExpertHeadings(system, testCase, responseText) {
   const allowedExperts = new Set(
     [testCase.expectedPrimaryExpert, ...(testCase.allowedHandoffs || [])].map(normalizeExpertId)
+  );
+  const explicitHeadings = extractExplicitSectionHeadings(system, responseText);
+  const allowedSections = new Set(
+    system.experts.flatMap((expert) => {
+      if (!allowedExperts.has(normalizeExpertId(expert.id))) {
+        return [];
+      }
+
+      const { defaultSections, complexSections } = resolveRequiredSections(
+        expert.requiredSections || {}
+      );
+      return [...defaultSections, ...complexSections].map(normalizeText);
+    })
   );
 
   return system.experts.some((expert) => {
@@ -448,9 +506,9 @@ function hasForbiddenExpertHeadings(system, testCase, responseText) {
     );
     const forbiddenSections = [...new Set([...defaultSections, ...complexSections])]
       .map(normalizeText)
-      .filter((section) => section !== "answer");
+      .filter((section) => section !== "answer" && !allowedSections.has(section));
 
-    return forbiddenSections.some((section) => sectionPresent(section, responseText, []));
+    return forbiddenSections.some((section) => explicitHeadings.has(section));
   });
 }
 
