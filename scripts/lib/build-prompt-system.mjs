@@ -29,8 +29,8 @@ export function generateArtifacts(system) {
   // Rich + md frontmatter → dot-claude/rules/ (no startup needed, Claude auto-loads)
   addSet(artifacts, system, path.join("dot-claude", "rules"), ".md", mdFm, renderRichInit, renderRichRouter, renderRichExpert);
 
-  // Rich + md frontmatter → dot-windsurf/rules/rich/
-  addSet(artifacts, system, path.join("dot-windsurf", "rules", "rich"), ".md", mdFm, renderRichInit, renderRichRouter, renderRichExpert);
+  // Rich + windsurf frontmatter → dot-windsurf/rules/rich/
+  addSet(artifacts, system, path.join("dot-windsurf", "rules", "rich"), ".md", windsurfFm, renderRichInit, renderRichRouter, renderRichExpert);
 
   // Rich + cursor frontmatter → dot-cursor/rules/rich/
   addSet(artifacts, system, path.join("dot-cursor", "rules", "rich"), ".mdc", cursorFm, renderRichInit, renderRichRouter, renderRichExpert);
@@ -42,14 +42,14 @@ export function generateArtifacts(system) {
   );
   artifacts.set(
     path.join("dot-windsurf", "rules", "00-startup.md"),
-    HEADER + mdFm("startup", system) + STARTUP_BODY
+    HEADER + windsurfFm("startup", system) + STARTUP_BODY
   );
 
   // Sparse + cursor frontmatter → dot-cursor/rules/gpt/
   addSet(artifacts, system, path.join("dot-cursor", "rules", "gpt"), ".mdc", cursorFm, renderSparseInit, renderSparseRouter, renderSparseExpert);
 
-  // Sparse + md frontmatter → dot-windsurf/rules/gpt/
-  addSet(artifacts, system, path.join("dot-windsurf", "rules", "gpt"), ".md", mdFm, renderSparseInit, renderSparseRouter, renderSparseExpert);
+  // Sparse + windsurf frontmatter → dot-windsurf/rules/gpt/
+  addSet(artifacts, system, path.join("dot-windsurf", "rules", "gpt"), ".md", windsurfFm, renderSparseInit, renderSparseRouter, renderSparseExpert);
 
   // Codex (own format, sparse)
   artifacts.set(path.join("dot-codex", "AGENTS.md"), renderAgents(system));
@@ -105,6 +105,31 @@ function mdFm(kind, _system, expert) {
   }
   return renderMdFrontmatter({
     trigger: expert.trigger,
+    description: expert.activationDescription
+  });
+}
+
+function windsurfFm(kind, _system, expert) {
+  if (kind === "startup") {
+    return renderMdFrontmatter({
+      trigger: "always_on",
+      description: "Model routing: directs GPT-family models to the gpt/ subfolder."
+    });
+  }
+  if (kind === "init") {
+    return renderMdFrontmatter({
+      trigger: "model_decision",
+      description: "Global OS for the MoE Swarm Architecture. Loaded into every agent context. Defines universal mandates that supersede individual expert personas."
+    });
+  }
+  if (kind === "router") {
+    return renderMdFrontmatter({
+      trigger: "model_decision",
+      description: "MoE Orchestrator / Router. Front-line triage agent. Analyzes intent and routes to the correct pipeline or expert. Use when the task type is ambiguous or spans multiple concerns."
+    });
+  }
+  return renderMdFrontmatter({
+    trigger: "model_decision",
     description: expert.activationDescription
   });
 }
