@@ -1,0 +1,34 @@
+{
+  "manifest_version": "2.0",
+  "run_id": "persona-prompting-model-comparison",
+  "prompt": "Design the data model and trust boundaries for this feature.",
+  "models": [
+    "gpt-5.4-medium",
+    "grok-4-20",
+    "gemini-3.1-pro",
+    "claude-4-sonnet",
+    "gpt-5.1",
+    "gpt-5.4-nano-medium"
+  ],
+  "conditions": ["sparse", "rich-preamble", "rich-pure"],
+  "tasks": [
+    { "id": "gpt-5.4-medium__sparse",        "model": "gpt-5.4-medium",    "condition": "sparse",        "depends_on": [], "timeout_sec": 120, "verify_profile": "output-exists", "status": "DONE" },
+    { "id": "gpt-5.4-medium__rich-preamble",  "model": "gpt-5.4-medium",    "condition": "rich-preamble", "depends_on": [], "timeout_sec": 120, "verify_profile": "output-exists", "status": "DONE" },
+    { "id": "gpt-5.4-medium__rich-pure",      "model": "gpt-5.4-medium",    "condition": "rich-pure",     "depends_on": [], "timeout_sec": 120, "verify_profile": "output-exists", "status": "DONE" },
+    { "id": "grok-4-20__sparse",              "model": "grok-4-20",         "condition": "sparse",        "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
+    { "id": "grok-4-20__rich-preamble",       "model": "grok-4-20",         "condition": "rich-preamble", "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
+    { "id": "grok-4-20__rich-pure",           "model": "grok-4-20",         "condition": "rich-pure",     "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
+    { "id": "gemini-3.1-pro__sparse",         "model": "gemini-3.1-pro",    "condition": "sparse",        "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
+    { "id": "gemini-3.1-pro__rich-preamble",  "model": "gemini-3.1-pro",    "condition": "rich-preamble", "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
+    { "id": "gemini-3.1-pro__rich-pure",      "model": "gemini-3.1-pro",    "condition": "rich-pure",     "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
+    { "id": "claude-4-sonnet__sparse",        "model": "claude-4-sonnet",   "condition": "sparse",        "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
+    { "id": "claude-4-sonnet__rich-preamble", "model": "claude-4-sonnet",   "condition": "rich-preamble", "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
+    { "id": "claude-4-sonnet__rich-pure",     "model": "claude-4-sonnet",   "condition": "rich-pure",     "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
+    { "id": "gpt-5.1__sparse",               "model": "gpt-5.1",           "condition": "sparse",        "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
+    { "id": "gpt-5.1__rich-preamble",         "model": "gpt-5.1",           "condition": "rich-preamble", "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
+    { "id": "gpt-5.1__rich-pure",             "model": "gpt-5.1",           "condition": "rich-pure",     "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
+    { "id": "gpt-5.4-nano-medium__sparse",        "model": "gpt-5.4-nano-medium",    "condition": "sparse",        "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
+    { "id": "gpt-5.4-nano-medium__rich-preamble",  "model": "gpt-5.4-nano-medium",    "condition": "rich-preamble", "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
+    { "id": "gpt-5.4-nano-medium__rich-pure",      "model": "gpt-5.4-nano-medium",    "condition": "rich-pure",     "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" }
+  ]
+}
