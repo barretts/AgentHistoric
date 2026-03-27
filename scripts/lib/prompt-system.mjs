@@ -32,7 +32,7 @@ export async function writeTextFile(filePath, contents) {
 }
 
 export function fileHeader(comment) {
-  return `<!-- ${comment} -->\n`;
+  return "";
 }
 
 export function toHeadingList(items) {
@@ -62,8 +62,8 @@ export function renderMdFrontmatter({ trigger, description }) {
 export function renderSkillFrontmatter({ name, description }) {
   return [
     "---",
-    `name: ${name}`,
-    `description: ${description}`,
+    `name: "${escapeDoubleQuotes(name)}"`,
+    `description: "${escapeDoubleQuotes(description)}"`,
     "---",
     ""
   ].join("\n");

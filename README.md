@@ -1,17 +1,26 @@
-# Philosopher Prompt System
+# Agent Historic
 
-A Mixture-of-Experts (MoE) prompt system for AI coding assistants. Six philosopher-inspired expert personas are routed by a single orchestrator, generating rules for **Claude**, **Cursor**, **Windsurf**, and **Codex** from one canonical source.
+> **Translating the world's most documented lives into high-fidelity agentic personas.**
 
-## Experts
+Agent Historic is an open library of persona architectures for Large Language Models. It bridges primary historical records and modern prompt engineering by distilling the reasoning, rhetoric, and decision-making frameworks of well-attested figures into actionable system prompts.
 
-| Expert | Role | Philosophy |
-|--------|------|------------|
+A Mixture-of-Experts (MoE) routing layer assigns the right persona to every request, generating rules for **Claude**, **Cursor**, **Windsurf**, and **Codex** from one canonical source.
+
+## Attested Personas
+
+| Persona | Role | Grounding |
+|---------|------|-----------|
 | **Peirce** | Implementation & Execution | Pragmatism, Cartesian Doubt, Stoic Discipline |
 | **Descartes** | Architecture & System Design | Methodological Skepticism |
 | **Popper** | QA & Falsification | Critical Rationalism |
 | **Rogers** | UX & Accessibility | User-Centered Design |
 | **Blackmore** | Automation & Patterns | Memetics, DRY Principle |
 | **Dennett** | Ideation & Exploration | Cognitive Science, Design Space |
+| **Liskov** | Interfaces & Abstractions | Substitution Principle, Contract Design |
+| **Dijkstra** | State & Formal Reasoning | Structured Programming, Invariants |
+| **Knuth** | Performance & Scaling | Algorithmic Analysis, Literate Programming |
+| **Shannon** | Context & Information Quality | Information Theory, Signal-to-Noise |
+| **Simon** | Agent Orchestration | Bounded Rationality, Satisficing |
 
 ## Quick Start
 
@@ -47,12 +56,12 @@ scripts/
     render-codex.mjs       # Codex renderers (AGENTS.md + SKILL.md)
 
 Generated output:
-  .claude/rules/           # Rich rules for Claude Code
-  .windsurf/rules/         # Rich rules for Windsurf
-  .cursor/rules/           # Rich rules for Cursor (.mdc)
-  .windsurf/rules-gpt/     # Sparse rules for GPT-exclusive Windsurf users
-  .cursor/rules-gpt/       # Sparse rules for GPT-exclusive Cursor users
-  .codex/                  # Sparse AGENTS.md + skills/
+  dot-claude/rules/        # Rich rules for Claude Code
+  dot-windsurf/rules/      # Rich rules for Windsurf
+  dot-cursor/rules/        # Rich rules for Cursor (.mdc)
+  dot-windsurf/rules/gpt/  # Sparse rules for GPT-family Windsurf routing
+  dot-cursor/rules/gpt/    # Sparse rules for GPT-family Cursor routing
+  dot-codex/               # Sparse AGENTS.md + skills/
 
 regression/
   fixtures/cases.json      # Regression test cases
@@ -67,10 +76,10 @@ bash install.sh [options]
 
 | Flag | Effect |
 |------|--------|
-| `--claude` | Install to `~/.claude/rules/` |
-| `--cursor` | Install to `~/.cursor/rules/` |
-| `--windsurf` | Install to `~/.windsurf/rules/` |
-| `--codex` | Install to `~/.codex/` |
+| `--claude` | Install to `~/dot-claude/rules/` |
+| `--cursor` | Install to `~/dot-cursor/rules/` |
+| `--windsurf` | Install to `~/dot-windsurf/rules/` |
+| `--codex` | Install to `~/dot-codex/` |
 | `--all` | All editors |
 | `--gpt` | Use sparse/GPT-optimized rules for Cursor and Windsurf |
 | `--list` | Show installed files without modifying anything |
@@ -82,16 +91,16 @@ bash install.sh [options]
 
 **Windsurf:** Open Customizations > Rules. `00-init.md` and `01-router.md` use `trigger: always` and load on every request. Expert rules use `trigger: model_decision` and are invoked automatically when relevant.
 
-**Claude Code:** Rules auto-load from `~/.claude/rules/`. No configuration needed.
+**Claude Code:** Rules auto-load from `~/dot-claude/rules/`. No configuration needed.
 
-**Codex:** `AGENTS.md` and `skills/` auto-load from `~/.codex/`. No configuration needed.
+**Codex:** `AGENTS.md` and `skills/` auto-load from `~/dot-codex/`. No configuration needed.
 
 ## Rich vs Sparse
 
 | Style | Targets | Description |
 |-------|---------|-------------|
 | **Rich** | Claude, Cursor, Windsurf | Full narrative, philosophy, voice. Includes a GPT adaptation preamble so GPT models can still follow them. |
-| **Sparse** | Codex, `rules-gpt/` | Numbered steps, execution bindings, output contracts. Optimized for models that prefer explicit structure. |
+| **Sparse** | Codex, `rules/gpt/` | Numbered steps, execution bindings, output contracts. Optimized for models that prefer explicit structure. |
 
 Rich rules are the default. Use `bash install.sh --gpt` if you exclusively use GPT models and want the sparse variant.
 
