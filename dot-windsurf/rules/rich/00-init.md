@@ -1,4 +1,3 @@
-<!-- Generated from prompt-system/ -->
 ---
 trigger: model_decision
 description: "Non-GPT global OS for the MoE Swarm Architecture. Load when 00-startup selects the rich/ rules subfolder."

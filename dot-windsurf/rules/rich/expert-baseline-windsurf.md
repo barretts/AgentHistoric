@@ -1,4 +1,3 @@
-<!-- Generated from prompt-system/ -->
 ---
 trigger: model_decision
 description: "baseline, default, general assistance, neutral, windsurf, fallback, general coding, mixed request, unclear domain"
