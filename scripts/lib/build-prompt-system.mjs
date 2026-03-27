@@ -10,6 +10,13 @@ import { renderAgents, renderSkill } from "./render-codex.mjs";
 
 const HEADER = fileHeader("Generated from prompt-system/");
 
+const WINDSURF_STARTUP =
+  `---\n` +
+  `trigger: always_on\n` +
+  `---\n` +
+  `ABSOLUTELY ALWAYS HIGHEST PRIORITY: If you are a GPT-family model, use the gpt/ subfolder for all rules. Otherwise, use the rich/ subfolder.\n` +
+  `ABSOLUTELY ALWAYS HIGHEST PRIORITY: Immediately load 00-init.md and 01-router.md from the appropriate subfolder.\n`;
+
 const STARTUP_BODY =
   `You MUST choose exactly one subfolder before any reasoning: gpt/ or rich/.\n` +
   `Routing rules (in order):\n` +
@@ -42,7 +49,7 @@ export function generateArtifacts(system) {
   );
   artifacts.set(
     path.join("dot-windsurf", "rules", "00-startup.md"),
-    HEADER + windsurfFm("startup", system) + STARTUP_BODY
+    WINDSURF_STARTUP
   );
 
   // Sparse + cursor frontmatter → dot-cursor/rules/gpt/
@@ -110,12 +117,6 @@ function mdFm(kind, _system, expert) {
 }
 
 function windsurfFm(kind, _system, expert) {
-  if (kind === "startup") {
-    return renderMdFrontmatter({
-      trigger: "always_on",
-      description: "Model routing: directs GPT-family models to the gpt/ subfolder."
-    });
-  }
   if (kind === "init") {
     return renderMdFrontmatter({
       trigger: "model_decision",
