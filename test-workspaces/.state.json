@@ -1,9 +1,9 @@
 {
   "state_version": "2.0",
-  "run_id": "persona-prompting-v3",
+  "run_id": "persona-prompting-v5-voice-modes",
   "run_status": "COMPLETED",
   "abort_reason": null,
-  "manifest_digest": "dqy3vi2",
+  "manifest_digest": "days70t",
   "policy": {
     "heal_schedule": "off",
     "batch_strategy": "fixed",
@@ -15,29 +15,6 @@
     "signature_repeat_limit": 1
   },
   "tasks": {
-    "gpt-5.4-medium__rich-old": {
-      "status": "DONE",
-      "worker_attempts": 1,
-      "healer_attempts": 0,
-      "last_failure_class": null,
-      "last_failure_signature": null,
-      "applied_patch_ids": [],
-      "history": [
-        {
-          "task_id": "gpt-5.4-medium__rich-old",
-          "phase": "worker",
-          "attempt_number": 1,
-          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/gpt-5.4-medium/rich-old.jsonl",
-          "verify_log_path": null,
-          "exit_code": 0,
-          "failure_class": null,
-          "failure_signature": null,
-          "applied_patch_ids": [],
-          "duration_sec": 46.9,
-          "timestamp": "2026-03-26T23:36:33.876Z"
-        }
-      ]
-    },
     "gpt-5.4-medium__rich-new": {
       "status": "DONE",
       "worker_attempts": 1,
@@ -56,12 +33,12 @@
           "failure_class": null,
           "failure_signature": null,
           "applied_patch_ids": [],
-          "duration_sec": 55.2,
-          "timestamp": "2026-03-26T23:37:29.056Z"
+          "duration_sec": 51,
+          "timestamp": "2026-03-27T17:30:29.924Z"
         }
       ]
     },
-    "claude-4.6-opus-high__rich-old": {
+    "gpt-5.4-medium__rich-voice": {
       "status": "DONE",
       "worker_attempts": 1,
       "healer_attempts": 0,
@@ -70,17 +47,40 @@
       "applied_patch_ids": [],
       "history": [
         {
-          "task_id": "claude-4.6-opus-high__rich-old",
+          "task_id": "gpt-5.4-medium__rich-voice",
           "phase": "worker",
           "attempt_number": 1,
-          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/claude-4.6-opus-high/rich-old.jsonl",
+          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/gpt-5.4-medium/rich-voice.jsonl",
           "verify_log_path": null,
           "exit_code": 0,
           "failure_class": null,
           "failure_signature": null,
           "applied_patch_ids": [],
-          "duration_sec": 63.2,
-          "timestamp": "2026-03-26T23:38:32.207Z"
+          "duration_sec": 49.7,
+          "timestamp": "2026-03-27T17:31:19.669Z"
+        }
+      ]
+    },
+    "gpt-5.4-medium__rich-scaffolded": {
+      "status": "DONE",
+      "worker_attempts": 1,
+      "healer_attempts": 0,
+      "last_failure_class": null,
+      "last_failure_signature": null,
+      "applied_patch_ids": [],
+      "history": [
+        {
+          "task_id": "gpt-5.4-medium__rich-scaffolded",
+          "phase": "worker",
+          "attempt_number": 1,
+          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/gpt-5.4-medium/rich-scaffolded.jsonl",
+          "verify_log_path": null,
+          "exit_code": 0,
+          "failure_class": null,
+          "failure_signature": null,
+          "applied_patch_ids": [],
+          "duration_sec": 67,
+          "timestamp": "2026-03-27T17:32:26.624Z"
         }
       ]
     },
@@ -102,12 +102,12 @@
           "failure_class": null,
           "failure_signature": null,
           "applied_patch_ids": [],
-          "duration_sec": 64.7,
-          "timestamp": "2026-03-26T23:39:36.874Z"
+          "duration_sec": 68.9,
+          "timestamp": "2026-03-27T17:33:35.569Z"
         }
       ]
     },
-    "grok-4-20__rich-old": {
+    "claude-4.6-opus-high__rich-voice": {
       "status": "DONE",
       "worker_attempts": 1,
       "healer_attempts": 0,
@@ -116,21 +116,21 @@
       "applied_patch_ids": [],
       "history": [
         {
-          "task_id": "grok-4-20__rich-old",
+          "task_id": "claude-4.6-opus-high__rich-voice",
           "phase": "worker",
           "attempt_number": 1,
-          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/grok-4-20/rich-old.jsonl",
+          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/claude-4.6-opus-high/rich-voice.jsonl",
           "verify_log_path": null,
           "exit_code": 0,
           "failure_class": null,
           "failure_signature": null,
           "applied_patch_ids": [],
-          "duration_sec": 23.6,
-          "timestamp": "2026-03-26T23:40:00.431Z"
+          "duration_sec": 64,
+          "timestamp": "2026-03-27T17:34:39.533Z"
         }
       ]
     },
-    "grok-4-20__rich-new": {
+    "claude-4.6-opus-high__rich-scaffolded": {
       "status": "DONE",
       "worker_attempts": 1,
       "healer_attempts": 0,
@@ -139,63 +139,17 @@
       "applied_patch_ids": [],
       "history": [
         {
-          "task_id": "grok-4-20__rich-new",
+          "task_id": "claude-4.6-opus-high__rich-scaffolded",
           "phase": "worker",
           "attempt_number": 1,
-          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/grok-4-20/rich-new.jsonl",
+          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/claude-4.6-opus-high/rich-scaffolded.jsonl",
           "verify_log_path": null,
           "exit_code": 0,
           "failure_class": null,
           "failure_signature": null,
           "applied_patch_ids": [],
-          "duration_sec": 35.9,
-          "timestamp": "2026-03-26T23:40:36.303Z"
-        }
-      ]
-    },
-    "gemini-3.1-pro__rich-old": {
-      "status": "DONE",
-      "worker_attempts": 1,
-      "healer_attempts": 0,
-      "last_failure_class": null,
-      "last_failure_signature": null,
-      "applied_patch_ids": [],
-      "history": [
-        {
-          "task_id": "gemini-3.1-pro__rich-old",
-          "phase": "worker",
-          "attempt_number": 1,
-          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/gemini-3.1-pro/rich-old.jsonl",
-          "verify_log_path": null,
-          "exit_code": 0,
-          "failure_class": null,
-          "failure_signature": null,
-          "applied_patch_ids": [],
-          "duration_sec": 23.9,
-          "timestamp": "2026-03-26T23:41:00.205Z"
-        }
-      ]
-    },
-    "gemini-3.1-pro__rich-new": {
-      "status": "DONE",
-      "worker_attempts": 1,
-      "healer_attempts": 0,
-      "last_failure_class": null,
-      "last_failure_signature": null,
-      "applied_patch_ids": [],
-      "history": [
-        {
-          "task_id": "gemini-3.1-pro__rich-new",
-          "phase": "worker",
-          "attempt_number": 1,
-          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/gemini-3.1-pro/rich-new.jsonl",
-          "verify_log_path": null,
-          "exit_code": 0,
-          "failure_class": null,
-          "failure_signature": null,
-          "applied_patch_ids": [],
-          "duration_sec": 30.2,
-          "timestamp": "2026-03-26T23:41:30.456Z"
+          "duration_sec": 64.4,
+          "timestamp": "2026-03-27T17:35:43.979Z"
         }
       ]
     }

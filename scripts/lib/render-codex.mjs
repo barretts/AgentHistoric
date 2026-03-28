@@ -3,7 +3,9 @@ import {
   fileHeader,
   humanizeExpertId,
   renderSkillFrontmatter,
-  resolveRequiredSections
+  resolveRequiredSections,
+  VOICE_CALIBRATION,
+  SCAFFOLDED_VOICE
 } from "./prompt-system.mjs";
 
 export function renderAgents(system, options = {}) {
@@ -38,6 +40,8 @@ export function renderAgents(system, options = {}) {
       "Verify logging rules, uncertainty labeling, and definition of done before finalizing.",
       "If multiple experts could apply, choose the one with the highest impact on correctness, not completeness."
     ]) +
+    `\n\n## ${options.scaffolded ? "Scaffolded Voice" : "Voice Calibration"}\n\n` +
+    toList(options.scaffolded ? SCAFFOLDED_VOICE : VOICE_CALIBRATION) +
     `\n\n## Routing Order\n\n` +
     toList(
       system.router.routingHeuristics.map(

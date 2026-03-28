@@ -1,22 +1,18 @@
 {
   "manifest_version": "2.0",
-  "run_id": "persona-prompting-v3",
+  "run_id": "persona-prompting-v5-voice-modes",
   "prompt": "Design the data model and trust boundaries for a user notification system that supports email, SMS, and push channels with per-user preferences and rate limiting.",
   "models": [
     "gpt-5.4-medium",
-    "claude-4.6-opus-high",
-    "grok-4-20",
-    "gemini-3.1-pro"
+    "claude-4.6-opus-high"
   ],
-  "conditions": ["rich-old", "rich-new"],
+  "conditions": ["rich-new", "rich-voice", "rich-scaffolded"],
   "tasks": [
-    { "id": "gpt-5.4-medium__rich-old",       "model": "gpt-5.4-medium",      "condition": "rich-old", "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
-    { "id": "gpt-5.4-medium__rich-new",       "model": "gpt-5.4-medium",      "condition": "rich-new", "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
-    { "id": "claude-4.6-opus-high__rich-old", "model": "claude-4.6-opus-high", "condition": "rich-old", "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
-    { "id": "claude-4.6-opus-high__rich-new", "model": "claude-4.6-opus-high", "condition": "rich-new", "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
-    { "id": "grok-4-20__rich-old",            "model": "grok-4-20",            "condition": "rich-old", "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
-    { "id": "grok-4-20__rich-new",            "model": "grok-4-20",            "condition": "rich-new", "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
-    { "id": "gemini-3.1-pro__rich-old",       "model": "gemini-3.1-pro",       "condition": "rich-old", "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
-    { "id": "gemini-3.1-pro__rich-new",       "model": "gemini-3.1-pro",       "condition": "rich-new", "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" }
+    { "id": "gpt-5.4-medium__rich-new",            "model": "gpt-5.4-medium",      "condition": "rich-new",        "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
+    { "id": "gpt-5.4-medium__rich-voice",           "model": "gpt-5.4-medium",      "condition": "rich-voice",      "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
+    { "id": "gpt-5.4-medium__rich-scaffolded",      "model": "gpt-5.4-medium",      "condition": "rich-scaffolded", "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
+    { "id": "claude-4.6-opus-high__rich-new",       "model": "claude-4.6-opus-high", "condition": "rich-new",        "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
+    { "id": "claude-4.6-opus-high__rich-voice",     "model": "claude-4.6-opus-high", "condition": "rich-voice",      "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" },
+    { "id": "claude-4.6-opus-high__rich-scaffolded", "model": "claude-4.6-opus-high", "condition": "rich-scaffolded", "depends_on": [], "timeout_sec": 180, "verify_profile": "output-exists" }
   ]
 }
