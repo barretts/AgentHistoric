@@ -1,4 +1,4 @@
-import { codeFence, resolveRequiredSections } from "./prompt-system.mjs";
+import { codeFence, resolveRequiredSections, VOICE_CALIBRATION, SCAFFOLDED_VOICE } from "./prompt-system.mjs";
 
 export function renderSparseInit(system, options = {}) {
   const g = system.globalRuntime;
@@ -9,12 +9,8 @@ export function renderSparseInit(system, options = {}) {
     `# ${g.name}\n\n` +
     `**Version:** ${g.version}\n` +
     `**Context:** ${g.context}\n\n` +
-    `## GPT Adaptation\n\n` +
-    toList([
-      "If you are a GPT-family model, treat the required headings and execution bindings as a stabilizing scaffold, not a cue to sound robotic.",
-      "Prefer natural, direct prose inside the selected expert structure.",
-      "Stay within the selected expert's method and section contract, but keep the writing fluid and useful rather than over-formal."
-    ]) +
+    `## ${options.scaffolded ? "Scaffolded Voice" : "Voice Calibration"}\n\n` +
+    toList(options.scaffolded ? SCAFFOLDED_VOICE : VOICE_CALIBRATION) +
     `\n\n## Execution Binding\n\n` +
     toList(executionBinding);
   if (options.debug) {

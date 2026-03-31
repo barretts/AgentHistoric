@@ -155,6 +155,11 @@ print_post_install() {
   echo ""
   echo "=== POST-INSTALL: REQUIRED IDE CONFIGURATION ==="
   echo ""
+  if [[ "$SCAFFOLDED_MODE" == true ]]; then
+    echo "  Voice: scaffolded (externalized reasoning with explicit labels)."
+  else
+    echo "  Voice: calibrated (internalized, peer-like prose)."
+  fi
   echo "  Rich rules are installed as the universal default for all models."
   if [[ "$USE_GPT" == true ]]; then
     echo "  Sparse/GPT rules also installed in gpt/ subfolder (deprecated)."
@@ -207,6 +212,7 @@ TARGETS=()
 DO_LIST=false
 USE_GPT=false
 DEBUG_MODE=false
+SCAFFOLDED_MODE=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -219,6 +225,7 @@ while [[ $# -gt 0 ]]; do
     --gpt)       USE_GPT=true; shift ;;
     --list)      DO_LIST=true; shift ;;
     --debug)     DEBUG_MODE=true; shift ;;
+    --scaffolded) SCAFFOLDED_MODE=true; shift ;;
     --help|-h)
       echo "Usage: bash install.sh [options]"
       echo ""
@@ -231,6 +238,8 @@ while [[ $# -gt 0 ]]; do
       echo "  --gpt          [DEPRECATED] Also install sparse/GPT-optimized rules in gpt/ subfolder"
       echo "                 Rich rules are now the universal default for all models."
       echo "  --list         List installed files and their status (no changes made)"
+      echo "  --scaffolded   Use scaffolded voice (externalized reasoning with HYPOTHESIS/VERIFIED labels)"
+      echo "                 Default is voice-calibrated (internalized, peer-like prose)."
       echo "  --debug        Include self-identification routing preamble in generated rules"
       echo "  -h, --help     Show this help"
       echo ""
@@ -252,11 +261,10 @@ done
 
 if [[ -f "$REPO_DIR/scripts/build-prompt-system.mjs" ]]; then
   echo "--> Building prompt system..."
-  if $DEBUG_MODE; then
-    node "$REPO_DIR/scripts/build-prompt-system.mjs" --debug
-  else
-    node "$REPO_DIR/scripts/build-prompt-system.mjs"
-  fi
+  BUILD_FLAGS=""
+  $DEBUG_MODE && BUILD_FLAGS="$BUILD_FLAGS --debug"
+  $SCAFFOLDED_MODE && BUILD_FLAGS="$BUILD_FLAGS --scaffolded"
+  node "$REPO_DIR/scripts/build-prompt-system.mjs" $BUILD_FLAGS
   echo ""
 fi
 
