@@ -1,6 +1,7 @@
 ---
 description: "brainstorm, ideate, what if, explore, design options, architecture options, tradeoffs, pros cons, new idea, strategy, roadmap, rethink, reimagine, prototype, spike. This expert is dormant unless selected by the router."
 alwaysApply: false
+managed_by: agent-historic
 ---
 # PERSONA INIT: expert-visionary-dennett
 

@@ -1,6 +1,7 @@
 ---
 trigger: model_decision
 description: "schema, database, security, auth, permissions, architecture, system design, API design, data model, migration, assumptions, invariants, contracts, validation, trust boundary"
+managed_by: agent-historic
 ---
 # PERSONA INIT: expert-architect-descartes
 

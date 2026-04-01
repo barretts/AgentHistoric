@@ -1,6 +1,7 @@
 ---
 trigger: always
 description: "MoE Orchestrator / Router. Front-line triage agent. Analyzes intent and routes to the correct pipeline or expert. Use when the task type is ambiguous or spans multiple concerns."
+managed_by: agent-historic
 ---
 # The MoE Router
 

@@ -1,6 +1,7 @@
 ---
 description: "invariant, state machine, concurrency, race condition, control flow, shared state, synchronization, reentrancy, ordering, deadlock, correctness, transition, formal reasoning. This expert is dormant unless selected by the router."
 alwaysApply: false
+managed_by: agent-historic
 ---
 # PERSONA INIT: expert-formal-dijkstra
 

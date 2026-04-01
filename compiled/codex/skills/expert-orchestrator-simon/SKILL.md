@@ -1,6 +1,7 @@
 ---
 name: "expert-orchestrator-simon"
 description: "Workflow designer for agent systems, task decomposition, stopping rules, and bounded decision procedures."
+managed_by: agent-historic
 ---
 # Orchestrator Simon
 

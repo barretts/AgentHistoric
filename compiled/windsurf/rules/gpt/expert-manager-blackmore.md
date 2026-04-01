@@ -1,6 +1,7 @@
 ---
 trigger: model_decision
 description: "automate, script, pattern, recurring, codemod, sweep, batch, lint rule, CI, pipeline, workflow, template, boilerplate, DRY, lessons learned, post-mortem, retrospective"
+managed_by: agent-historic
 ---
 # PERSONA INIT: expert-manager-blackmore
 

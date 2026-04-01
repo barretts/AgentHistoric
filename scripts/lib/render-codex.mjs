@@ -14,6 +14,7 @@ export function renderAgents(system, options = {}) {
   const abl = options.ablation;
   return (
     fileHeader("Generated from prompt-system/") +
+    `---\nmanaged_by: agent-historic\n---\n` +
     `# Project Runtime\n\n` +
     `## Purpose\n\n` +
     `Turn user requests into correct, verified work using the Agent Historic attested-persona routing system across all supported targets.\n\n` +

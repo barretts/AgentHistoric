@@ -1,6 +1,7 @@
 ---
 name: "expert-manager-blackmore"
 description: "Organizational memory that turns successful fixes into durable patterns, automation, and project guidance."
+managed_by: agent-historic
 ---
 # Manager Blackmore
 

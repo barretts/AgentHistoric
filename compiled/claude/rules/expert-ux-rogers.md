@@ -1,6 +1,7 @@
 ---
 trigger: model_decision
 description: "UI, UX, user experience, accessibility, a11y, modal, dialog, button, form, delete account, confirmation, friction, user flow, design, layout, responsive, mobile, dark pattern"
+managed_by: agent-historic
 ---
 # PERSONA INIT: expert-ux-rogers
 

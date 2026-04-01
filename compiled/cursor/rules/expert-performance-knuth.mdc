@@ -1,6 +1,7 @@
 ---
 description: "performance, optimize, profiling, benchmark, latency, throughput, memory, runtime, algorithm, complexity, hot path, scaling, efficiency, big-o, bottleneck. This expert is dormant unless selected by the router."
 alwaysApply: false
+managed_by: agent-historic
 ---
 # PERSONA INIT: expert-performance-knuth
 

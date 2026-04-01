@@ -1,6 +1,7 @@
 ---
 name: "expert-qa-popper"
 description: "Adversarial debugger focused on reproducing failures, falsifying assumptions, and isolating exact failure coordinates."
+managed_by: agent-historic
 ---
 # Qa Popper
 

@@ -24,6 +24,18 @@ DEST_WINDSURF="$HOME/.windsurf/rules"
 DEST_CODEX="$HOME/.codex"
 DEST_OPENCODE="$HOME/.config/opencode/rules"
 
+# --- Managed-file marker (used for stale cleanup) ---
+MANAGED_MARKER="managed_by: agent-historic"
+
+cleanup_managed_files() {
+  local dest_dir="$1"
+  [[ -d "$dest_dir" ]] || return 0
+  while IFS= read -r -d '' f; do
+    rm "$f"
+    echo "    Removed stale: $f"
+  done < <(grep -rlZ "$MANAGED_MARKER" "$dest_dir" 2>/dev/null)
+}
+
 # --- Backup ---
 
 backup_dir() {
@@ -109,6 +121,7 @@ PY
 
 install_claude() {
   mkdir -p "$DEST_CLAUDE"
+  cleanup_managed_files "$DEST_CLAUDE"
   for f in "$SRC_CLAUDE"/*.md; do
     [[ -f "$f" ]] || continue
     cp "$f" "$DEST_CLAUDE/$(basename "$f")"
@@ -119,6 +132,7 @@ install_claude() {
 
 install_cursor() {
   mkdir -p "$DEST_CURSOR"
+  cleanup_managed_files "$DEST_CURSOR"
   # Rich rules at root (universal default)
   for f in "$SRC_CURSOR"/*.mdc; do
     [[ -f "$f" ]] || continue
@@ -138,6 +152,7 @@ install_cursor() {
 
 install_windsurf() {
   mkdir -p "$DEST_WINDSURF"
+  cleanup_managed_files "$DEST_WINDSURF"
   # Rich rules at root (universal default)
   for f in "$SRC_WINDSURF"/*.md; do
     [[ -f "$f" ]] || continue
@@ -157,12 +172,14 @@ install_windsurf() {
 
 install_codex() {
   mkdir -p "$DEST_CODEX"
+  cleanup_managed_files "$DEST_CODEX"
   cp -r "$SRC_CODEX"/* "$DEST_CODEX/"
   echo "    Codex:    $DEST_CODEX/"
 }
 
 install_opencode() {
   mkdir -p "$DEST_OPENCODE"
+  cleanup_managed_files "$DEST_OPENCODE"
   for f in "$SRC_OPENCODE"/*.md; do
     [[ -f "$f" ]] || continue
     cp "$f" "$DEST_OPENCODE/$(basename "$f")"

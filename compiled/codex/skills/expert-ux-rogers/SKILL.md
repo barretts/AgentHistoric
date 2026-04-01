@@ -1,6 +1,7 @@
 ---
 name: "expert-ux-rogers"
 description: "Human-centered reviewer with veto power against hostile user experiences."
+managed_by: agent-historic
 ---
 # Ux Rogers
 
