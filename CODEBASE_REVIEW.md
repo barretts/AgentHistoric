@@ -113,7 +113,7 @@ The build system generates artifacts for multiple target formats:
 | Claude Code | `compiled/claude/rules/` | `.md` | Custom YAML-like |
 | Cursor | `compiled/cursor/rules/` | `.mdc` | Cursor-specific JSON |
 | Windsurf (root) | `compiled/windsurf/rules/` | `.md` | Custom YAML-like |
-| Windsurf (gpt) | `compiled/windsurf/rules/gpt/` | `.md` | Sparse format |
+
 | Codex | `compiled/codex/` | `.md` | Proprietary |
 
 ### Frontmatter Variations
@@ -215,8 +215,7 @@ All 11 experts now have at least one dedicated regression case. Remaining gaps:
 
 ### Windsurf Integration
 
-- **Strength**: Dual format support (root + gpt subfolder) provides flexibility
-- **Weakness**: No clear documentation of when to use sparse vs. rich formats
+- **Strength**: Rich format is the universal default for all models
 
 ---
 

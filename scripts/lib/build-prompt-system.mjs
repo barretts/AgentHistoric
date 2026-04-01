@@ -5,7 +5,7 @@ import {
   renderMdFrontmatter
 } from "./prompt-system.mjs";
 import { renderRichInit, renderRichRouter, renderRichExpert } from "./render-rich.mjs";
-import { renderSparseInit, renderSparseRouter, renderSparseExpert } from "./render-sparse.mjs";
+
 import { renderAgents, renderSkill } from "./render-codex.mjs";
 
 const HEADER = fileHeader("Generated from prompt-system/");
@@ -24,13 +24,7 @@ export function generateArtifacts(system, options = {}) {
   // Rich + cursor frontmatter → compiled/cursor/rules/
   addSet(artifacts, system, path.join("compiled", "cursor", "rules"), ".mdc", cursorFm, renderRichInit, renderRichRouter, renderRichExpert, options);
 
-  // Sparse + cursor frontmatter → compiled/cursor/rules/gpt/
-  addSet(artifacts, system, path.join("compiled", "cursor", "rules", "gpt"), ".mdc", cursorFm, renderSparseInit, renderSparseRouter, renderSparseExpert, options);
-
-  // Sparse + windsurf frontmatter → compiled/windsurf/rules/gpt/
-  addSet(artifacts, system, path.join("compiled", "windsurf", "rules", "gpt"), ".md", windsurfFm, renderSparseInit, renderSparseRouter, renderSparseExpert, options);
-
-  // Codex (own format, sparse)
+  // Codex (own format)
   artifacts.set(path.join("compiled", "codex", "AGENTS.md"), renderAgents(system, options));
   for (const expert of system.experts) {
     artifacts.set(
@@ -64,12 +58,6 @@ function addSet(artifacts, system, dir, ext, fmFn, initFn, routerFn, expertFn, o
 // ── Frontmatter Factories ───────────────────────────────────────────
 
 function mdFm(kind, _system, expert) {
-  if (kind === "startup") {
-    return renderMdFrontmatter({
-      trigger: "always",
-      description: "Model routing: directs GPT-family models to the gpt/ subfolder."
-    });
-  }
   if (kind === "init") {
     return renderMdFrontmatter({
       trigger: "always",

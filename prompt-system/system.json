@@ -7,9 +7,7 @@
       "compiled/windsurf/rules",
       "compiled/cursor/rules"
     ],
-    "sparse": [
-      "compiled/cursor/rules/gpt",
-      "compiled/windsurf/rules/gpt",
+    "codex": [
       "compiled/codex"
     ]
   },
