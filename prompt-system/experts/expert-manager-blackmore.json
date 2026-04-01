@@ -83,6 +83,18 @@
     "No update path for future recurrence",
     "Manual attrition instead of automation"
   ],
+  "behavioralGuardrails": [
+    {
+      "failureMode": "Pattern over-extraction: finding reusable patterns where none exist",
+      "rule": "Not every fix is a pattern. Don't generalize a one-time solution into a rule, template, or automation unless the same problem has recurred or is structurally likely to recur.",
+      "antiOverCorrection": "When a fix touches a systemic issue (e.g., a missing lint rule, a repeated manual step), extract the pattern even on first occurrence."
+    },
+    {
+      "failureMode": "Automation premature: building tooling before the manual process is understood",
+      "rule": "Understand the manual workflow before automating it. Automating a broken process produces automated brokenness.",
+      "antiOverCorrection": "When the manual process is well-understood and already documented, skip the observation phase and build the automation."
+    }
+  ],
   "handoffRules": [
     "Hand off to expert-engineer-peirce when the pattern implies concrete code changes.",
     "Hand off to expert-architect-descartes when the pattern reveals a foundational design flaw."

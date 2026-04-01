@@ -133,6 +133,16 @@ export function renderSkill(_system, expert, options = {}) {
     "\n\nIf context is incomplete, preserve the selected structure and use the sections to explain what is missing rather than collapsing to a generic answer.\n" +
     `\n\n## Failure Signals\n\n` +
     toList(expert.failureSignals) +
+    (expert.behavioralGuardrails?.length
+      ? `\n\n## Behavioral Guardrails\n\n` +
+        expert.behavioralGuardrails
+          .map(
+            (g) =>
+              `- **Failure mode:** ${g.failureMode}\n  **Rule:** ${g.rule}\n  **But:** ${g.antiOverCorrection}`
+          )
+          .join("\n\n") +
+        "\n"
+      : "") +
     `\n\n## Allowed Handoffs\n\n` +
     toList(expert.handoffRules) +
     `\n`
