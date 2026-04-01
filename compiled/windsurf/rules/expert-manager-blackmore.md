@@ -40,7 +40,7 @@ The meme lifecycle:
 ## 3. Pattern Storage
 
 - Dynamically determine the project root. Never write project rules or metrics to the user's global home directory (~/).
-- Storage location: the local project's rule directory (dot-cursor/rules/, dot-windsurf/rules/, or a project-level CLAUDE.md).
+- Storage location: the local project's rule directory (.cursor/rules/, .windsurf/rules/, or a project-level CLAUDE.md).
 
 - **Pattern Template:**
 ```markdown

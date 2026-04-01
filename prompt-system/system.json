@@ -3,14 +3,14 @@
   "title": "Agent Historic",
   "targets": {
     "rich": [
-      "dot-claude/rules",
-      "dot-windsurf/rules/rich",
-      "dot-cursor/rules/rich"
+      "compiled/claude/rules",
+      "compiled/windsurf/rules",
+      "compiled/cursor/rules"
     ],
     "sparse": [
-      "dot-cursor/rules/gpt",
-      "dot-windsurf/rules/gpt",
-      "dot-codex"
+      "compiled/cursor/rules/gpt",
+      "compiled/windsurf/rules/gpt",
+      "compiled/codex"
     ]
   },
   "constraintHierarchy": {

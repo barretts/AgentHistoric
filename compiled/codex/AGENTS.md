@@ -56,19 +56,19 @@ Each layer restricts but never expands the constraints of the layer above. An ex
 
 ## Routing Order
 
-- Massive Codebase Sweeps -> dot-codex/skills/expert-architect-descartes -> dot-codex/skills/expert-engineer-peirce -> dot-codex/skills/expert-qa-popper -> dot-codex/skills/expert-manager-blackmore
-- Agent Workflows & Orchestration -> dot-codex/skills/expert-orchestrator-simon -> dot-codex/skills/expert-architect-descartes -> dot-codex/skills/expert-manager-blackmore
-- Exploration & Ideation -> dot-codex/skills/expert-visionary-dennett -> dot-codex/skills/expert-ux-rogers
-- Foundational Architecture -> dot-codex/skills/expert-architect-descartes
-- Interfaces & Abstractions -> dot-codex/skills/expert-abstractions-liskov -> dot-codex/skills/expert-architect-descartes -> dot-codex/skills/expert-engineer-peirce
-- Pragmatic Implementation -> dot-codex/skills/expert-engineer-peirce
-- Performance & Scaling -> dot-codex/skills/expert-performance-knuth -> dot-codex/skills/expert-engineer-peirce -> dot-codex/skills/expert-architect-descartes
-- Debug Firefighting & Test Failures -> dot-codex/skills/expert-qa-popper -> dot-codex/skills/expert-engineer-peirce -> dot-codex/skills/expert-manager-blackmore
-- State, Concurrency & Invariants -> dot-codex/skills/expert-formal-dijkstra -> dot-codex/skills/expert-qa-popper -> dot-codex/skills/expert-engineer-peirce
-- Bug Hunting & Edge Cases -> dot-codex/skills/expert-qa-popper
-- Context Compression & Retrieval Quality -> dot-codex/skills/expert-information-shannon -> dot-codex/skills/expert-orchestrator-simon -> dot-codex/skills/expert-engineer-peirce
-- Security & 3PP Vulnerabilities -> dot-codex/skills/expert-qa-popper -> dot-codex/skills/expert-engineer-peirce
-- Retrospective & Pattern Extraction -> dot-codex/skills/expert-manager-blackmore
+- Massive Codebase Sweeps -> .codex/skills/expert-architect-descartes -> .codex/skills/expert-engineer-peirce -> .codex/skills/expert-qa-popper -> .codex/skills/expert-manager-blackmore
+- Agent Workflows & Orchestration -> .codex/skills/expert-orchestrator-simon -> .codex/skills/expert-architect-descartes -> .codex/skills/expert-manager-blackmore
+- Exploration & Ideation -> .codex/skills/expert-visionary-dennett -> .codex/skills/expert-ux-rogers
+- Foundational Architecture -> .codex/skills/expert-architect-descartes
+- Interfaces & Abstractions -> .codex/skills/expert-abstractions-liskov -> .codex/skills/expert-architect-descartes -> .codex/skills/expert-engineer-peirce
+- Pragmatic Implementation -> .codex/skills/expert-engineer-peirce
+- Performance & Scaling -> .codex/skills/expert-performance-knuth -> .codex/skills/expert-engineer-peirce -> .codex/skills/expert-architect-descartes
+- Debug Firefighting & Test Failures -> .codex/skills/expert-qa-popper -> .codex/skills/expert-engineer-peirce -> .codex/skills/expert-manager-blackmore
+- State, Concurrency & Invariants -> .codex/skills/expert-formal-dijkstra -> .codex/skills/expert-qa-popper -> .codex/skills/expert-engineer-peirce
+- Bug Hunting & Edge Cases -> .codex/skills/expert-qa-popper
+- Context Compression & Retrieval Quality -> .codex/skills/expert-information-shannon -> .codex/skills/expert-orchestrator-simon -> .codex/skills/expert-engineer-peirce
+- Security & 3PP Vulnerabilities -> .codex/skills/expert-qa-popper -> .codex/skills/expert-engineer-peirce
+- Retrospective & Pattern Extraction -> .codex/skills/expert-manager-blackmore
 
 ## Global Rules
 
@@ -105,14 +105,14 @@ Then inspect the saved log file.
 
 ## Available Expert Skills
 
-- dot-codex/skills/expert-abstractions-liskov: Abstractions Liskov
-- dot-codex/skills/expert-architect-descartes: Architect Descartes
-- dot-codex/skills/expert-engineer-peirce: Engineer Peirce
-- dot-codex/skills/expert-formal-dijkstra: Formal Dijkstra
-- dot-codex/skills/expert-information-shannon: Information Shannon
-- dot-codex/skills/expert-manager-blackmore: Manager Blackmore
-- dot-codex/skills/expert-orchestrator-simon: Orchestrator Simon
-- dot-codex/skills/expert-performance-knuth: Performance Knuth
-- dot-codex/skills/expert-qa-popper: Qa Popper
-- dot-codex/skills/expert-ux-rogers: Ux Rogers
-- dot-codex/skills/expert-visionary-dennett: Visionary Dennett
+- .codex/skills/expert-abstractions-liskov: Abstractions Liskov
+- .codex/skills/expert-architect-descartes: Architect Descartes
+- .codex/skills/expert-engineer-peirce: Engineer Peirce
+- .codex/skills/expert-formal-dijkstra: Formal Dijkstra
+- .codex/skills/expert-information-shannon: Information Shannon
+- .codex/skills/expert-manager-blackmore: Manager Blackmore
+- .codex/skills/expert-orchestrator-simon: Orchestrator Simon
+- .codex/skills/expert-performance-knuth: Performance Knuth
+- .codex/skills/expert-qa-popper: Qa Popper
+- .codex/skills/expert-ux-rogers: Ux Rogers
+- .codex/skills/expert-visionary-dennett: Visionary Dennett
