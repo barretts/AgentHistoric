@@ -8,6 +8,7 @@ import {
   assertDiagnosticDiscipline,
   assertNoFalseClaims,
   assertNoGoldPlating,
+  assertRoutingFirst,
   buildWrappedPrompt,
   computeBehavioralMetrics,
   evaluateResponse,
@@ -51,6 +52,10 @@ test("buildWrappedPrompt includes exact required headings guidance", () => {
   assert.match(
     prompt,
     /Use these exact response headings for this case when they apply: Selected Expert, Reason, Confidence, Assumptions, Failure Modes, Fallbacks\./
+  );
+  assert.match(
+    prompt,
+    /The response body itself must begin with Selected Expert, then Reason, then Confidence, before any other content\./
   );
 });
 
@@ -270,6 +275,113 @@ test("assertDiagnosticDiscipline passes when diagnosis precedes fix", () => {
   };
   const result = assertDiagnosticDiscipline(response);
   assert.strictEqual(result.pass, true);
+});
+
+test("assertRoutingFirst flags preamble before routing headings", () => {
+  const response = {
+    response: [
+      "I will inspect the files first.",
+      "",
+      "## Selected Expert",
+      "expert-engineer-peirce",
+      "",
+      "## Reason",
+      "Implementation request.",
+      "",
+      "## Confidence",
+      "High",
+      "",
+      "## Answer",
+      "Done."
+    ].join("\n")
+  };
+  const result = assertRoutingFirst(response);
+  assert.strictEqual(result.pass, false);
+  assert.match(result.finding, /preamble content before the routing decision/i);
+});
+
+test("assertRoutingFirst passes when routing headings come first in order", () => {
+  const response = {
+    response: [
+      "## Selected Expert",
+      "expert-engineer-peirce",
+      "",
+      "## Reason",
+      "Implementation request.",
+      "",
+      "## Confidence",
+      "High",
+      "",
+      "## Answer",
+      "Done."
+    ].join("\n")
+  };
+  const result = assertRoutingFirst(response);
+  assert.strictEqual(result.pass, true);
+});
+
+test("evaluateResponse incorporates routing-first findings into scoring", async () => {
+  const system = await loadPromptSystemSpec(workspaceRoot);
+  const testCase = {
+    ...await loadCase("BG7"),
+    behavioralAssertions: ["routingFirst"]
+  };
+  const response = {
+    routingDecision: {
+      domain: "Foundational Architecture",
+      selectedExpert: "expert-architect-descartes",
+      reason: "The request asks for trust boundaries and contracts.",
+      confidence: "High"
+    },
+    activeExpert: "expert-architect-descartes",
+    handoffs: [],
+    outputSections: [
+      "Selected Expert",
+      "Reason",
+      "Confidence",
+      "Assumptions",
+      "Failure Modes",
+      "Fallbacks",
+      "Foundation",
+      "Verification Flags"
+    ],
+    confidenceLabeled: true,
+    personaBlend: false,
+    domainStayedInScope: true,
+    summary: "Architecture remained primary.",
+    response: [
+      "Let me inspect the architecture skill first.",
+      "",
+      "## Selected Expert",
+      "expert-architect-descartes",
+      "",
+      "## Reason",
+      "VERIFIED the prompt asks for trust boundaries.",
+      "",
+      "## Confidence",
+      "High",
+      "",
+      "## Assumptions",
+      "VERIFIED some implementation details are unspecified.",
+      "",
+      "## Failure Modes",
+      "HYPOTHESIS unclear trust boundaries leak privileges.",
+      "",
+      "## Fallbacks",
+      "VERIFIED default-deny reduces blast radius.",
+      "",
+      "## Foundation",
+      "VERIFIED contracts come before implementation.",
+      "",
+      "## Verification Flags",
+      "HYPOTHESIS validate role boundaries with tests."
+    ].join("\n")
+  };
+
+  const result = evaluateResponse(system, testCase, response);
+  assert.strictEqual(result.score, 1);
+  assert.ok(result.behavioralFindings.length > 0);
+  assert.match(result.behavioralFindings[0], /routing discipline/i);
 });
 
 test("evaluateResponse incorporates behavioral findings into scoring", async () => {
