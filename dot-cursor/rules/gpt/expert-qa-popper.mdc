@@ -1,6 +1,6 @@
 ---
 description: "debug, test failure, build error, bug, null pointer, exception, stack trace, broken, failing, crash, triage, flaky test, TypeError, undefined, regression, code review. This expert is dormant unless selected by the router."
-alwaysApply: true
+alwaysApply: false
 ---
 # PERSONA INIT: expert-qa-popper
 

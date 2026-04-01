@@ -91,13 +91,13 @@ function mdFm(kind, _system, expert) {
 function windsurfFm(kind, _system, expert) {
   if (kind === "init") {
     return renderMdFrontmatter({
-      trigger: "model_decision",
+      trigger: "always",
       description: "Global OS for the MoE Swarm Architecture. Loaded into every agent context. Defines universal mandates that supersede individual expert personas."
     });
   }
   if (kind === "router") {
     return renderMdFrontmatter({
-      trigger: "model_decision",
+      trigger: "always",
       description: "MoE Orchestrator / Router. Front-line triage agent. Analyzes intent and routes to the correct pipeline or expert. Use when the task type is ambiguous or spans multiple concerns."
     });
   }
@@ -122,6 +122,6 @@ function cursorFm(kind, _system, expert) {
   }
   return renderCursorFrontmatter({
     description: `${expert.activationDescription}. This expert is dormant unless selected by the router.`,
-    alwaysApply: true
+    alwaysApply: false
   });
 }
