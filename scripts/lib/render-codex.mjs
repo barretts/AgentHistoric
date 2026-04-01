@@ -10,6 +10,7 @@ import {
 
 export function renderAgents(system, options = {}) {
   const g = system.globalRuntime;
+  const abl = options.ablation;
   return (
     fileHeader("Generated from prompt-system/") +
     `# Project Runtime\n\n` +
@@ -48,8 +49,10 @@ export function renderAgents(system, options = {}) {
       "Verify logging rules, uncertainty labeling, and definition of done before finalizing.",
       "If multiple experts could apply, choose the one with the highest impact on correctness, not completeness."
     ]) +
-    `\n\n## ${options.scaffolded ? "Scaffolded Voice" : "Voice Calibration"}\n\n` +
-    toList(options.scaffolded ? SCAFFOLDED_VOICE : VOICE_CALIBRATION) +
+    (abl !== "voice-calibration"
+      ? `\n\n## ${options.scaffolded ? "Scaffolded Voice" : "Voice Calibration"}\n\n` +
+        toList(options.scaffolded ? SCAFFOLDED_VOICE : VOICE_CALIBRATION)
+      : "") +
     `\n\n## Routing Order\n\n` +
     toList(
       system.router.routingHeuristics.map(
@@ -60,13 +63,14 @@ export function renderAgents(system, options = {}) {
       )
     ) +
     `\n\n## Global Rules\n\n` +
-    toList(g.uncertaintyRules) +
-    `\n\n` +
-    toList(g.foundationalConstraints) +
-    `\n\n## Logging\n\n` +
-    toList(g.logging.required) +
-    `\n\n` +
-    codeFence(g.logging.pattern.join("\n"), "bash") +
+    (abl !== "uncertainty-rules" ? toList(g.uncertaintyRules) + `\n\n` : "") +
+    (abl !== "foundational-constraints" ? toList(g.foundationalConstraints) : "") +
+    (abl !== "logging-protocol"
+      ? `\n\n## Logging\n\n` +
+        toList(g.logging.required) +
+        `\n\n` +
+        codeFence(g.logging.pattern.join("\n"), "bash")
+      : "") +
     `\n\n## Definition Of Done\n\n` +
     toList(g.definitionOfDone) +
     `\n\n## Available Expert Skills\n\n` +
@@ -80,6 +84,7 @@ export function renderAgents(system, options = {}) {
 }
 
 export function renderSkill(_system, expert, options = {}) {
+  const abl = options.ablation;
   const {
     defaultSections: defaultStructure,
     complexSections: complexStructure
@@ -98,7 +103,7 @@ export function renderSkill(_system, expert, options = {}) {
     `${expert.personaIntro}\n\n` +
     `## Philosophy\n\n` +
     `${expert.philosophy}\n\n` +
-    (expert.corePhilosophy?.length
+    (expert.corePhilosophy?.length && abl !== "expert-philosophy"
       ? expert.corePhilosophy
           .map((p) => `- **${p.name}:** ${p.description}`)
           .join("\n") + "\n\n"
@@ -139,9 +144,10 @@ export function renderSkill(_system, expert, options = {}) {
       ? "When the only required section is Answer, do not create internal labeled mini-sections such as Assumptions, Edge Cases, Risk, or Verification inside that Answer block. Keep that material inline as sentences or bullets.\n"
       : "") +
     "\n\nIf context is incomplete, preserve the selected structure and use the sections to explain what is missing rather than collapsing to a generic answer.\n" +
-    `\n\n## Failure Signals\n\n` +
-    toList(expert.failureSignals) +
-    (expert.behavioralGuardrails?.length
+    (abl !== "failure-signals"
+      ? `\n\n## Failure Signals\n\n` + toList(expert.failureSignals)
+      : "") +
+    (expert.behavioralGuardrails?.length && abl !== "behavioral-guardrails"
       ? `\n\n## Behavioral Guardrails\n\n` +
         expert.behavioralGuardrails
           .map(

@@ -561,6 +561,42 @@ export function computeBehavioralMetrics(response, testCase) {
   };
 }
 
+// ── Ablation Report ─────────────────────────────────────────────────
+
+export function formatAblationReport(report) {
+  const lines = [];
+
+  lines.push("# Ablation Report");
+  lines.push("");
+  lines.push(`- Timestamp: ${report.timestamp}`);
+  lines.push(`- Trials per condition: ${report.trialsPerCondition}`);
+  lines.push("");
+  lines.push("| Section | Chars Saved | pass^k Delta | Over-Engineering Delta | Concision Delta | Verdict |");
+  lines.push("|---------|:----------:|:------------:|:---------------------:|:--------------:|:-------:|");
+
+  for (const s of report.sections) {
+    lines.push(
+      `| ${s.id} | ${s.charsSaved} | ${formatDelta(s.passHatKDelta)} | ${formatDelta(s.overEngineeringDelta)} | ${formatDelta(s.concisionDelta)} | ${s.verdict} |`
+    );
+  }
+
+  lines.push("");
+  lines.push("## Verdict Legend");
+  lines.push("");
+  lines.push("- **KEEP:** Removing this section measurably worsens behavior. It earns its token cost.");
+  lines.push("- **REVIEW:** No measurable impact detected. Candidate for rewriting or removal.");
+  lines.push("- **REMOVE:** Removing this section measurably improves behavior. It may be counterproductive.");
+  lines.push("");
+
+  return lines.join("\n");
+}
+
+function formatDelta(value) {
+  if (value === 0) return "+0.00";
+  const sign = value > 0 ? "+" : "";
+  return `${sign}${value.toFixed(2)}`;
+}
+
 export function compareTargets(resultsByTarget) {
   const cursor = resultsByTarget.cursor;
   const codex = resultsByTarget.codex;

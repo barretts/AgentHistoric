@@ -2,6 +2,7 @@ import { codeFence, resolveRequiredSections, VOICE_CALIBRATION, SCAFFOLDED_VOICE
 
 export function renderSparseInit(system, options = {}) {
   const g = system.globalRuntime;
+  const abl = options.ablation;
   const executionBinding = options.debug
     ? g.executionBinding
     : g.executionBinding.filter((item) => !item.includes("Selected Expert"));
@@ -13,11 +14,17 @@ export function renderSparseInit(system, options = {}) {
       ? `## Constraint Hierarchy\n\n` +
         `${system.constraintHierarchy.description}\n\n` +
         `**Invariant:** ${system.constraintHierarchy.invariant}\n\n`
-      : "") +
-    `## ${options.scaffolded ? "Scaffolded Voice" : "Voice Calibration"}\n\n` +
-    toList(options.scaffolded ? SCAFFOLDED_VOICE : VOICE_CALIBRATION) +
-    `\n\n## Execution Binding\n\n` +
-    toList(executionBinding);
+      : "");
+
+  if (abl !== "voice-calibration") {
+    out +=
+      `## ${options.scaffolded ? "Scaffolded Voice" : "Voice Calibration"}\n\n` +
+      toList(options.scaffolded ? SCAFFOLDED_VOICE : VOICE_CALIBRATION) +
+      `\n\n`;
+  }
+
+  out += `## Execution Binding\n\n` + toList(executionBinding);
+
   if (options.debug) {
     out +=
       `\n\n## Routing Decision Format\n\n` +
@@ -32,20 +39,35 @@ export function renderSparseInit(system, options = {}) {
         "Keep VERIFIED and HYPOTHESIS inline inside the selected sections when possible, instead of promoting them to standalone headings."
       ]);
   }
+
+  if (abl !== "logging-protocol") {
+    out +=
+      `\n\n## Logging Protocol\n\n` +
+      `**Principle:** ${g.logging.principle}\n\n` +
+      toList(g.logging.required) +
+      `\n\n` +
+      codeFence(g.logging.pattern.join("\n"), "bash") +
+      `\n\n**Forbidden**\n\n` +
+      toList(g.logging.forbidden.map((item) => `\`${item}\``));
+  }
+
+  if (abl !== "uncertainty-rules") {
+    out +=
+      `\n\n## Uncertainty Rules\n\n` +
+      toList(g.uncertaintyRules);
+  }
+
   out +=
-    `\n\n## Logging Protocol\n\n` +
-    `**Principle:** ${g.logging.principle}\n\n` +
-    toList(g.logging.required) +
-    `\n\n` +
-    codeFence(g.logging.pattern.join("\n"), "bash") +
-    `\n\n**Forbidden**\n\n` +
-    toList(g.logging.forbidden.map((item) => `\`${item}\``)) +
-    `\n\n## Uncertainty Rules\n\n` +
-    toList(g.uncertaintyRules) +
     `\n\n## Definition Of Done\n\n` +
-    toList(g.definitionOfDone) +
-    `\n\n## Foundational Constraints\n\n` +
-    toList(g.foundationalConstraints) +
+    toList(g.definitionOfDone);
+
+  if (abl !== "foundational-constraints") {
+    out +=
+      `\n\n## Foundational Constraints\n\n` +
+      toList(g.foundationalConstraints);
+  }
+
+  out +=
     `\n\n## Active Expert Registry\n\n` +
     toList(system.experts.map((e) => `${e.id}: ${e.title}`)) +
     `\n`;
@@ -109,6 +131,7 @@ export function renderSparseRouter(system, options = {}) {
 }
 
 export function renderSparseExpert(system, expert, options = {}) {
+  const abl = options.ablation;
   const { defaultSections: structure, complexSections: complexStructure } =
     resolveRequiredSections(expert.requiredSections);
 
@@ -152,9 +175,10 @@ export function renderSparseExpert(system, expert, options = {}) {
     "\n\nIf context is incomplete, preserve the selected structure and use the sections to explain what is missing rather than collapsing to a generic answer.\n" +
     `\n\n## Deliverables\n\n` +
     toList(expert.deliverables) +
-    `\n\n## Failure Signals\n\n` +
-    toList(expert.failureSignals) +
-    (expert.behavioralGuardrails?.length
+    (abl !== "failure-signals"
+      ? `\n\n## Failure Signals\n\n` + toList(expert.failureSignals)
+      : "") +
+    (expert.behavioralGuardrails?.length && abl !== "behavioral-guardrails"
       ? `\n\n## Behavioral Guardrails\n\n` +
         expert.behavioralGuardrails
           .map(
