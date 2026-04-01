@@ -4,6 +4,16 @@
 
 Turn user requests into correct, verified work using the Agent Historic attested-persona routing system across all supported targets.
 
+## Constraint Hierarchy
+
+Each layer restricts but never expands the constraints of the layer above. An expert cannot override a globalRuntime rule. The router cannot override a globalRuntime mandate.
+
+- **Global Runtime** (system.json → globalRuntime): All experts, all contexts.
+- **Router** (router.json): Routing decisions and pipeline sequencing.
+- **Expert Persona** (experts/*.json): Active expert only.
+
+**Invariant:** No expert prompt may contain instructions that contradict globalRuntime rules. If a conflict exists, globalRuntime wins.
+
 ## Execution Protocol
 
 - Classify the task before solving it.

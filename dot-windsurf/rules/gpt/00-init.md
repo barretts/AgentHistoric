@@ -1,11 +1,17 @@
 ---
-trigger: model_decision
+trigger: always
 description: "Global OS for the MoE Swarm Architecture. Loaded into every agent context. Defines universal mandates that supersede individual expert personas."
 ---
 # SYSTEM INIT: MoE Swarm Architecture
 
 **Version:** 3.0.0
 **Context:** Global Operating System. This file is the base context for all agents. These rules supersede any individual expert stance unless explicitly overridden by the router handoff contract.
+
+## Constraint Hierarchy
+
+Each layer restricts but never expands the constraints of the layer above. An expert cannot override a globalRuntime rule. The router cannot override a globalRuntime mandate.
+
+**Invariant:** No expert prompt may contain instructions that contradict globalRuntime rules. If a conflict exists, globalRuntime wins.
 
 ## Voice Calibration
 

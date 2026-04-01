@@ -31,7 +31,9 @@ export function parseArgs(argv) {
       cursor: "gpt-5.4-medium",
       codex: null
     },
-    caseIds: []
+    caseIds: [],
+    trials: 1,
+    parallel: 1
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -57,6 +59,12 @@ export function parseArgs(argv) {
         .split(",")
         .map((value) => value.trim())
         .filter(Boolean);
+      index += 1;
+    } else if (arg === "--trials") {
+      options.trials = Math.max(1, parseInt(argv[index + 1], 10) || 1);
+      index += 1;
+    } else if (arg === "--parallel") {
+      options.parallel = Math.max(1, parseInt(argv[index + 1], 10) || 1);
       index += 1;
     }
   }
@@ -301,9 +309,37 @@ export function evaluateResponse(system, testCase, response) {
     findings.push(`Invalid handoffs: ${invalidHandoffs.join(", ")}.`);
   }
 
+  const behavioralFindings = [];
+  const assertions = testCase.behavioralAssertions || [];
+
+  const assertionMap = {
+    noGoldPlating: () => assertNoGoldPlating(response, testCase),
+    concision: () => assertConcision(response),
+    noFalseClaims: () => assertNoFalseClaims(response),
+    diagnosticDiscipline: () => assertDiagnosticDiscipline(response)
+  };
+
+  for (const name of assertions) {
+    const fn = assertionMap[name];
+    if (fn) {
+      const result = fn();
+      if (!result.pass) {
+        behavioralFindings.push(result.finding);
+      }
+    }
+  }
+
   const routingMatch =
     selectedExpert === normalizeExpertId(testCase.expectedPrimaryExpert);
-  const score = findings.length === 0 ? 2 : routingMatch ? 1 : 0;
+  const hasBehavioralIssues = behavioralFindings.length > 0;
+  const score =
+    findings.length === 0 && !hasBehavioralIssues
+      ? 2
+      : routingMatch
+        ? 1
+        : 0;
+
+  const behavioralMetrics = computeBehavioralMetrics(response, testCase);
 
   return {
     score,
@@ -312,6 +348,8 @@ export function evaluateResponse(system, testCase, response) {
     verificationQuality: confidenceLabeled,
     confidenceLabeling: confidenceLabeled,
     notableDrift: findings,
+    behavioralFindings,
+    behavioralMetrics,
     missingSections,
     routingMatch,
     invalidHandoffs,
@@ -322,6 +360,241 @@ export function evaluateResponse(system, testCase, response) {
 
 export function scoreCase(system, testCase, response) {
   return evaluateResponse(system, testCase, response);
+}
+
+// ── Behavioral Assertion Helpers ──────────────────────────────────
+
+export function assertNoGoldPlating(response, testCase) {
+  const responseText = String(response.response || "");
+  const expectedSections = new Set(
+    (testCase.expectedSections || []).map((s) => s.toLowerCase())
+  );
+  const allowedHandoffs = new Set(
+    (testCase.allowedHandoffs || []).map((h) => h.toLowerCase())
+  );
+
+  const headingPattern = /^#{1,4}\s+(.+)$/gm;
+  const extraSections = [];
+  let match;
+
+  while ((match = headingPattern.exec(responseText)) !== null) {
+    const heading = match[1].trim().toLowerCase();
+    if (
+      heading === "selected expert" ||
+      heading === "reason" ||
+      heading === "confidence"
+    ) {
+      continue;
+    }
+    if (!expectedSections.has(heading) && !allowedHandoffs.has(heading)) {
+      extraSections.push(match[1].trim());
+    }
+  }
+
+  if (extraSections.length > 0) {
+    return {
+      pass: false,
+      finding: `Gold-plating: ${extraSections.length} unexpected section(s): ${extraSections.join(", ")}`
+    };
+  }
+
+  return { pass: true, finding: "" };
+}
+
+export function assertConcision(response, maxChars = 4000) {
+  const responseText = String(response.response || "");
+  if (responseText.length > maxChars) {
+    return {
+      pass: false,
+      finding: `Concision: response is ${responseText.length} chars (max ${maxChars})`
+    };
+  }
+  return { pass: true, finding: "" };
+}
+
+export function assertNoFalseClaims(response) {
+  const responseText = String(response.response || "");
+  const patterns = [
+    {
+      pattern: /\ball tests pass\b/i,
+      claim: "'all tests pass' without evidence of running tests"
+    },
+    {
+      pattern: /\bsuccessfully (?:ran|executed|completed)\b/i,
+      claim: "claims successful execution"
+    },
+    {
+      pattern: /\bno (?:issues?|problems?|errors?) (?:found|detected|observed)\b/i,
+      claim: "'no issues found' without investigation evidence"
+    }
+  ];
+
+  const hasToolEvidence =
+    /(?:```|output:|log:|result:|ran |executed |\$ )/i.test(responseText);
+
+  if (hasToolEvidence) {
+    return { pass: true, finding: "" };
+  }
+
+  for (const { pattern, claim } of patterns) {
+    if (pattern.test(responseText)) {
+      return {
+        pass: false,
+        finding: `False claim: ${claim}`
+      };
+    }
+  }
+
+  return { pass: true, finding: "" };
+}
+
+export function assertDiagnosticDiscipline(response) {
+  const responseText = String(response.response || "");
+
+  const diagnosisPatterns = [
+    /\bread(?:ing)?\s+(?:the|this)\s+(?:error|stack|log|output|file|code)/i,
+    /\b(?:error|stack trace|exception|log)\s*(?:shows?|says?|indicates?|reveals?)/i,
+    /\broot cause\b/i,
+    /\bhypothesis\b/i,
+    /\bbecause\b.*\b(?:fails?|errors?|throws?|breaks?)\b/i,
+    /\binvestigat/i
+  ];
+
+  const fixPatterns = [
+    /\b(?:fix|solution|change|replace|update|modify|add|remove)\b/i
+  ];
+
+  const hasDiagnosis = diagnosisPatterns.some((p) => p.test(responseText));
+  const hasFix = fixPatterns.some((p) => p.test(responseText));
+
+  if (hasFix && !hasDiagnosis) {
+    return {
+      pass: false,
+      finding: "Diagnostic discipline: proposed a fix without evidence of diagnosis"
+    };
+  }
+
+  return { pass: true, finding: "" };
+}
+
+// ── Multi-Trial Runner ──────────────────────────────────────────────
+
+export async function runTrials(runSingleTrial, { trials = 1, parallel = 1 }) {
+  const results = [];
+
+  for (let i = 0; i < trials; i += parallel) {
+    const batch = [];
+    for (let j = 0; j < parallel && i + j < trials; j++) {
+      batch.push(runSingleTrial(i + j));
+    }
+    const batchResults = await Promise.all(batch);
+    results.push(...batchResults);
+  }
+
+  return results;
+}
+
+export function aggregateTrialResults(trialResults) {
+  const scores = trialResults.map((r) => r.score);
+  const experts = trialResults.map((r) => r.selectedExpert);
+  const expectedExpert = trialResults[0]?.expectedExpert;
+
+  const passAtK = scores.some((s) => s === 2);
+  const passHatK = scores.every((s) => s === 2);
+  const meanScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+  const routingConsistency = expectedExpert
+    ? experts.filter((e) => e === expectedExpert).length / experts.length
+    : null;
+
+  const scoreDistribution = { 0: 0, 1: 0, 2: 0 };
+  for (const s of scores) {
+    scoreDistribution[s] = (scoreDistribution[s] || 0) + 1;
+  }
+
+  return {
+    trials: trialResults.length,
+    results: trialResults.map((r, i) => ({
+      trialIndex: i,
+      score: r.score,
+      selectedExpert: r.selectedExpert
+    })),
+    passAtK,
+    passHatK,
+    meanScore: Math.round(meanScore * 100) / 100,
+    routingConsistency: routingConsistency !== null
+      ? Math.round(routingConsistency * 100) / 100
+      : null,
+    scoreDistribution
+  };
+}
+
+// ── Behavioral Metrics ──────────────────────────────────────────────
+
+export function computeBehavioralMetrics(response, testCase) {
+  const responseText = String(response.response || "");
+  const expectedSections = testCase.expectedSections || [];
+
+  const headingPattern = /^#{1,4}\s+(.+)$/gm;
+  let actualSectionCount = 0;
+  let match;
+  while ((match = headingPattern.exec(responseText)) !== null) {
+    const heading = match[1].trim().toLowerCase();
+    if (["selected expert", "reason", "confidence"].includes(heading)) continue;
+    actualSectionCount++;
+  }
+  actualSectionCount = Math.max(actualSectionCount, 1);
+  const overEngineering = Math.min(
+    1.0,
+    expectedSections.length / actualSectionCount
+  );
+
+  const isComplex = expectedSections.length >= 5;
+  const referenceChars = isComplex ? 8000 : 2000;
+  const concision = Math.min(
+    1.0,
+    responseText.length > 0 ? referenceChars / responseText.length : 1.0
+  );
+
+  return {
+    overEngineering: Math.round(overEngineering * 100) / 100,
+    concision: Math.round(concision * 100) / 100
+  };
+}
+
+// ── Ablation Report ─────────────────────────────────────────────────
+
+export function formatAblationReport(report) {
+  const lines = [];
+
+  lines.push("# Ablation Report");
+  lines.push("");
+  lines.push(`- Timestamp: ${report.timestamp}`);
+  lines.push(`- Trials per condition: ${report.trialsPerCondition}`);
+  lines.push("");
+  lines.push("| Section | Chars Saved | pass^k Delta | Over-Engineering Delta | Concision Delta | Verdict |");
+  lines.push("|---------|:----------:|:------------:|:---------------------:|:--------------:|:-------:|");
+
+  for (const s of report.sections) {
+    lines.push(
+      `| ${s.id} | ${s.charsSaved} | ${formatDelta(s.passHatKDelta)} | ${formatDelta(s.overEngineeringDelta)} | ${formatDelta(s.concisionDelta)} | ${s.verdict} |`
+    );
+  }
+
+  lines.push("");
+  lines.push("## Verdict Legend");
+  lines.push("");
+  lines.push("- **KEEP:** Removing this section measurably worsens behavior. It earns its token cost.");
+  lines.push("- **REVIEW:** No measurable impact detected. Candidate for rewriting or removal.");
+  lines.push("- **REMOVE:** Removing this section measurably improves behavior. It may be counterproductive.");
+  lines.push("");
+
+  return lines.join("\n");
+}
+
+function formatDelta(value) {
+  if (value === 0) return "+0.00";
+  const sign = value > 0 ? "+" : "";
+  return `${sign}${value.toFixed(2)}`;
 }
 
 export function compareTargets(resultsByTarget) {
@@ -361,6 +634,7 @@ export function compareTargets(resultsByTarget) {
 
 export function formatSummary(run) {
   const lines = [];
+  const trialsPerCase = run.trialsPerCase || 1;
 
   lines.push(`# Regression Run`);
   lines.push("");
@@ -368,7 +642,25 @@ export function formatSummary(run) {
   lines.push(`- Targets: ${run.targets.join(", ")}`);
   lines.push(`- Timestamp: ${run.timestamp}`);
   lines.push(`- Cases: ${run.caseCount}`);
+  if (trialsPerCase > 1) {
+    lines.push(`- Trials per case: ${trialsPerCase}`);
+  }
   lines.push("");
+
+  if (trialsPerCase > 1 && run.aggregated) {
+    lines.push("| Case | Target | pass@k | pass^k | Mean | Routing | Distribution |");
+    lines.push("|------|--------|--------|--------|------|---------|-------------|");
+    for (const agg of run.aggregated) {
+      const dist = `0:${agg.scoreDistribution[0]} 1:${agg.scoreDistribution[1]} 2:${agg.scoreDistribution[2]}`;
+      const routing = agg.routingConsistency !== null
+        ? `${Math.round(agg.routingConsistency * 100)}%`
+        : "N/A";
+      lines.push(
+        `| ${agg.caseId} | ${agg.target} | ${agg.passAtK ? "Y" : "N"} | ${agg.passHatK ? "Y" : "N"} | ${agg.meanScore} | ${routing} | ${dist} |`
+      );
+    }
+    lines.push("");
+  }
 
   for (const result of run.results) {
     lines.push(
@@ -376,6 +668,13 @@ export function formatSummary(run) {
     );
     if (result.score.notableDrift.length > 0) {
       lines.push(`  drift: ${result.score.notableDrift.join(" | ")}`);
+    }
+    if (result.score.behavioralFindings && result.score.behavioralFindings.length > 0) {
+      lines.push(`  behavioral: ${result.score.behavioralFindings.join(" | ")}`);
+    }
+    if (result.score.behavioralMetrics) {
+      const m = result.score.behavioralMetrics;
+      lines.push(`  metrics: overEngineering=${m.overEngineering} concision=${m.concision}`);
     }
   }
 

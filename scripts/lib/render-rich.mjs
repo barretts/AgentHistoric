@@ -13,49 +13,70 @@ export function renderRichInit(system, options = {}) {
   out += `**Version:** ${g.version} (Philosophical Engineering Edition)\n`;
   out += `**Context:** ${g.context}\n\n`;
 
-  // Section 1: Logging
-  out += `## 1. The Non-Destructive Logging Protocol\n\n`;
-  out += `**The Hazard:** ${g.logging.hazard}\n\n`;
-  out += `**The Principle:** ${g.logging.principle} ${g.logging.required.join(" ")}\n\n`;
-  out += `**The Pattern (adapt the command to your runtime):**\n\n`;
-  out += codeFence(g.logging.extendedPattern.join("\n"), "bash");
-  out += `\n\n**Forbidden:**\n`;
-  out += g.logging.forbidden
-    .map((cmd) => {
-      const r = reasons[cmd];
-      return r ? `- \`${cmd}\` (${r})` : `- \`${cmd}\``;
-    })
-    .join("\n");
-  out += `\n\n${g.logging.violationNote}\n\n`;
+  // Constraint Hierarchy
+  if (system.constraintHierarchy) {
+    const ch = system.constraintHierarchy;
+    out += `## Constraint Hierarchy\n\n`;
+    out += `${ch.description}\n\n`;
+    for (const layer of ch.layers) {
+      out += `- **${layer.name}** (${layer.source}): ${layer.scope}.\n`;
+    }
+    out += `\n**Invariant:** ${ch.invariant}\n\n`;
+  }
 
-  // Section 2: Mandate
-  out += `## 2. All Test, Build, and Run Commands MUST Be Logged\n\n`;
-  out += `${g.logging.mandate}\n\n`;
+  const abl = options.ablation;
+
+  // Section 1: Logging
+  if (abl !== "logging-protocol") {
+    out += `## 1. The Non-Destructive Logging Protocol\n\n`;
+    out += `**The Hazard:** ${g.logging.hazard}\n\n`;
+    out += `**The Principle:** ${g.logging.principle} ${g.logging.required.join(" ")}\n\n`;
+    out += `**The Pattern (adapt the command to your runtime):**\n\n`;
+    out += codeFence(g.logging.extendedPattern.join("\n"), "bash");
+    out += `\n\n**Forbidden:**\n`;
+    out += g.logging.forbidden
+      .map((cmd) => {
+        const r = reasons[cmd];
+        return r ? `- \`${cmd}\` (${r})` : `- \`${cmd}\``;
+      })
+      .join("\n");
+    out += `\n\n${g.logging.violationNote}\n\n`;
+
+    // Section 2: Mandate
+    out += `## 2. All Test, Build, and Run Commands MUST Be Logged\n\n`;
+    out += `${g.logging.mandate}\n\n`;
+  }
 
   // Section 3: Epistemic rules
-  out += `## 3. Epistemic Humility & Communication Constraints\n\n`;
-  out += `* **Truthfulness:** ${g.uncertaintyRules[0]}\n`;
-  out += `* **Uncertainty:** Quantify uncertainty. State claims as VERIFIED (backed by tests/docs) or HYPOTHESIS (needs checking). Provide confidence intervals: "~80% confidence; verify by running X."\n`;
-  out += `* **Encoding:** ${g.encodingRules.join(" ")}`;
-  out += `\n\n`;
+  if (abl !== "uncertainty-rules") {
+    out += `## 3. Epistemic Humility & Communication Constraints\n\n`;
+    out += `* **Truthfulness:** ${g.uncertaintyRules[0]}\n`;
+    out += `* **Uncertainty:** Quantify uncertainty. State claims as VERIFIED (backed by tests/docs) or HYPOTHESIS (needs checking). Provide confidence intervals: "~80% confidence; verify by running X."\n`;
+    out += `* **Encoding:** ${g.encodingRules.join(" ")}`;
+    out += `\n\n`;
+  }
 
   // Voice section
-  const voiceItems = options.scaffolded ? SCAFFOLDED_VOICE : VOICE_CALIBRATION;
-  const voiceHeading = options.scaffolded ? "Scaffolded Voice" : "Voice Calibration";
-  out += `## ${voiceHeading}\n\n`;
-  out += voiceItems.map((item) => `- ${item}`).join("\n");
-  out += `\n\n`;
+  if (abl !== "voice-calibration") {
+    const voiceItems = options.scaffolded ? SCAFFOLDED_VOICE : VOICE_CALIBRATION;
+    const voiceHeading = options.scaffolded ? "Scaffolded Voice" : "Voice Calibration";
+    out += `## ${voiceHeading}\n\n`;
+    out += voiceItems.map((item) => `- ${item}`).join("\n");
+    out += `\n\n`;
+  }
 
   // Section 4: Done
   out += `## 4. Definition of Done\n\n`;
   out += `"Done" means code + tests + verified. Placeholders, pseudo-code, and "TODOs" in core logic are globally rejected.\n\n`;
 
   // Section 5: Constraints
-  out += `## 5. Foundational Constraints\n\n`;
-  out += g.foundationalConstraintsDetailed
-    .map((c) => `* **${c.name}:** ${c.description}`)
-    .join("\n");
-  out += `\n\n`;
+  if (abl !== "foundational-constraints") {
+    out += `## 5. Foundational Constraints\n\n`;
+    out += g.foundationalConstraintsDetailed
+      .map((c) => `* **${c.name}:** ${c.description}`)
+      .join("\n");
+    out += `\n\n`;
+  }
 
   // Section 6: Registry
   out += `## 6. Swarm Registry\n`;
@@ -137,8 +158,10 @@ export function renderRichExpert(system, expert, options = {}) {
   out += `**Philosophy:** ${expert.philosophy}\n\n`;
   out += `${expert.personaIntro}\n\n`;
 
+  const abl = options.ablation;
+
   // Core Philosophy
-  if (expert.corePhilosophy?.length) {
+  if (expert.corePhilosophy?.length && abl !== "expert-philosophy") {
     section++;
     out += `## ${section}. Core Philosophy\n\n`;
     for (const p of expert.corePhilosophy) {
@@ -245,13 +268,24 @@ export function renderRichExpert(system, expert, options = {}) {
   }
 
   // Failure Signals
-  if (expert.failureSignals?.length) {
+  if (expert.failureSignals?.length && abl !== "failure-signals") {
     section++;
     out += `## ${section}. Failure Signals\n\n`;
     for (const f of expert.failureSignals) {
       out += `- ${f}\n`;
     }
     out += `\n`;
+  }
+
+  // Behavioral Guardrails
+  if (expert.behavioralGuardrails?.length && abl !== "behavioral-guardrails") {
+    section++;
+    out += `## ${section}. Behavioral Guardrails\n\n`;
+    for (const g of expert.behavioralGuardrails) {
+      out += `**Failure mode:** ${g.failureMode}\n`;
+      out += `**Rule:** ${g.rule}\n`;
+      out += `**But:** ${g.antiOverCorrection}\n\n`;
+    }
   }
 
   // Allowed Handoffs

@@ -1,0 +1,46 @@
+{
+  "sections": [
+    {
+      "id": "logging-protocol",
+      "description": "Non-Destructive Logging Protocol (init sections 1-2)",
+      "source": "system.json → globalRuntime.logging",
+      "expectedImpact": "Logging compliance in debug/test scenarios"
+    },
+    {
+      "id": "voice-calibration",
+      "description": "Voice Calibration / Scaffolded Voice section",
+      "source": "VOICE_CALIBRATION constant",
+      "expectedImpact": "Output style (prose vs scaffolded)"
+    },
+    {
+      "id": "foundational-constraints",
+      "description": "Foundational Constraints (visual verification, ownership, stewardship, dependency investigation)",
+      "source": "system.json → globalRuntime.foundationalConstraintsDetailed",
+      "expectedImpact": "Code quality and investigation thoroughness"
+    },
+    {
+      "id": "behavioral-guardrails",
+      "description": "Behavioral Guardrails section from expert prompts",
+      "source": "experts/*.json → behavioralGuardrails",
+      "expectedImpact": "Over-engineering, gold-plating, false claims"
+    },
+    {
+      "id": "uncertainty-rules",
+      "description": "Epistemic Humility & uncertainty labeling rules",
+      "source": "system.json → globalRuntime.uncertaintyRules",
+      "expectedImpact": "VERIFIED/HYPOTHESIS labeling behavior"
+    },
+    {
+      "id": "expert-philosophy",
+      "description": "Core Philosophy section from expert prompts",
+      "source": "experts/*.json → corePhilosophy",
+      "expectedImpact": "Expert-specific reasoning approach"
+    },
+    {
+      "id": "failure-signals",
+      "description": "Failure Signals section from expert prompts",
+      "source": "experts/*.json → failureSignals",
+      "expectedImpact": "Avoidance of known failure patterns"
+    }
+  ]
+}
