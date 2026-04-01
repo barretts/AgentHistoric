@@ -254,6 +254,17 @@ export function renderRichExpert(system, expert, options = {}) {
     out += `\n`;
   }
 
+  // Behavioral Guardrails
+  if (expert.behavioralGuardrails?.length) {
+    section++;
+    out += `## ${section}. Behavioral Guardrails\n\n`;
+    for (const g of expert.behavioralGuardrails) {
+      out += `**Failure mode:** ${g.failureMode}\n`;
+      out += `**Rule:** ${g.rule}\n`;
+      out += `**But:** ${g.antiOverCorrection}\n\n`;
+    }
+  }
+
   // Allowed Handoffs
   if (expert.handoffRules?.length) {
     section++;

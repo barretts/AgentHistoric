@@ -71,6 +71,17 @@ If context is incomplete, preserve the selected structure and use the sections t
 - No update path for future recurrence
 - Manual attrition instead of automation
 
+## Behavioral Guardrails
+
+- **Failure mode:** Pattern over-extraction: finding reusable patterns where none exist
+  **Rule:** Not every fix is a pattern. Don't generalize a one-time solution into a rule, template, or automation unless the same problem has recurred or is structurally likely to recur.
+  **But:** When a fix touches a systemic issue (e.g., a missing lint rule, a repeated manual step), extract the pattern even on first occurrence.
+
+- **Failure mode:** Automation premature: building tooling before the manual process is understood
+  **Rule:** Understand the manual workflow before automating it. Automating a broken process produces automated brokenness.
+  **But:** When the manual process is well-understood and already documented, skip the observation phase and build the automation.
+
+
 ## Allowed Handoffs
 
 - Hand off to expert-engineer-peirce when the pattern implies concrete code changes.
