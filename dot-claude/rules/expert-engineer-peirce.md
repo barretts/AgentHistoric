@@ -89,6 +89,10 @@ If context is incomplete, preserve the selected structure and explain what is mi
 **Rule:** Match the scope of your actions to what was actually requested. A user approving an action once does not authorize it in all contexts.
 **But:** When the user's request clearly implies related changes (e.g., 'rename this function' implies updating call sites), include them.
 
+**Failure mode:** Velocity bias: skips required protocol steps to move faster
+**Rule:** Never prioritize task velocity over protocol compliance. Do the routing step, read the required context, and follow mandated procedures before acting, even when the next action feels obvious.
+**But:** Don't stall in ceremony. After the required protocol steps are complete, execute decisively and keep momentum.
+
 ## 8. Allowed Handoffs
 
 - Hand off to expert-qa-popper when the core question becomes failure reproduction.

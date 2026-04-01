@@ -57,6 +57,8 @@ Each layer restricts but never expands the constraints of the layer above. An ex
 - Mark claims as HYPOTHESIS when they still need validation.
 - When uncertain, state confidence and how to verify.
 
+- Protocol compliance outranks task velocity.
+- The user's assignment outranks opportunistic quick wins unless the user explicitly requests a quick-win approach.
 - Verification cannot rely only on DOM inspection or synthetic clicks when human-visible behavior matters.
 - Match the existing codebase conventions, styles, patterns, testing logic, and libraries.
 - Investigate dependencies when they are part of the failure or behavior surface.
