@@ -3,16 +3,19 @@ import assert from "node:assert/strict";
 import path from "node:path";
 
 import {
+  aggregateTrialResults,
   assertConcision,
   assertDiagnosticDiscipline,
   assertNoFalseClaims,
   assertNoGoldPlating,
   buildWrappedPrompt,
+  computeBehavioralMetrics,
   evaluateResponse,
   expectedResponseSections,
   loadRegressionFixtures,
   parseArgs,
-  routePrompt
+  routePrompt,
+  runTrials
 } from "./regression.mjs";
 import { loadPromptSystemSpec } from "./prompt-system.mjs";
 
@@ -356,4 +359,115 @@ test("evaluateResponse rejects blended headings from another expert", async () =
   const result = evaluateResponse(system, testCase, response);
   assert.strictEqual(result.score, 1);
   assert.match(result.notableDrift.join(" "), /persona blending/i);
+});
+
+// ── Multi-Trial Runner ──────────────────────────────────────────────
+
+test("runTrials executes the correct number of trials", async () => {
+  let count = 0;
+  const results = await runTrials(
+    async (idx) => {
+      count++;
+      return { trialIndex: idx, score: 2, selectedExpert: "expert-engineer-peirce" };
+    },
+    { trials: 5, parallel: 2 }
+  );
+  assert.strictEqual(results.length, 5);
+  assert.strictEqual(count, 5);
+});
+
+test("aggregateTrialResults computes pass@k and pass^k correctly", () => {
+  const mixed = aggregateTrialResults([
+    { score: 2, selectedExpert: "expert-engineer-peirce", expectedExpert: "expert-engineer-peirce" },
+    { score: 1, selectedExpert: "expert-engineer-peirce", expectedExpert: "expert-engineer-peirce" },
+    { score: 2, selectedExpert: "expert-engineer-peirce", expectedExpert: "expert-engineer-peirce" }
+  ]);
+  assert.strictEqual(mixed.passAtK, true);
+  assert.strictEqual(mixed.passHatK, false);
+  assert.strictEqual(mixed.meanScore, 1.67);
+  assert.strictEqual(mixed.routingConsistency, 1.0);
+  assert.deepStrictEqual(mixed.scoreDistribution, { 0: 0, 1: 1, 2: 2 });
+
+  const perfect = aggregateTrialResults([
+    { score: 2, selectedExpert: "expert-qa-popper", expectedExpert: "expert-qa-popper" },
+    { score: 2, selectedExpert: "expert-qa-popper", expectedExpert: "expert-qa-popper" }
+  ]);
+  assert.strictEqual(perfect.passAtK, true);
+  assert.strictEqual(perfect.passHatK, true);
+  assert.strictEqual(perfect.meanScore, 2);
+});
+
+test("aggregateTrialResults detects routing inconsistency", () => {
+  const inconsistent = aggregateTrialResults([
+    { score: 2, selectedExpert: "expert-engineer-peirce", expectedExpert: "expert-qa-popper" },
+    { score: 1, selectedExpert: "expert-qa-popper", expectedExpert: "expert-qa-popper" },
+    { score: 2, selectedExpert: "expert-qa-popper", expectedExpert: "expert-qa-popper" }
+  ]);
+  assert.strictEqual(inconsistent.routingConsistency, 0.67);
+});
+
+// ── Behavioral Metrics ──────────────────────────────────────────────
+
+test("computeBehavioralMetrics detects over-engineering", () => {
+  const response = {
+    response: "## Answer\nDo the thing.\n\n## Extra Section\nBonus.\n\n## Another\nMore bonus."
+  };
+  const testCase = { expectedSections: ["Answer"] };
+  const metrics = computeBehavioralMetrics(response, testCase);
+  assert.ok(metrics.overEngineering < 1.0, `Expected <1.0, got ${metrics.overEngineering}`);
+  assert.strictEqual(metrics.overEngineering, 0.33);
+});
+
+test("computeBehavioralMetrics returns 1.0 for well-scoped response", () => {
+  const response = { response: "## Answer\nThe fix is to use optional chaining." };
+  const testCase = { expectedSections: ["Answer"] };
+  const metrics = computeBehavioralMetrics(response, testCase);
+  assert.strictEqual(metrics.overEngineering, 1.0);
+});
+
+test("computeBehavioralMetrics concision penalizes verbose responses", () => {
+  const longText = "x".repeat(5000);
+  const response = { response: longText };
+  const testCase = { expectedSections: ["Answer"] };
+  const metrics = computeBehavioralMetrics(response, testCase);
+  assert.ok(metrics.concision < 1.0, `Expected <1.0, got ${metrics.concision}`);
+});
+
+test("parseArgs supports --trials and --parallel flags", () => {
+  const opts = parseArgs(["--trials", "5", "--parallel", "3"]);
+  assert.strictEqual(opts.trials, 5);
+  assert.strictEqual(opts.parallel, 3);
+});
+
+test("parseArgs defaults trials to 1 and parallel to 1", () => {
+  const opts = parseArgs([]);
+  assert.strictEqual(opts.trials, 1);
+  assert.strictEqual(opts.parallel, 1);
+});
+
+test("evaluateResponse includes behavioralMetrics in result", async () => {
+  const system = await loadPromptSystemSpec(workspaceRoot);
+  const testCase = {
+    expectedPrimaryExpert: "expert-engineer-peirce",
+    expectedSections: ["Answer"],
+    allowedHandoffs: [],
+    forbiddenBehaviors: [],
+    behavioralAssertions: []
+  };
+
+  const response = {
+    routingDecision: { selectedExpert: "expert-engineer-peirce" },
+    activeExpert: "expert-engineer-peirce",
+    handoffs: [],
+    outputSections: ["Answer"],
+    confidenceLabeled: true,
+    personaBlend: false,
+    domainStayedInScope: true,
+    response: "## Answer\nUse optional chaining: user?.name"
+  };
+
+  const result = evaluateResponse(system, testCase, response);
+  assert.ok(result.behavioralMetrics, "Missing behavioralMetrics");
+  assert.ok(typeof result.behavioralMetrics.overEngineering === "number");
+  assert.ok(typeof result.behavioralMetrics.concision === "number");
 });
