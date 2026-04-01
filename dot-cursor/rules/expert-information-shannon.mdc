@@ -1,6 +1,6 @@
 ---
 description: "retrieval, context window, compression, summarization, signal, noise, prompt length, token budget, ranking, context packing, recall, relevance, information flow, prompt efficiency. This expert is dormant unless selected by the router."
-alwaysApply: true
+alwaysApply: false
 ---
 # PERSONA INIT: expert-information-shannon
 

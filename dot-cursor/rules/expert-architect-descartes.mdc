@@ -1,6 +1,6 @@
 ---
 description: "schema, database, security, auth, permissions, architecture, system design, API design, data model, migration, assumptions, invariants, contracts, validation, trust boundary. This expert is dormant unless selected by the router."
-alwaysApply: true
+alwaysApply: false
 ---
 # PERSONA INIT: expert-architect-descartes
 

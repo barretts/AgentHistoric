@@ -1,6 +1,6 @@
 ---
 description: "agent loop, orchestration, decomposition, workflow, planning, stopping condition, routing, decision procedure, tool selection, retry policy, evaluation loop, coordination, delegation, planner. This expert is dormant unless selected by the router."
-alwaysApply: true
+alwaysApply: false
 ---
 # PERSONA INIT: expert-orchestrator-simon
 

@@ -89,6 +89,93 @@ test("every codex SKILL.md has valid frontmatter", () => {
   }
 });
 
+// ── Frontmatter Correctness ─────────────────────────────────────────
+
+function extractFrontmatter(content) {
+  const match = content.match(/^---\n([\s\S]*?)\n---/);
+  if (!match) return {};
+  const fm = {};
+  for (const line of match[1].split("\n")) {
+    const [key, ...rest] = line.split(":");
+    if (key && rest.length) fm[key.trim()] = rest.join(":").trim().replace(/^"|"$/g, "");
+  }
+  return fm;
+}
+
+test("cursor init and router are alwaysApply:true, experts are alwaysApply:false", () => {
+  for (const [filePath, content] of cursorArtifacts()) {
+    const fm = extractFrontmatter(content);
+    const isInit = filePath.includes("00-init");
+    const isRouter = filePath.includes("01-router");
+
+    if (isInit || isRouter) {
+      assert.strictEqual(
+        fm.alwaysApply, "true",
+        `${filePath}: init/router must be alwaysApply: true`
+      );
+    } else {
+      assert.strictEqual(
+        fm.alwaysApply, "false",
+        `${filePath}: expert must be alwaysApply: false`
+      );
+    }
+  }
+});
+
+test("windsurf init and router are trigger:always, experts are trigger:model_decision", () => {
+  const windsurfMd = [...artifacts].filter(
+    ([p]) =>
+      p.startsWith("dot-windsurf/rules/") &&
+      p.endsWith(".md") &&
+      !p.includes("/gpt/")
+  );
+
+  for (const [filePath, content] of windsurfMd) {
+    const fm = extractFrontmatter(content);
+    const isInit = filePath.includes("00-init");
+    const isRouter = filePath.includes("01-router");
+
+    if (isInit || isRouter) {
+      assert.strictEqual(
+        fm.trigger, "always",
+        `${filePath}: init/router must be trigger: always`
+      );
+    } else {
+      assert.strictEqual(
+        fm.trigger, "model_decision",
+        `${filePath}: expert must be trigger: model_decision`
+      );
+    }
+  }
+});
+
+test("claude init and router are trigger:always, experts are trigger:model_decision", () => {
+  const claudeMd = [...artifacts].filter(
+    ([p]) =>
+      p.startsWith("dot-claude/rules/") &&
+      p.endsWith(".md") &&
+      !p.includes("/gpt/")
+  );
+
+  for (const [filePath, content] of claudeMd) {
+    const fm = extractFrontmatter(content);
+    const isInit = filePath.includes("00-init");
+    const isRouter = filePath.includes("01-router");
+
+    if (isInit || isRouter) {
+      assert.strictEqual(
+        fm.trigger, "always",
+        `${filePath}: init/router must be trigger: always`
+      );
+    } else {
+      assert.strictEqual(
+        fm.trigger, "model_decision",
+        `${filePath}: expert must be trigger: model_decision`
+      );
+    }
+  }
+});
+
 // ── Required Sections: Init ─────────────────────────────────────────
 
 test("init prompts contain required sections", () => {
