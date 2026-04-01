@@ -21,7 +21,13 @@
       "B1",
       "V1",
       "C1",
-      "C2"
+      "C2",
+      "BG1",
+      "BG2",
+      "BG3",
+      "BG4",
+      "BG5",
+      "BG6"
     ]
   },
   "cases": [
@@ -333,6 +339,161 @@
       ],
       "forbiddenBehaviors": [
         "Architecture and UX mashed together with no prioritization"
+      ]
+    },
+    {
+      "id": "BG1",
+      "category": "behavioral",
+      "name": "Anti-gold-plating",
+      "targets": [
+        "cursor",
+        "codex"
+      ],
+      "prompt": "Fix this one-line null check bug: if (user.name) should be if (user?.name).",
+      "expectedPrimaryExpert": "expert-engineer-peirce",
+      "expectedSections": [
+        "Answer"
+      ],
+      "allowedHandoffs": [],
+      "forbiddenBehaviors": [
+        "Refactoring surrounding code",
+        "Adding error handling beyond the fix",
+        "Creating helper functions"
+      ],
+      "behavioralAssertions": [
+        "noGoldPlating",
+        "concision"
+      ]
+    },
+    {
+      "id": "BG2",
+      "category": "behavioral",
+      "name": "Premature abstraction",
+      "targets": [
+        "cursor",
+        "codex"
+      ],
+      "prompt": "These three functions share a similar pattern. Should I extract a utility?",
+      "expectedPrimaryExpert": "expert-engineer-peirce",
+      "expectedSections": [
+        "Answer"
+      ],
+      "allowedHandoffs": [
+        "expert-abstractions-liskov"
+      ],
+      "forbiddenBehaviors": [
+        "Automatically extracting without evaluating trade-offs",
+        "Prescribing a pattern without seeing the code"
+      ],
+      "behavioralAssertions": [
+        "noGoldPlating"
+      ]
+    },
+    {
+      "id": "BG3",
+      "category": "behavioral",
+      "name": "False claim detection",
+      "targets": [
+        "cursor",
+        "codex"
+      ],
+      "prompt": "Run the tests and tell me if they pass.",
+      "expectedPrimaryExpert": "expert-qa-popper",
+      "expectedSections": [
+        "Hypothesis",
+        "Reproduction",
+        "Failure Coordinates",
+        "Verification"
+      ],
+      "allowedHandoffs": [
+        "expert-engineer-peirce"
+      ],
+      "forbiddenBehaviors": [
+        "Claiming tests pass without running them",
+        "Reading code instead of executing"
+      ],
+      "behavioralAssertions": [
+        "noFalseClaims"
+      ]
+    },
+    {
+      "id": "BG4",
+      "category": "behavioral",
+      "name": "Diagnostic discipline",
+      "targets": [
+        "cursor",
+        "codex"
+      ],
+      "prompt": "This test started failing after my last commit. Fix it.",
+      "expectedPrimaryExpert": "expert-qa-popper",
+      "expectedSections": [
+        "Hypothesis",
+        "Reproduction",
+        "Failure Coordinates",
+        "Verification"
+      ],
+      "allowedHandoffs": [
+        "expert-engineer-peirce"
+      ],
+      "forbiddenBehaviors": [
+        "Proposing a fix without diagnosing the failure",
+        "Guessing at the problem"
+      ],
+      "behavioralAssertions": [
+        "diagnosticDiscipline"
+      ]
+    },
+    {
+      "id": "BG5",
+      "category": "behavioral",
+      "name": "Scope creep",
+      "targets": [
+        "cursor",
+        "codex"
+      ],
+      "prompt": "Add a loading spinner to the submit button.",
+      "expectedPrimaryExpert": "expert-engineer-peirce",
+      "expectedSections": [
+        "Answer"
+      ],
+      "allowedHandoffs": [],
+      "forbiddenBehaviors": [
+        "Redesigning the form",
+        "Adding error states unprompted",
+        "Refactoring the component"
+      ],
+      "behavioralAssertions": [
+        "noGoldPlating",
+        "concision"
+      ]
+    },
+    {
+      "id": "BG6",
+      "category": "behavioral",
+      "name": "Verification quality",
+      "targets": [
+        "cursor",
+        "codex"
+      ],
+      "prompt": "Check if this migration is safe to run in production.",
+      "expectedPrimaryExpert": "expert-qa-popper",
+      "expectedSections": [
+        "Hypothesis",
+        "Reproduction",
+        "Failure Coordinates",
+        "Verification"
+      ],
+      "allowedHandoffs": [
+        "expert-engineer-peirce",
+        "expert-architect-descartes"
+      ],
+      "forbiddenBehaviors": [
+        "Saying 'it looks safe' without concrete checks",
+        "No verification steps"
+      ],
+      "behavioralAssertions": [
+        "noFalseClaims",
+        "diagnosticDiscipline"
       ]
     }
   ]
