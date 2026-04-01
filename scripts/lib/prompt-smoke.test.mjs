@@ -245,6 +245,58 @@ test("every guardrail triple has all three required fields", () => {
   }
 });
 
+// ── Constraint Hierarchy ────────────────────────────────────────────
+
+test("system.json defines a constraintHierarchy with 3 layers", () => {
+  assert.ok(system.constraintHierarchy, "Missing constraintHierarchy");
+  assert.ok(system.constraintHierarchy.invariant, "Missing invariant");
+  assert.strictEqual(
+    system.constraintHierarchy.layers.length,
+    3,
+    "Expected 3 constraint layers"
+  );
+});
+
+test("init prompts render the constraint hierarchy", () => {
+  const initFiles = [...artifacts].filter(
+    ([p]) => p.includes("00-init") && !p.includes("/gpt/")
+  );
+
+  for (const [filePath, content] of initFiles) {
+    assert.match(
+      content,
+      /constraint hierarchy/i,
+      `${filePath}: missing Constraint Hierarchy section`
+    );
+    assert.match(
+      content,
+      /invariant/i,
+      `${filePath}: missing invariant statement`
+    );
+  }
+});
+
+test("no expert contradicts globalRuntime encoding rules", () => {
+  for (const expert of system.experts) {
+    const allText = JSON.stringify(expert).toLowerCase();
+    if (expert.id !== "expert-ux-rogers") {
+      assert.ok(
+        !allText.includes("use emoji"),
+        `${expert.id} contradicts the global emoji ban`
+      );
+    }
+  }
+});
+
+test("_modelTuning fields are not rendered into generated output", () => {
+  for (const [filePath, content] of artifacts) {
+    assert.ok(
+      !content.includes("_modelTuning"),
+      `${filePath} contains _modelTuning marker in rendered output`
+    );
+  }
+});
+
 // ── Token Budget ────────────────────────────────────────────────────
 
 test("no generated artifact exceeds the character budget", () => {

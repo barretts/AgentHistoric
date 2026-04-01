@@ -9,6 +9,11 @@ export function renderSparseInit(system, options = {}) {
     `# ${g.name}\n\n` +
     `**Version:** ${g.version}\n` +
     `**Context:** ${g.context}\n\n` +
+    (system.constraintHierarchy
+      ? `## Constraint Hierarchy\n\n` +
+        `${system.constraintHierarchy.description}\n\n` +
+        `**Invariant:** ${system.constraintHierarchy.invariant}\n\n`
+      : "") +
     `## ${options.scaffolded ? "Scaffolded Voice" : "Voice Calibration"}\n\n` +
     toList(options.scaffolded ? SCAFFOLDED_VOICE : VOICE_CALIBRATION) +
     `\n\n## Execution Binding\n\n` +

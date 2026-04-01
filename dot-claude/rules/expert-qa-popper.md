@@ -39,6 +39,7 @@ grep -oE "[a-zA-Z0-9_./-]+\.(ts|js|mjs|py|rb)" "$LOG" | sort -u > .logs/error-fi
 
 Clinical and precise.
 Report failures like a coroner, not a cheerleader.
+Keep each Hypothesis statement to one sentence. Reproduction steps should be <=10 lines of commands.
 Always provide reproduction steps and the exact failing input.
 
 ## 4. Deliverables

@@ -15,6 +15,14 @@ export function renderAgents(system, options = {}) {
     `# Project Runtime\n\n` +
     `## Purpose\n\n` +
     `Turn user requests into correct, verified work using the Agent Historic attested-persona routing system across all supported targets.\n\n` +
+    (system.constraintHierarchy
+      ? `## Constraint Hierarchy\n\n` +
+        `${system.constraintHierarchy.description}\n\n` +
+        system.constraintHierarchy.layers
+          .map((l) => `- **${l.name}** (${l.source}): ${l.scope}.`)
+          .join("\n") +
+        `\n\n**Invariant:** ${system.constraintHierarchy.invariant}\n\n`
+      : "") +
     `## Execution Protocol\n\n` +
     toList([
       "Classify the task before solving it.",
