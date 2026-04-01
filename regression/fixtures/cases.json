@@ -27,7 +27,12 @@
       "BG3",
       "BG4",
       "BG5",
-      "BG6"
+      "BG6",
+      "Dj1",
+      "Sh1",
+      "Kn1",
+      "Li1",
+      "Si1"
     ]
   },
   "cases": [
@@ -494,6 +499,136 @@
       "behavioralAssertions": [
         "noFalseClaims",
         "diagnosticDiscipline"
+      ]
+    },
+    {
+      "id": "Dj1",
+      "category": "expert",
+      "name": "Dijkstra behavior",
+      "targets": [
+        "cursor",
+        "codex"
+      ],
+      "prompt": "This concurrent queue has a race condition. Model the state and find the invariant violation.",
+      "expectedPrimaryExpert": "expert-formal-dijkstra",
+      "expectedSections": [
+        "State Model",
+        "Invariants",
+        "Failure Paths",
+        "Correction",
+        "Verification"
+      ],
+      "allowedHandoffs": [
+        "expert-qa-popper",
+        "expert-engineer-peirce"
+      ],
+      "forbiddenBehaviors": [
+        "Treating concurrency as ordinary implementation detail",
+        "No invariants named"
+      ]
+    },
+    {
+      "id": "Sh1",
+      "category": "expert",
+      "name": "Shannon behavior",
+      "targets": [
+        "cursor",
+        "codex"
+      ],
+      "prompt": "Our context window keeps overflowing. Compress the retrieval context without losing critical information.",
+      "expectedPrimaryExpert": "expert-information-shannon",
+      "expectedSections": [
+        "Signal",
+        "Noise",
+        "Compression Strategy",
+        "Critical Retention",
+        "Validation"
+      ],
+      "allowedHandoffs": [
+        "expert-orchestrator-simon",
+        "expert-engineer-peirce"
+      ],
+      "forbiddenBehaviors": [
+        "More text instead of better signal",
+        "No validation of retrieval quality"
+      ]
+    },
+    {
+      "id": "Kn1",
+      "category": "expert",
+      "name": "Knuth behavior",
+      "targets": [
+        "cursor",
+        "codex"
+      ],
+      "prompt": "This API endpoint is taking 3 seconds to respond. Profile it and find the bottleneck.",
+      "expectedPrimaryExpert": "expert-performance-knuth",
+      "expectedSections": [
+        "Metric",
+        "Bottleneck",
+        "Optimization Plan",
+        "Tradeoffs",
+        "Verification"
+      ],
+      "allowedHandoffs": [
+        "expert-engineer-peirce",
+        "expert-architect-descartes"
+      ],
+      "forbiddenBehaviors": [
+        "Optimization without measurement",
+        "Micro-optimization before algorithmic leverage"
+      ]
+    },
+    {
+      "id": "Li1",
+      "category": "expert",
+      "name": "Liskov behavior",
+      "targets": [
+        "cursor",
+        "codex"
+      ],
+      "prompt": "We need a stable interface for this plugin system. Design the boundary and contract.",
+      "expectedPrimaryExpert": "expert-abstractions-liskov",
+      "expectedSections": [
+        "Boundary",
+        "Contract",
+        "Coupling Risks",
+        "Recommended Abstraction",
+        "Compatibility"
+      ],
+      "allowedHandoffs": [
+        "expert-architect-descartes",
+        "expert-engineer-peirce"
+      ],
+      "forbiddenBehaviors": [
+        "Implementation details without interface reasoning",
+        "Hidden coupling left unnamed"
+      ]
+    },
+    {
+      "id": "Si1",
+      "category": "expert",
+      "name": "Simon behavior",
+      "targets": [
+        "cursor",
+        "codex"
+      ],
+      "prompt": "Break this large migration task into a workflow with clear stopping conditions.",
+      "expectedPrimaryExpert": "expert-orchestrator-simon",
+      "expectedSections": [
+        "Objective",
+        "Procedure",
+        "Stopping Conditions",
+        "Procedure Risks",
+        "Evaluation"
+      ],
+      "allowedHandoffs": [
+        "expert-architect-descartes",
+        "expert-manager-blackmore"
+      ],
+      "forbiddenBehaviors": [
+        "No stopping condition",
+        "Workflow stages blended without ownership"
       ]
     }
   ]
