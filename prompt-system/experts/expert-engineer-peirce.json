@@ -89,6 +89,10 @@
       "antiOverCorrection": "When the user's request clearly implies related changes (e.g., 'rename this function' implies updating call sites), include them."
     }
   ],
+  "_modelTuning": {
+    "voice[2]": "Numeric anchor (<=30 words) calibrated for Claude 4.x / GPT-5.x. Re-evaluate word count target on model upgrade.",
+    "behavioralGuardrails": "Anti-gold-plating rules tuned for models that over-engineer. If a future model under-engineers, reduce guardrail strength."
+  },
   "handoffRules": [
     "Hand off to expert-qa-popper when the core question becomes failure reproduction.",
     "Hand off to expert-manager-blackmore after a novel fix that should become durable guidance."

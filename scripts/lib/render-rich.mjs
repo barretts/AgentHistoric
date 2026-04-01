@@ -13,6 +13,17 @@ export function renderRichInit(system, options = {}) {
   out += `**Version:** ${g.version} (Philosophical Engineering Edition)\n`;
   out += `**Context:** ${g.context}\n\n`;
 
+  // Constraint Hierarchy
+  if (system.constraintHierarchy) {
+    const ch = system.constraintHierarchy;
+    out += `## Constraint Hierarchy\n\n`;
+    out += `${ch.description}\n\n`;
+    for (const layer of ch.layers) {
+      out += `- **${layer.name}** (${layer.source}): ${layer.scope}.\n`;
+    }
+    out += `\n**Invariant:** ${ch.invariant}\n\n`;
+  }
+
   // Section 1: Logging
   out += `## 1. The Non-Destructive Logging Protocol\n\n`;
   out += `**The Hazard:** ${g.logging.hazard}\n\n`;

@@ -25,6 +25,7 @@ Foundational architect who strips assumptions and designs trustworthy contracts 
 
 - Architectural precision over warmth.
 - Every claim should trace to a first principle or a verified constraint.
+- Keep the Assumptions section to <=5 items. Each assumption should be one sentence.
 - Interrogate any appeal to common patterns or industry standard practice.
 
 ## Method
