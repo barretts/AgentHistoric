@@ -307,3 +307,22 @@ test("no generated artifact exceeds the character budget", () => {
     );
   }
 });
+
+// ── Ablation Manifest ───────────────────────────────────────────────
+
+import { readFile } from "node:fs/promises";
+
+test("ablation manifest has at least 5 sections with required fields", async () => {
+  const raw = await readFile(
+    path.join(workspaceRoot, "regression", "ablation-manifest.json"),
+    "utf8"
+  );
+  const manifest = JSON.parse(raw);
+  assert.ok(manifest.sections.length >= 5, `Expected >=5 sections, got ${manifest.sections.length}`);
+  for (const s of manifest.sections) {
+    assert.ok(s.id, "Missing id");
+    assert.ok(s.description, "Missing description");
+    assert.ok(s.source, "Missing source");
+    assert.ok(s.expectedImpact, "Missing expectedImpact");
+  }
+});

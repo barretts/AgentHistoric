@@ -12,6 +12,7 @@ import {
   computeBehavioralMetrics,
   evaluateResponse,
   expectedResponseSections,
+  formatAblationReport,
   loadRegressionFixtures,
   parseArgs,
   routePrompt,
@@ -20,6 +21,7 @@ import {
 import { loadPromptSystemSpec } from "./prompt-system.mjs";
 
 const workspaceRoot = path.resolve(import.meta.dirname, "..", "..");
+const globalSystem = await loadPromptSystemSpec(workspaceRoot);
 
 async function loadCase(caseId) {
   const fixtures = await loadRegressionFixtures(workspaceRoot);
@@ -470,4 +472,83 @@ test("evaluateResponse includes behavioralMetrics in result", async () => {
   assert.ok(result.behavioralMetrics, "Missing behavioralMetrics");
   assert.ok(typeof result.behavioralMetrics.overEngineering === "number");
   assert.ok(typeof result.behavioralMetrics.concision === "number");
+});
+
+// ── Ablation Report ─────────────────────────────────────────────────
+
+test("formatAblationReport renders table with all sections", () => {
+  const report = {
+    timestamp: "2026-03-31",
+    trialsPerCondition: 3,
+    sections: [
+      {
+        id: "logging-protocol",
+        description: "Logging Protocol",
+        charsSaved: 350,
+        controlMean: 1.8,
+        ablatedMean: 1.7,
+        passHatKDelta: 0,
+        overEngineeringDelta: 0.0,
+        concisionDelta: 0.0,
+        verdict: "KEEP"
+      },
+      {
+        id: "expert-philosophy",
+        description: "Core Philosophy",
+        charsSaved: 200,
+        controlMean: 1.9,
+        ablatedMean: 1.9,
+        passHatKDelta: 0,
+        overEngineeringDelta: 0.0,
+        concisionDelta: 0.0,
+        verdict: "REVIEW"
+      }
+    ]
+  };
+
+  const md = formatAblationReport(report);
+  assert.match(md, /# Ablation Report/);
+  assert.match(md, /logging-protocol/);
+  assert.match(md, /expert-philosophy/);
+  assert.match(md, /KEEP/);
+  assert.match(md, /REVIEW/);
+  assert.match(md, /Trials per condition: 3/);
+});
+
+// ── Ablation Build ──────────────────────────────────────────────────
+
+import { generateArtifacts } from "./build-prompt-system.mjs";
+
+test("ablation mode produces artifacts without the ablated section", () => {
+  const system = JSON.parse(JSON.stringify(globalSystem));
+  const control = generateArtifacts(system, {});
+  const ablated = generateArtifacts(system, { ablation: "behavioral-guardrails" });
+
+  for (const [filePath, content] of control) {
+    if (filePath.includes("expert-") && !filePath.includes("00-init") && !filePath.includes("01-router")) {
+      const ablatedContent = ablated.get(filePath);
+      if (content.includes("Behavioral Guardrails")) {
+        assert.ok(
+          !ablatedContent.includes("Behavioral Guardrails"),
+          `${filePath}: behavioral guardrails should be ablated`
+        );
+      }
+    }
+  }
+});
+
+test("ablation mode produces smaller artifacts than control", () => {
+  const system = JSON.parse(JSON.stringify(globalSystem));
+  const control = generateArtifacts(system, {});
+  const ablated = generateArtifacts(system, { ablation: "logging-protocol" });
+
+  let controlSize = 0;
+  let ablatedSize = 0;
+  for (const [, content] of control) controlSize += content.length;
+  for (const [, content] of ablated) ablatedSize += content.length;
+
+  assert.ok(
+    ablatedSize < controlSize,
+    `Ablated (${ablatedSize}) should be smaller than control (${controlSize})`
+  );
 });
