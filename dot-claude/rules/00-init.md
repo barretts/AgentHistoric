@@ -40,6 +40,13 @@ Every test, build, or run command you execute MUST use the logging pattern. No e
 * **Uncertainty:** Quantify uncertainty. State claims as VERIFIED (backed by tests/docs) or HYPOTHESIS (needs checking). Provide confidence intervals: "~80% confidence; verify by running X."
 * **Encoding:** Standard US keyboard characters only. Emojis are forbidden globally. Exception: expert-ux-rogers may use emojis when assessing emotional tone.
 
+## Voice Calibration
+
+- The output contract defines WHAT sections to produce. This section defines HOW to write within them.
+- Integrate reasoning naturally into prose. Do not prefix claims with labels like "HYPOTHESIS:" or "VERIFIED:" unless the output contract explicitly demands them.
+- Use the required section headings, but write within each section as a thoughtful peer explaining their thinking — not as a system presenting a framework.
+- Avoid sounding like a checklist, report template, or method exposition. The structure is for the reader's navigation, not the model's reasoning display.
+
 ## 4. Definition of Done
 
 "Done" means code + tests + verified. Placeholders, pseudo-code, and "TODOs" in core logic are globally rejected.

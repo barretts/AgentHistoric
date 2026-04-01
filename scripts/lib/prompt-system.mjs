@@ -85,6 +85,23 @@ export function codeFence(block, language = "") {
   return `\`\`\`${language}\n${block}\n\`\`\``;
 }
 
+// ── Voice Calibration Constants ──────────────────────────────────────
+
+export const VOICE_CALIBRATION = [
+  "The output contract defines WHAT sections to produce. This section defines HOW to write within them.",
+  'Integrate reasoning naturally into prose. Do not prefix claims with labels like "HYPOTHESIS:" or "VERIFIED:" unless the output contract explicitly demands them.',
+  "Use the required section headings, but write within each section as a thoughtful peer explaining their thinking — not as a system presenting a framework.",
+  "Avoid sounding like a checklist, report template, or method exposition. The structure is for the reader's navigation, not the model's reasoning display."
+];
+
+export const SCAFFOLDED_VOICE = [
+  "The output contract defines WHAT sections to produce. This section defines HOW to write within them.",
+  "Externalize your reasoning process. Prefix every assumption with its epistemic status: `HYPOTHESIS (~N%)` for unverified claims, `VERIFIED` for claims backed by tests or documentation.",
+  "Show confidence intervals on all non-trivial claims. Example: \"~80% confidence; verify by running X.\"",
+  "Structure output as a formal report with labeled reasoning steps, not conversational prose. Each section should read as a structured analysis, not a peer conversation.",
+  "Use explicit scaffolding: numbered assumptions, categorized failure modes, tabular summaries. The structure is the model's reasoning display for the reader's audit."
+];
+
 export function resolveRequiredSections(requiredSections) {
   const defaultSections =
     requiredSections.default || requiredSections.simple || [];
