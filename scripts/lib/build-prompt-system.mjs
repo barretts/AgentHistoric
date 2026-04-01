@@ -15,26 +15,26 @@ const HEADER = fileHeader("Generated from prompt-system/");
 export function generateArtifacts(system, options = {}) {
   const artifacts = new Map();
 
-  // Rich + md frontmatter → dot-claude/rules/ (no startup needed, Claude auto-loads)
-  addSet(artifacts, system, path.join("dot-claude", "rules"), ".md", mdFm, renderRichInit, renderRichRouter, renderRichExpert, options);
+  // Rich + md frontmatter → compiled/claude/rules/
+  addSet(artifacts, system, path.join("compiled", "claude", "rules"), ".md", mdFm, renderRichInit, renderRichRouter, renderRichExpert, options);
 
-  // Rich + windsurf frontmatter → dot-windsurf/rules/ (root)
-  addSet(artifacts, system, path.join("dot-windsurf", "rules"), ".md", windsurfFm, renderRichInit, renderRichRouter, renderRichExpert, options);
+  // Rich + windsurf frontmatter → compiled/windsurf/rules/
+  addSet(artifacts, system, path.join("compiled", "windsurf", "rules"), ".md", windsurfFm, renderRichInit, renderRichRouter, renderRichExpert, options);
 
-  // Rich + cursor frontmatter → dot-cursor/rules/ (root)
-  addSet(artifacts, system, path.join("dot-cursor", "rules"), ".mdc", cursorFm, renderRichInit, renderRichRouter, renderRichExpert, options);
+  // Rich + cursor frontmatter → compiled/cursor/rules/
+  addSet(artifacts, system, path.join("compiled", "cursor", "rules"), ".mdc", cursorFm, renderRichInit, renderRichRouter, renderRichExpert, options);
 
-  // Sparse + cursor frontmatter → dot-cursor/rules/gpt/
-  addSet(artifacts, system, path.join("dot-cursor", "rules", "gpt"), ".mdc", cursorFm, renderSparseInit, renderSparseRouter, renderSparseExpert, options);
+  // Sparse + cursor frontmatter → compiled/cursor/rules/gpt/
+  addSet(artifacts, system, path.join("compiled", "cursor", "rules", "gpt"), ".mdc", cursorFm, renderSparseInit, renderSparseRouter, renderSparseExpert, options);
 
-  // Sparse + windsurf frontmatter → dot-windsurf/rules/gpt/
-  addSet(artifacts, system, path.join("dot-windsurf", "rules", "gpt"), ".md", windsurfFm, renderSparseInit, renderSparseRouter, renderSparseExpert, options);
+  // Sparse + windsurf frontmatter → compiled/windsurf/rules/gpt/
+  addSet(artifacts, system, path.join("compiled", "windsurf", "rules", "gpt"), ".md", windsurfFm, renderSparseInit, renderSparseRouter, renderSparseExpert, options);
 
   // Codex (own format, sparse)
-  artifacts.set(path.join("dot-codex", "AGENTS.md"), renderAgents(system, options));
+  artifacts.set(path.join("compiled", "codex", "AGENTS.md"), renderAgents(system, options));
   for (const expert of system.experts) {
     artifacts.set(
-      path.join("dot-codex", "skills", expert.codexSkillDir, "SKILL.md"),
+      path.join("compiled", "codex", "skills", expert.codexSkillDir, "SKILL.md"),
       renderSkill(system, expert, options)
     );
   }
