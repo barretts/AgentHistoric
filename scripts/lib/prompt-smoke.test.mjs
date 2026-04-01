@@ -202,6 +202,30 @@ test("init prompts contain required sections", () => {
   }
 });
 
+test("rich init prompts render routing-first and protocol-over-velocity rules", () => {
+  const richInitFiles = [...artifacts].filter(([p]) =>
+    ["dot-claude/rules/00-init.md", "dot-windsurf/rules/00-init.md", "dot-cursor/rules/00-init.mdc"].includes(p)
+  );
+
+  for (const [filePath, content] of richInitFiles) {
+    assert.match(
+      content,
+      /Before the first tool call, skill invocation, or code edit, complete the routing step and state the routing decision\./,
+      `${filePath}: missing routing-first execution binding`
+    );
+    assert.match(
+      content,
+      /Never prioritize task velocity over protocol compliance\./,
+      `${filePath}: missing protocol-over-velocity rule`
+    );
+    assert.match(
+      content,
+      /The user's assignment outranks opportunistic quick wins unless the user explicitly requests a quick-win approach\./,
+      `${filePath}: missing assignment-over-quick-wins constraint`
+    );
+  }
+});
+
 // ── Required Sections: Router ───────────────────────────────────────
 
 test("router prompts contain required sections", () => {
@@ -221,6 +245,45 @@ test("router prompts contain required sections", () => {
       );
     }
   }
+});
+
+test("rich router prompts render the router contract rules", () => {
+  const richRouterFiles = [...artifacts].filter(([p]) =>
+    ["dot-claude/rules/01-router.md", "dot-windsurf/rules/01-router.md", "dot-cursor/rules/01-router.mdc"].includes(p)
+  );
+
+  for (const [filePath, content] of richRouterFiles) {
+    assert.match(
+      content,
+      /Routing is mandatory before the first tool call, skill invocation, or code edit\./,
+      `${filePath}: missing routing-first router contract`
+    );
+    assert.match(
+      content,
+      /Prefer protocol compliance over task velocity when they compete\./,
+      `${filePath}: missing protocol-over-velocity router contract`
+    );
+  }
+});
+
+test("codex runtime renders execution binding and router contract rules", () => {
+  const content = artifacts.get("dot-codex/AGENTS.md");
+  assert.ok(content, "Missing dot-codex/AGENTS.md artifact");
+  assert.match(
+    content,
+    /Before the first tool call, skill invocation, or code edit, complete the routing step and state the routing decision\./,
+    "dot-codex/AGENTS.md: missing routing-first execution binding"
+  );
+  assert.match(
+    content,
+    /Never prioritize task velocity over protocol compliance\./,
+    "dot-codex/AGENTS.md: missing protocol-over-velocity rule"
+  );
+  assert.match(
+    content,
+    /Routing is mandatory before the first tool call, skill invocation, or code edit\./,
+    "dot-codex/AGENTS.md: missing router contract rule"
+  );
 });
 
 // ── Required Sections: Expert ───────────────────────────────────────

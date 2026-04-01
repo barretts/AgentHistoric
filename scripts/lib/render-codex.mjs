@@ -10,6 +10,7 @@ import {
 
 export function renderAgents(system, options = {}) {
   const g = system.globalRuntime;
+  const r = system.router;
   const abl = options.ablation;
   return (
     fileHeader("Generated from prompt-system/") +
@@ -25,29 +26,14 @@ export function renderAgents(system, options = {}) {
         `\n\n**Invariant:** ${system.constraintHierarchy.invariant}\n\n`
       : "") +
     `## Execution Protocol\n\n` +
+    toList(g.executionBinding) +
+    `\n\n## Router Contract\n\n` +
+    toList(r.contracts) +
+    `\n\n## Routing Preference\n\n` +
     toList([
-      "Classify the task before solving it.",
-      "Select exactly one primary expert skill unless a named pipeline handoff is required.",
-      ...(options.debug
-        ? [
-            "State the selection as Selected Expert, Reason, and Confidence for non-trivial tasks, and include those labels in the visible user-facing response."
-          ]
-        : []),
-      "Apply only that expert skill while it is active.",
-      "If context is missing, keep the selected expert structure and use it to explain what evidence or inputs are missing.",
-      "Use the selected expert's required section headings verbatim.",
-      ...(options.debug
-        ? [
-            "After the routing preamble, use only the active expert's required headings unless an explicit allowed handoff is named.",
-            "Do not emit headings, section labels, or deliverable names from another expert while a different expert is active.",
-            "Keep VERIFIED and HYPOTHESIS inline inside the selected sections, never as standalone headings."
-          ]
-        : []),
       "When a request mixes exploration with architecture, debugging, or UX, prefer the expert with the highest impact on correctness and foundations.",
       "If the user asks whether something should be built and only secondarily mentions UX or friendliness, prefer architecture before ideation.",
-      "If the user explicitly asks for multiple options, drafts, or redesign alternatives, keep ideation primary unless the prompt also requests concrete architecture artifacts such as schemas, trust boundaries, or contracts.",
-      "Verify logging rules, uncertainty labeling, and definition of done before finalizing.",
-      "If multiple experts could apply, choose the one with the highest impact on correctness, not completeness."
+      "If the user explicitly asks for multiple options, drafts, or redesign alternatives, keep ideation primary unless the prompt also requests concrete architecture artifacts such as schemas, trust boundaries, or contracts."
     ]) +
     (abl !== "voice-calibration"
       ? `\n\n## ${options.scaffolded ? "Scaffolded Voice" : "Voice Calibration"}\n\n` +
