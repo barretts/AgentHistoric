@@ -36,18 +36,6 @@ cleanup_managed_files() {
   done < <(grep -rlZ "$MANAGED_MARKER" "$dest_dir" 2>/dev/null)
 }
 
-# --- Backup ---
-
-backup_dir() {
-  local dir="$1"
-  if [[ -d "$dir" ]]; then
-    local ts
-    ts="$(date +%Y%m%d-%H%M%S)"
-    cp -r "$dir" "${dir}-${ts}"
-    echo "    Backup: ${dir}-${ts}"
-  fi
-}
-
 # --- Loader-header injection ---
 # Writes (or replaces) a marked block at the top of a file that tells the IDE
 # to always load the init + router rules. Idempotent: re-runs replace the block.
@@ -433,17 +421,6 @@ echo "    Source:  $REPO_DIR"
 echo "    Targets: ${TARGETS[*]}"
 echo "    Style:   rich (universal default)"
 echo ""
-
-echo "--> Backing up existing rule directories..."
-for target in "${TARGETS[@]}"; do
-  case "$target" in
-    claude)   backup_dir "$DEST_CLAUDE" ;;
-    cursor)   backup_dir "$DEST_CURSOR" ;;
-    windsurf) backup_dir "$DEST_WINDSURF" ;;
-    codex)    backup_dir "$DEST_CODEX" ;;
-    opencode) backup_dir "$DEST_OPENCODE" ;;
-  esac
-done
 
 echo "--> Installing rules..."
 for target in "${TARGETS[@]}"; do
