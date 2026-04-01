@@ -161,23 +161,21 @@ Four code-based graders in `regression.mjs` for evaluating LLM output quality:
 
 ### Regression Fixtures (`regression/fixtures/cases.json`)
 
-The test suite defines **14 test cases** across 3 categories:
+The test suite defines **25 test cases** across 4 categories:
 
 | Category | Cases | Purpose |
 |----------|-------|---------|
 | Router (clear intent) | R1-R6 | Verify correct expert selection for unambiguous tasks |
-| Expert behavior | Q1, D1, P1, Rg1, B1, V1 | Validate each expert's output contract |
+| Expert behavior | Q1, D1, P1, Rg1, B1, V1, Dj1, Sh1, Kn1, Li1, Si1 | Validate each expert's output contract (all 11 covered) |
 | Conflict resolution | C1, C2 | Test priority rules when multiple experts apply |
+| Behavioral | BG1-BG6 | Test guardrail effectiveness (gold-plating, false claims, scope creep, diagnostic discipline) |
 
 ### Remaining Coverage Gaps
 
-**Missing Test Scenarios:**
-1. **Formal Dijkstra** - No dedicated test case for concurrency/stateful systems
-2. **Information Shannon** - No test for context compression scenarios
-3. **Performance Knuth** - No benchmark-driven routing tests
-4. **Abstractions Liskov** - No interface stability validation
-5. **Orchestrator Simon** - No multi-agent workflow decomposition tests
-6. **Behavioral provocation cases** - No cases that tempt gold-plating, false claims, or scope creep (D10)
+All 11 experts now have at least one dedicated regression case. Remaining gaps:
+1. **Multi-case coverage** - Most experts have only 1 case; higher-traffic experts (Peirce, Descartes, Popper) would benefit from 3-5 cases each
+2. **Cross-expert pipeline cases** - No cases that exercise full pipeline handoff sequences
+3. **LLM-as-judge graders** (D6/D7) - All evaluation is deterministic code; no model-based soft grading yet
 
 ---
 
@@ -264,9 +262,10 @@ Per the global `AGENTS.md` requirements:
 | Phase 1: Gap Analysis | Complete | 38 items audited, all classifications verified |
 | Phase 2: Behavioral Guardrails | Complete | 30 guardrail triples across 11 experts, 3 renderers updated |
 | Phase 3: Test Infrastructure | Complete | 12 smoke tests, 4 behavioral assertions, 32 total tests |
-| Phase 4: Prompt Architecture | Planned | Constraint hierarchy, model markers, numeric anchors |
-| Phase 5: Eval Maturity | Planned | pass@k, behavioral fixtures, model-based graders |
-| Phase 6: Ablation Testing | Planned | Section removal experiments |
+| Phase 4: Prompt Architecture | Complete | Constraint hierarchy, model markers, numeric anchors |
+| Phase 5: Eval Maturity | Complete | pass@k/pass^k, 6 behavioral fixtures, behavioral metrics |
+| Phase 6: Ablation Testing | Complete | 7-section ablation manifest, runner, report renderer |
+| Gap Cleanup | Complete | C2 (read-only bias), C3 (adversarial protocol), E2 (lead with answer), full expert coverage |
 
 ---
 
@@ -274,6 +273,6 @@ Per the global `AGENTS.md` requirements:
 
 AgentHistoric implements a **sophisticated philosophical routing system** that successfully translates epistemological traditions into actionable AI agent behaviors. The architecture demonstrates strong separation of concerns between source definitions, build automation, and runtime artifacts.
 
-Recent improvements (Phases 1-3) added a behavioral guardrails layer with 30 Failure Mode → Rule → Anti-Over-Correction triples and a comprehensive smoke test suite that validates structural integrity of all generated prompts. The test count increased from 11 to 32 with multi-layer defense against prompt regressions.
+Phases 1-6 added behavioral guardrails (30 triples across 11 experts), a 3-layer constraint hierarchy, multi-trial regression with pass@k/pass^k, ablation testing infrastructure, and comprehensive smoke tests. The test count increased from 11 to 49 and regression cases from 14 to 25, with all 11 experts now covered.
 
-**Overall Assessment**: Production-ready with strong test coverage. Remaining work focuses on prompt architecture refinement (Phase 4) and evaluation maturity (Phases 5-6).
+**Overall Assessment**: Production-ready with comprehensive test and evaluation infrastructure. Remaining work focuses on running ablation experiments with live API access and adding LLM-as-judge graders for soft behavioral dimensions.

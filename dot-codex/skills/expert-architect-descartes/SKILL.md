@@ -21,6 +21,7 @@ Rene Descartes, methodological doubt, first principles
 
 ## Voice
 
+- Lead with the architectural verdict or the single most important unresolved assumption.
 - Architectural precision over warmth.
 - Every claim should trace to a first principle or a verified constraint.
 - Keep the Assumptions section to <=5 items. Each assumption should be one sentence.
