@@ -10,12 +10,11 @@ const system = await loadPromptSystemSpec(workspaceRoot);
 const artifacts = generateArtifacts(system);
 
 const CURSOR_RICH = "compiled/cursor/rules";
-const CURSOR_SPARSE = "compiled/cursor/rules/gpt";
 const MAX_CHARS = 15000;
 
 function artifactsInDir(dir, ext) {
   return [...artifacts].filter(
-    ([p]) => p.startsWith(dir + "/") && p.endsWith(ext) && !p.includes("/gpt/")
+    ([p]) => p.startsWith(dir + "/") && p.endsWith(ext)
   );
 }
 
@@ -23,14 +22,7 @@ function cursorArtifacts() {
   return [...artifacts].filter(
     ([p]) =>
       p.startsWith(CURSOR_RICH + "/") &&
-      p.endsWith(".mdc") &&
-      !p.includes("/gpt/")
-  );
-}
-
-function sparseArtifacts() {
-  return [...artifacts].filter(
-    ([p]) => p.startsWith(CURSOR_SPARSE + "/") && p.endsWith(".mdc")
+      p.endsWith(".mdc")
   );
 }
 
@@ -39,7 +31,6 @@ function expertArtifacts(dir, ext) {
     ([p]) =>
       p.startsWith(dir + "/") &&
       p.endsWith(ext) &&
-      !p.includes("/gpt/") &&
       !p.includes("00-init") &&
       !p.includes("01-router")
   );
@@ -68,8 +59,7 @@ test("every windsurf/claude .md artifact has valid frontmatter", () => {
   const mdArtifacts = [...artifacts].filter(
     ([p]) =>
       (p.startsWith("compiled/windsurf/rules/") || p.startsWith("compiled/claude/rules/")) &&
-      p.endsWith(".md") &&
-      !p.includes("/gpt/")
+      p.endsWith(".md")
   );
 
   for (const [filePath, content] of mdArtifacts) {
@@ -126,8 +116,7 @@ test("windsurf init and router are trigger:always, experts are trigger:model_dec
   const windsurfMd = [...artifacts].filter(
     ([p]) =>
       p.startsWith("compiled/windsurf/rules/") &&
-      p.endsWith(".md") &&
-      !p.includes("/gpt/")
+      p.endsWith(".md")
   );
 
   for (const [filePath, content] of windsurfMd) {
@@ -153,8 +142,7 @@ test("claude init and router are trigger:always, experts are trigger:model_decis
   const claudeMd = [...artifacts].filter(
     ([p]) =>
       p.startsWith("compiled/claude/rules/") &&
-      p.endsWith(".md") &&
-      !p.includes("/gpt/")
+      p.endsWith(".md")
   );
 
   for (const [filePath, content] of claudeMd) {
@@ -180,7 +168,7 @@ test("claude init and router are trigger:always, experts are trigger:model_decis
 
 test("init prompts contain required sections", () => {
   const initFiles = [...artifacts].filter(
-    ([p]) => p.includes("00-init") && !p.includes("/gpt/")
+    ([p]) => p.includes("00-init")
   );
   assert.ok(initFiles.length >= 3, "Expected init files for cursor, windsurf, claude");
 
@@ -230,7 +218,7 @@ test("rich init prompts render routing-first and protocol-over-velocity rules", 
 
 test("router prompts contain required sections", () => {
   const routerFiles = [...artifacts].filter(
-    ([p]) => p.includes("01-router") && !p.includes("/gpt/")
+    ([p]) => p.includes("01-router")
   );
   assert.ok(routerFiles.length >= 3, "Expected router files for cursor, windsurf, claude");
 
@@ -409,7 +397,7 @@ test("system.json defines a constraintHierarchy with 3 layers", () => {
 
 test("init prompts render the constraint hierarchy", () => {
   const initFiles = [...artifacts].filter(
-    ([p]) => p.includes("00-init") && !p.includes("/gpt/")
+    ([p]) => p.includes("00-init")
   );
 
   for (const [filePath, content] of initFiles) {

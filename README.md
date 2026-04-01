@@ -34,8 +34,6 @@ bash install.sh
 # 3. Or install for specific editors
 bash install.sh --cursor --windsurf
 
-# 4. Also install deprecated sparse/GPT rules (opt-in)
-bash install.sh --gpt
 ```
 
 ## Layout
@@ -52,15 +50,12 @@ scripts/
     prompt-system.mjs      # Loader, frontmatter, helpers
     build-prompt-system.mjs # Artifact generator + frontmatter factories
     render-rich.mjs        # Rich renderers (Claude-optimized)
-    render-sparse.mjs      # Sparse renderers (GPT-optimized)
     render-codex.mjs       # Codex renderers (AGENTS.md + SKILL.md)
 
 Generated output (compiled/):
   compiled/claude/rules/        # Rich rules for Claude Code
   compiled/windsurf/rules/      # Rich rules for Windsurf
   compiled/cursor/rules/        # Rich rules for Cursor (.mdc)
-  compiled/windsurf/rules/gpt/  # Sparse rules (deprecated, opt-in via --gpt)
-  compiled/cursor/rules/gpt/    # Sparse rules (deprecated, opt-in via --gpt)
   compiled/codex/               # Codex AGENTS.md + skills/
 
 regression/
@@ -81,7 +76,6 @@ bash install.sh [options]
 | `--windsurf` | Install to `~/.windsurf/rules/` |
 | `--codex` | Install to `~/.codex/` |
 | `--all` | All editors |
-| `--gpt` | *(deprecated)* Also install sparse/GPT rules in `gpt/` subfolder |
 | `--list` | Show installed files without modifying anything |
 | *(no flags)* | Auto-detect installed editors |
 
@@ -95,22 +89,13 @@ bash install.sh [options]
 
 **Codex:** `AGENTS.md` and `skills/` auto-load from `~/.codex/`. No configuration needed.
 
-## Rich vs Sparse
-
-| Style | Targets | Description |
-|-------|---------|-------------|
-| **Rich** | Claude, Cursor, Windsurf, Codex | Full narrative, philosophy, voice. Universal default for all models. |
-| **Sparse** *(deprecated)* | `rules/gpt/` (opt-in) | Numbered steps, execution bindings, output contracts. Available via `--gpt` flag but no longer recommended. |
-
-Rich rules are the universal default for all models including GPT-family. Experimental results (V1/V2 persona prompting comparison) showed that current-generation GPT models benefit from philosophical framing and that the previous GPT adaptation preamble suppressed engagement. Use `bash install.sh --gpt` only if you specifically need the legacy sparse variant.
-
 ## Generate Targets
 
 ```bash
 npm run build:prompts
 ```
 
-Regenerates all six output directories from the canonical JSON in `prompt-system/`.
+Regenerates all output directories from the canonical JSON in `prompt-system/`.
 
 ## Testing
 
