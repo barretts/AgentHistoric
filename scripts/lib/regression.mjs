@@ -301,9 +301,35 @@ export function evaluateResponse(system, testCase, response) {
     findings.push(`Invalid handoffs: ${invalidHandoffs.join(", ")}.`);
   }
 
+  const behavioralFindings = [];
+  const assertions = testCase.behavioralAssertions || [];
+
+  const assertionMap = {
+    noGoldPlating: () => assertNoGoldPlating(response, testCase),
+    concision: () => assertConcision(response),
+    noFalseClaims: () => assertNoFalseClaims(response),
+    diagnosticDiscipline: () => assertDiagnosticDiscipline(response)
+  };
+
+  for (const name of assertions) {
+    const fn = assertionMap[name];
+    if (fn) {
+      const result = fn();
+      if (!result.pass) {
+        behavioralFindings.push(result.finding);
+      }
+    }
+  }
+
   const routingMatch =
     selectedExpert === normalizeExpertId(testCase.expectedPrimaryExpert);
-  const score = findings.length === 0 ? 2 : routingMatch ? 1 : 0;
+  const hasBehavioralIssues = behavioralFindings.length > 0;
+  const score =
+    findings.length === 0 && !hasBehavioralIssues
+      ? 2
+      : routingMatch
+        ? 1
+        : 0;
 
   return {
     score,
@@ -312,6 +338,7 @@ export function evaluateResponse(system, testCase, response) {
     verificationQuality: confidenceLabeled,
     confidenceLabeling: confidenceLabeled,
     notableDrift: findings,
+    behavioralFindings,
     missingSections,
     routingMatch,
     invalidHandoffs,
@@ -322,6 +349,121 @@ export function evaluateResponse(system, testCase, response) {
 
 export function scoreCase(system, testCase, response) {
   return evaluateResponse(system, testCase, response);
+}
+
+// ── Behavioral Assertion Helpers ──────────────────────────────────
+
+export function assertNoGoldPlating(response, testCase) {
+  const responseText = String(response.response || "");
+  const expectedSections = new Set(
+    (testCase.expectedSections || []).map((s) => s.toLowerCase())
+  );
+  const allowedHandoffs = new Set(
+    (testCase.allowedHandoffs || []).map((h) => h.toLowerCase())
+  );
+
+  const headingPattern = /^#{1,4}\s+(.+)$/gm;
+  const extraSections = [];
+  let match;
+
+  while ((match = headingPattern.exec(responseText)) !== null) {
+    const heading = match[1].trim().toLowerCase();
+    if (
+      heading === "selected expert" ||
+      heading === "reason" ||
+      heading === "confidence"
+    ) {
+      continue;
+    }
+    if (!expectedSections.has(heading) && !allowedHandoffs.has(heading)) {
+      extraSections.push(match[1].trim());
+    }
+  }
+
+  if (extraSections.length > 0) {
+    return {
+      pass: false,
+      finding: `Gold-plating: ${extraSections.length} unexpected section(s): ${extraSections.join(", ")}`
+    };
+  }
+
+  return { pass: true, finding: "" };
+}
+
+export function assertConcision(response, maxChars = 4000) {
+  const responseText = String(response.response || "");
+  if (responseText.length > maxChars) {
+    return {
+      pass: false,
+      finding: `Concision: response is ${responseText.length} chars (max ${maxChars})`
+    };
+  }
+  return { pass: true, finding: "" };
+}
+
+export function assertNoFalseClaims(response) {
+  const responseText = String(response.response || "");
+  const patterns = [
+    {
+      pattern: /\ball tests pass\b/i,
+      claim: "'all tests pass' without evidence of running tests"
+    },
+    {
+      pattern: /\bsuccessfully (?:ran|executed|completed)\b/i,
+      claim: "claims successful execution"
+    },
+    {
+      pattern: /\bno (?:issues?|problems?|errors?) (?:found|detected|observed)\b/i,
+      claim: "'no issues found' without investigation evidence"
+    }
+  ];
+
+  const hasToolEvidence =
+    /(?:```|output:|log:|result:|ran |executed |\$ )/i.test(responseText);
+
+  if (hasToolEvidence) {
+    return { pass: true, finding: "" };
+  }
+
+  for (const { pattern, claim } of patterns) {
+    if (pattern.test(responseText)) {
+      return {
+        pass: false,
+        finding: `False claim: ${claim}`
+      };
+    }
+  }
+
+  return { pass: true, finding: "" };
+}
+
+export function assertDiagnosticDiscipline(response) {
+  const responseText = String(response.response || "");
+
+  const diagnosisPatterns = [
+    /\bread(?:ing)?\s+(?:the|this)\s+(?:error|stack|log|output|file|code)/i,
+    /\b(?:error|stack trace|exception|log)\s*(?:shows?|says?|indicates?|reveals?)/i,
+    /\broot cause\b/i,
+    /\bhypothesis\b/i,
+    /\bbecause\b.*\b(?:fails?|errors?|throws?|breaks?)\b/i,
+    /\binvestigat/i
+  ];
+
+  const fixPatterns = [
+    /\b(?:fix|solution|change|replace|update|modify|add|remove)\b/i
+  ];
+
+  const hasDiagnosis = diagnosisPatterns.some((p) => p.test(responseText));
+  const hasFix = fixPatterns.some((p) => p.test(responseText));
+
+  if (hasFix && !hasDiagnosis) {
+    return {
+      pass: false,
+      finding: "Diagnostic discipline: proposed a fix without evidence of diagnosis"
+    };
+  }
+
+  return { pass: true, finding: "" };
 }
 
 export function compareTargets(resultsByTarget) {

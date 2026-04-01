@@ -120,7 +120,22 @@ Regenerates all six output directories from the canonical JSON in `prompt-system
 npm run test:unit
 ```
 
-Covers artifact drift detection, routing expectations, and evaluator behavior.
+32 tests across 3 test files:
+
+| File | Tests | Scope |
+|------|:-----:|-------|
+| `prompt-smoke.test.mjs` | 12 | Frontmatter validity, required sections, expert cross-references, guardrail completeness, token budgets |
+| `prompt-system.test.mjs` | 4 | Section resolution, generated artifact sync |
+| `regression.test.mjs` | 16 | Routing, evaluator, behavioral assertions |
+
+### Behavioral Assertions
+
+The regression evaluator includes four code-based graders that detect behavioral anti-patterns in LLM output:
+
+- **`assertNoGoldPlating`** — flags extra sections beyond the output contract
+- **`assertConcision`** — flags responses exceeding a character budget
+- **`assertNoFalseClaims`** — flags success claims without execution evidence
+- **`assertDiagnosticDiscipline`** — flags fix proposals without prior diagnosis
 
 ### Regression Suites
 
@@ -139,13 +154,13 @@ node scripts/run-regressions.mjs --suite smoke --cursor-model gpt-5.4-medium
 
 ### Scores
 
-- **2:** Correct expert, correct structure, correct depth
-- **1:** Mostly correct, minor drift
+- **2:** Correct expert, correct structure, no behavioral findings
+- **1:** Correct expert, minor format drift or behavioral findings
 - **0:** Wrong expert or wrong structure
 
 ## Adding a New Expert
 
-1. Create `prompt-system/experts/<expert-id>.json`.
+1. Create `prompt-system/experts/<expert-id>.json` with a `behavioralGuardrails` array (at least one Failure Mode → Rule → Anti-Over-Correction triple).
 2. Register the expert in `prompt-system/system.json`.
 3. Run `npm run build:prompts`.
 4. Add regression cases to `regression/fixtures/cases.json`.
@@ -153,7 +168,7 @@ node scripts/run-regressions.mjs --suite smoke --cursor-model gpt-5.4-medium
 
 ## Adding a Regression Case
 
-Add an object to `regression/fixtures/cases.json` with `id`, `category`, `name`, `targets`, `prompt`, `expectedPrimaryExpert`, `expectedSections`, `allowedHandoffs`, and `forbiddenBehaviors`. Include the case id in `suites.smoke` or `suites.full`.
+Add an object to `regression/fixtures/cases.json` with `id`, `category`, `name`, `targets`, `prompt`, `expectedPrimaryExpert`, `expectedSections`, `allowedHandoffs`, and `forbiddenBehaviors`. Optionally add `behavioralAssertions` (e.g., `["noGoldPlating", "concision"]`). Include the case id in `suites.smoke` or `suites.full`.
 
 ## Verification Workflow
 

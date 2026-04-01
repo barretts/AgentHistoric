@@ -3,6 +3,10 @@ import assert from "node:assert/strict";
 import path from "node:path";
 
 import {
+  assertConcision,
+  assertDiagnosticDiscipline,
+  assertNoFalseClaims,
+  assertNoGoldPlating,
   buildWrappedPrompt,
   evaluateResponse,
   expectedResponseSections,
@@ -168,6 +172,128 @@ test("evaluateResponse ignores inline uncertainty labels that are not headings",
   assert.strictEqual(result.score, 2);
   assert.strictEqual(result.personaBlend, false);
   assert.deepEqual(result.notableDrift, []);
+});
+
+// ── Behavioral Assertion Tests ─────────────────────────────────────
+
+test("assertNoGoldPlating flags extra sections beyond expected", () => {
+  const response = {
+    response: [
+      "## Selected Expert",
+      "expert-engineer-peirce",
+      "## Reason",
+      "Clear implementation request.",
+      "## Confidence",
+      "High",
+      "## Answer",
+      "Here is the implementation.",
+      "## Refactoring Suggestions",
+      "Here are some bonus improvements."
+    ].join("\n")
+  };
+  const testCase = { expectedSections: ["Answer"], allowedHandoffs: [] };
+
+  const result = assertNoGoldPlating(response, testCase);
+  assert.strictEqual(result.pass, false);
+  assert.match(result.finding, /gold-plating/i);
+  assert.match(result.finding, /Refactoring Suggestions/);
+});
+
+test("assertNoGoldPlating passes when only expected sections present", () => {
+  const response = {
+    response: [
+      "## Selected Expert",
+      "expert-engineer-peirce",
+      "## Reason",
+      "Implementation request.",
+      "## Confidence",
+      "High",
+      "## Answer",
+      "Done."
+    ].join("\n")
+  };
+  const testCase = { expectedSections: ["Answer"], allowedHandoffs: [] };
+
+  const result = assertNoGoldPlating(response, testCase);
+  assert.strictEqual(result.pass, true);
+});
+
+test("assertConcision flags responses over the limit", () => {
+  const response = { response: "x".repeat(5000) };
+  const result = assertConcision(response, 4000);
+  assert.strictEqual(result.pass, false);
+  assert.match(result.finding, /concision/i);
+});
+
+test("assertConcision passes for short responses", () => {
+  const response = { response: "Short answer." };
+  const result = assertConcision(response, 4000);
+  assert.strictEqual(result.pass, true);
+});
+
+test("assertNoFalseClaims flags 'all tests pass' without evidence", () => {
+  const response = {
+    response: "I reviewed the code and all tests pass. The implementation looks correct."
+  };
+  const result = assertNoFalseClaims(response);
+  assert.strictEqual(result.pass, false);
+  assert.match(result.finding, /false claim/i);
+});
+
+test("assertNoFalseClaims passes when tool evidence is present", () => {
+  const response = {
+    response: "```\n$ npm test\nall tests pass\n```\nAll tests pass."
+  };
+  const result = assertNoFalseClaims(response);
+  assert.strictEqual(result.pass, true);
+});
+
+test("assertDiagnosticDiscipline flags fix-without-diagnosis", () => {
+  const response = {
+    response: "Replace the function with this new implementation. Also add error handling."
+  };
+  const result = assertDiagnosticDiscipline(response);
+  assert.strictEqual(result.pass, false);
+  assert.match(result.finding, /diagnostic discipline/i);
+});
+
+test("assertDiagnosticDiscipline passes when diagnosis precedes fix", () => {
+  const response = {
+    response:
+      "Reading the error stack trace shows the null pointer originates from line 42. " +
+      "The root cause is a missing null check. Fix: add a guard clause."
+  };
+  const result = assertDiagnosticDiscipline(response);
+  assert.strictEqual(result.pass, true);
+});
+
+test("evaluateResponse incorporates behavioral findings into scoring", async () => {
+  const system = await loadPromptSystemSpec(workspaceRoot);
+  const testCase = {
+    ...await loadCase("R1"),
+    behavioralAssertions: ["concision"]
+  };
+  const response = {
+    routingDecision: {
+      domain: "Implementation",
+      selectedExpert: "expert-engineer-peirce",
+      reason: "Clear implementation request.",
+      confidence: "High"
+    },
+    activeExpert: "expert-engineer-peirce",
+    handoffs: [],
+    outputSections: ["Answer"],
+    confidenceLabeled: true,
+    personaBlend: false,
+    domainStayedInScope: true,
+    summary: "Implementation is primary.",
+    response: "Selected Expert: expert-engineer-peirce\nReason: impl\nConfidence: High\n\n## Answer\n" + "x".repeat(5000)
+  };
+
+  const result = evaluateResponse(system, testCase, response);
+  assert.strictEqual(result.score, 1);
+  assert.ok(result.behavioralFindings.length > 0);
+  assert.match(result.behavioralFindings[0], /concision/i);
 });
 
 test("evaluateResponse rejects blended headings from another expert", async () => {
