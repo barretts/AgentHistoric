@@ -98,6 +98,8 @@ export function buildWrappedPrompt(testCase) {
     "Set activeExpert to the expert currently producing the answer.",
     "Set handoffs to an array of named expert ids if you explicitly handed off, otherwise [].",
     "Set outputSections to the ordered section headings you actually used in the response, or ['Answer'] when you lead directly with an answer.",
+    "The response body itself must begin with Selected Expert, then Reason, then Confidence, before any other content.",
+    "Do not add a preamble like 'I'll inspect the files' or 'First I will use a tool' before the routing headings.",
     "If the prompt lacks enough concrete implementation context, preserve the selected expert structure anyway and use the sections to explain what is missing.",
     "Do not invent alternate headings like Missing Context, Assessment, Pattern, or Possible Designs unless they are part of the required headings.",
     `Use these exact response headings for this case when they apply: ${requiredHeadings.join(", ")}.`,
@@ -316,7 +318,8 @@ export function evaluateResponse(system, testCase, response) {
     noGoldPlating: () => assertNoGoldPlating(response, testCase),
     concision: () => assertConcision(response),
     noFalseClaims: () => assertNoFalseClaims(response),
-    diagnosticDiscipline: () => assertDiagnosticDiscipline(response)
+    diagnosticDiscipline: () => assertDiagnosticDiscipline(response),
+    routingFirst: () => assertRoutingFirst(response)
   };
 
   for (const name of assertions) {
@@ -471,6 +474,37 @@ export function assertDiagnosticDiscipline(response) {
     return {
       pass: false,
       finding: "Diagnostic discipline: proposed a fix without evidence of diagnosis"
+    };
+  }
+
+  return { pass: true, finding: "" };
+}
+
+export function assertRoutingFirst(response) {
+  const responseText = String(response.response || "");
+  const selectedMatch = responseText.match(/^\s*(?:#+\s*)?Selected Expert(?=\s*:|\s*$)/im);
+  const reasonMatch = responseText.match(/^\s*(?:#+\s*)?Reason(?=\s*:|\s*$)/im);
+  const confidenceMatch = responseText.match(/^\s*(?:#+\s*)?Confidence(?=\s*:|\s*$)/im);
+
+  if (!selectedMatch || !reasonMatch || !confidenceMatch) {
+    return {
+      pass: false,
+      finding: "Routing discipline: missing Selected Expert, Reason, or Confidence headings."
+    };
+  }
+
+  const prefix = responseText.slice(0, selectedMatch.index).trim();
+  if (prefix.length > 0) {
+    return {
+      pass: false,
+      finding: "Routing discipline: response included preamble content before the routing decision."
+    };
+  }
+
+  if (!(selectedMatch.index < reasonMatch.index && reasonMatch.index < confidenceMatch.index)) {
+    return {
+      pass: false,
+      finding: "Routing discipline: Selected Expert, Reason, and Confidence must appear in that order."
     };
   }
 
