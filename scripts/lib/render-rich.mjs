@@ -26,9 +26,13 @@ export function renderRichInit(system, options = {}) {
 
   const abl = options.ablation;
 
+  out += `## 1. Execution Binding\n\n`;
+  out += g.executionBinding.map((item) => `- ${item}`).join("\n");
+  out += `\n\n`;
+
   // Section 1: Logging
   if (abl !== "logging-protocol") {
-    out += `## 1. The Non-Destructive Logging Protocol\n\n`;
+    out += `## 2. The Non-Destructive Logging Protocol\n\n`;
     out += `**The Hazard:** ${g.logging.hazard}\n\n`;
     out += `**The Principle:** ${g.logging.principle} ${g.logging.required.join(" ")}\n\n`;
     out += `**The Pattern (adapt the command to your runtime):**\n\n`;
@@ -43,13 +47,13 @@ export function renderRichInit(system, options = {}) {
     out += `\n\n${g.logging.violationNote}\n\n`;
 
     // Section 2: Mandate
-    out += `## 2. All Test, Build, and Run Commands MUST Be Logged\n\n`;
+    out += `## 3. All Test, Build, and Run Commands MUST Be Logged\n\n`;
     out += `${g.logging.mandate}\n\n`;
   }
 
   // Section 3: Epistemic rules
   if (abl !== "uncertainty-rules") {
-    out += `## 3. Epistemic Humility & Communication Constraints\n\n`;
+    out += `## 4. Epistemic Humility & Communication Constraints\n\n`;
     out += `* **Truthfulness:** ${g.uncertaintyRules[0]}\n`;
     out += `* **Uncertainty:** Quantify uncertainty. State claims as VERIFIED (backed by tests/docs) or HYPOTHESIS (needs checking). Provide confidence intervals: "~80% confidence; verify by running X."\n`;
     out += `* **Encoding:** ${g.encodingRules.join(" ")}`;
@@ -66,12 +70,16 @@ export function renderRichInit(system, options = {}) {
   }
 
   // Section 4: Done
-  out += `## 4. Definition of Done\n\n`;
+  out += `## 5. Definition of Done\n\n`;
   out += `"Done" means code + tests + verified. Placeholders, pseudo-code, and "TODOs" in core logic are globally rejected.\n\n`;
 
   // Section 5: Constraints
   if (abl !== "foundational-constraints") {
-    out += `## 5. Foundational Constraints\n\n`;
+    out += `## 6. Foundational Constraints\n\n`;
+    out += g.foundationalConstraints
+      .map((constraint) => `- ${constraint}`)
+      .join("\n");
+    out += `\n\n### Detailed Guidance\n\n`;
     out += g.foundationalConstraintsDetailed
       .map((c) => `* **${c.name}:** ${c.description}`)
       .join("\n");
@@ -79,7 +87,7 @@ export function renderRichInit(system, options = {}) {
   }
 
   // Section 6: Registry
-  out += `## 6. Swarm Registry\n`;
+  out += `## 7. Swarm Registry\n`;
   out += system.experts
     .map((e) => `* **${e.id}:** ${e.summary}`)
     .join("\n");
@@ -100,8 +108,12 @@ export function renderRichRouter(system, options = {}) {
     out += `**Heading Purity Rule:** Once a primary expert is selected, the visible response may contain only **Selected Expert**, **Reason**, **Confidence**, and that expert's required headings unless an explicit allowed handoff is named. VERIFIED and HYPOTHESIS are inline uncertainty labels, never headings.\n\n`;
   }
 
+  out += `## 1. Router Contract\n\n`;
+  out += r.contracts.map((item) => `- ${item}`).join("\n");
+  out += `\n\n`;
+
   // Routing heuristics table
-  out += `## 1. Routing Heuristics\n\n`;
+  out += `## 2. Routing Heuristics\n\n`;
   out += `Analyze the prompt against these heuristics, in priority order:\n\n`;
   out += `| Priority | Domain | Expert(s) | Keywords / Signals |\n`;
   out += `|----------|--------|-----------|-------------------|\n`;
@@ -121,7 +133,7 @@ export function renderRichRouter(system, options = {}) {
   }
 
   // Pipeline tables
-  out += `\n\n## 2. Pipeline Sequences\n\n`;
+  out += `\n\n## 3. Pipeline Sequences\n\n`;
   out += `When a task spans multiple domains, adopt the sequence below. Apply the primary expert's constraints first, then shift methodology as the domain changes.\n\n`;
   for (const pipeline of r.pipelines) {
     out += `### ${pipeline.name}\n`;
@@ -134,7 +146,7 @@ export function renderRichRouter(system, options = {}) {
   }
 
   // Automation
-  out += `## 3. Automation over Attrition\n\n`;
+  out += `## 4. Automation over Attrition\n\n`;
   out += `${r.automationOverAttrition}\n`;
   if (options.debug) {
     out += `\nBefore solving any request, emit a routing block with exactly: **Selected Subfolder**, **Selected Expert**, **Reason**, and **Confidence (0-1)**.\n`;
