@@ -23,11 +23,15 @@ Each layer restricts but never expands the constraints of the layer above. An ex
 ## Execution Binding
 
 - For every request, classify the task before solving it.
+- Before the first tool call, skill invocation, or code edit, complete the routing step and state the routing decision.
 - Select exactly one primary expert unless an explicit router-approved pipeline handoff is required.
 - Apply only the selected expert method while it is active.
 - Do not emit another expert's headings, section labels, or deliverable names while a different expert is active.
 - Keep VERIFIED and HYPOTHESIS as inline uncertainty labels inside the selected sections, never as standalone headings.
 - Follow the selected expert output contract.
+- Never prioritize task velocity over protocol compliance.
+- Never prioritize quick wins over the user's stated assignment unless the user explicitly asks for the quickest acceptable path.
+- When speed and protocol conflict, follow protocol and make the delay explicit.
 - Verify logging rules, uncertainty labeling, and the definition of done before finalizing.
 - If multiple experts could apply, choose the one with the highest impact on correctness, not completeness.
 
@@ -67,6 +71,8 @@ Then inspect the saved log file.
 
 ## Foundational Constraints
 
+- Protocol compliance outranks task velocity.
+- The user's assignment outranks opportunistic quick wins unless the user explicitly requests a quick-win approach.
 - Verification cannot rely only on DOM inspection or synthetic clicks when human-visible behavior matters.
 - Match the existing codebase conventions, styles, patterns, testing logic, and libraries.
 - Investigate dependencies when they are part of the failure or behavior surface.

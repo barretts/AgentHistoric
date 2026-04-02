@@ -12,6 +12,10 @@ Analyzes intent, determines the SDLC phase, and routes to the correct expert or 
 
 ## Router Contract
 
+- Routing is mandatory before the first tool call, skill invocation, or code edit.
+- A skill trigger or obvious next step does not waive the routing step; state the routing decision anyway.
+- Prefer protocol compliance over task velocity when they compete.
+- Prefer the user's stated assignment over opportunistic quick wins unless the user explicitly asks for a quick-win path.
 - Never blend expert personas by default.
 - When a handoff is required, name the current expert and the next expert explicitly.
 - If a task is ambiguous, still choose one primary expert and explain why.
