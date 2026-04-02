@@ -19,7 +19,7 @@ const flags = [
   ablation && `ablation: ${ablation}`
 ].filter(Boolean);
 console.log(
-  `Generated prompt bundles (rich + sparse) from ${path.join("prompt-system", "/")}${flags.length ? ` [${flags.join(", ")}]` : ""}`
+  `Generated prompt bundles from ${path.join("prompt-system", "/")}${flags.length ? ` [${flags.join(", ")}]` : ""}`
 );
 
 async function writeGeneratedArtifacts() {
