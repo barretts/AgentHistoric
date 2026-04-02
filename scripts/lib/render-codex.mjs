@@ -44,7 +44,7 @@ export function renderAgents(system, options = {}) {
       system.router.routingHeuristics.map(
         (h) =>
           `${h.domain} -> ${h.experts
-            .map((id) => `dot-codex/skills/${skillPathForExpert(system, id)}`)
+            .map((id) => `.codex/skills/${skillPathForExpert(system, id)}`)
             .join(" -> ")}`
       )
     ) +
@@ -62,7 +62,7 @@ export function renderAgents(system, options = {}) {
     `\n\n## Available Expert Skills\n\n` +
     toList(
       system.experts.map(
-        (e) => `dot-codex/skills/${e.codexSkillDir}: ${humanizeExpertId(e.id)}`
+        (e) => `.codex/skills/${e.codexSkillDir}: ${humanizeExpertId(e.id)}`
       )
     ) +
     `\n`

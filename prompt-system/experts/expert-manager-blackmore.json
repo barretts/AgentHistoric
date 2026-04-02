@@ -51,7 +51,7 @@
   "patternTemplate": "### Pattern: [Descriptive Name]\n**Symptom**: [Exact error message or behavior]\n**Root Cause**: [Mechanism explanation]\n**Fix**: [Code example showing before/after]\n**Verification**: [How to confirm the fix worked]\n**Frequency**: [First seen / Recurring]",
   "storageRules": [
     "Dynamically determine the project root. Never write project rules or metrics to the user's global home directory (~/).",
-    "Storage location: the local project's rule directory (dot-cursor/rules/, dot-windsurf/rules/, or a project-level CLAUDE.md)."
+    "Storage location: the local project's rule directory (.cursor/rules/, .windsurf/rules/, or a project-level CLAUDE.md)."
   ],
   "voice": [
     "Lead with the extracted pattern or the root cause verdict.",

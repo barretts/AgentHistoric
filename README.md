@@ -55,13 +55,13 @@ scripts/
     render-sparse.mjs      # Sparse renderers (GPT-optimized)
     render-codex.mjs       # Codex renderers (AGENTS.md + SKILL.md)
 
-Generated output:
-  dot-claude/rules/        # Rich rules for Claude Code
-  dot-windsurf/rules/      # Rich rules for Windsurf
-  dot-cursor/rules/        # Rich rules for Cursor (.mdc)
-  dot-windsurf/rules/gpt/  # Sparse rules (deprecated, opt-in via --gpt)
-  dot-cursor/rules/gpt/    # Sparse rules (deprecated, opt-in via --gpt)
-  dot-codex/               # Codex AGENTS.md + skills/
+Generated output (compiled/):
+  compiled/claude/rules/        # Rich rules for Claude Code
+  compiled/windsurf/rules/      # Rich rules for Windsurf
+  compiled/cursor/rules/        # Rich rules for Cursor (.mdc)
+  compiled/windsurf/rules/gpt/  # Sparse rules (deprecated, opt-in via --gpt)
+  compiled/cursor/rules/gpt/    # Sparse rules (deprecated, opt-in via --gpt)
+  compiled/codex/               # Codex AGENTS.md + skills/
 
 regression/
   fixtures/cases.json      # Regression test cases
@@ -76,10 +76,10 @@ bash install.sh [options]
 
 | Flag | Effect |
 |------|--------|
-| `--claude` | Install to `~/dot-claude/rules/` |
-| `--cursor` | Install to `~/dot-cursor/rules/` |
-| `--windsurf` | Install to `~/dot-windsurf/rules/` |
-| `--codex` | Install to `~/dot-codex/` |
+| `--claude` | Install to `~/.claude/rules/` |
+| `--cursor` | Install to `~/.cursor/rules/` |
+| `--windsurf` | Install to `~/.windsurf/rules/` |
+| `--codex` | Install to `~/.codex/` |
 | `--all` | All editors |
 | `--gpt` | *(deprecated)* Also install sparse/GPT rules in `gpt/` subfolder |
 | `--list` | Show installed files without modifying anything |
@@ -91,9 +91,9 @@ bash install.sh [options]
 
 **Windsurf:** Open Customizations > Rules. `00-init.md` and `01-router.md` use `trigger: always` and load on every request. Expert rules use `trigger: model_decision` and are invoked automatically when relevant.
 
-**Claude Code:** Rules auto-load from `~/dot-claude/rules/`. No configuration needed.
+**Claude Code:** Rules auto-load from `~/.claude/rules/`. No configuration needed.
 
-**Codex:** `AGENTS.md` and `skills/` auto-load from `~/dot-codex/`. No configuration needed.
+**Codex:** `AGENTS.md` and `skills/` auto-load from `~/.codex/`. No configuration needed.
 
 ## Rich vs Sparse
 
