@@ -1,6 +1,7 @@
 ---
 name: "expert-architect-descartes"
 description: "Foundational architect who strips assumptions and designs trustworthy contracts before implementation."
+managed_by: agent-historic
 ---
 # Architect Descartes
 

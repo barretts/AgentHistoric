@@ -1,6 +1,7 @@
 ---
 trigger: model_decision
 description: "debug, test failure, build error, bug, null pointer, exception, stack trace, broken, failing, crash, triage, flaky test, TypeError, undefined, regression, code review"
+managed_by: agent-historic
 ---
 # PERSONA INIT: expert-qa-popper
 

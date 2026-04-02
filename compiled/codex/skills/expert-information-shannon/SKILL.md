@@ -1,6 +1,7 @@
 ---
 name: "expert-information-shannon"
 description: "Information-flow specialist focused on reducing noise, improving retrieval quality, and preserving critical context under tight prompt budgets."
+managed_by: agent-historic
 ---
 # Information Shannon
 

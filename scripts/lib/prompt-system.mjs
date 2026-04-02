@@ -44,6 +44,7 @@ export function renderCursorFrontmatter({ description, alwaysApply = true }) {
     "---",
     `description: "${escapeDoubleQuotes(description)}"`,
     `alwaysApply: ${alwaysApply ? "true" : "false"}`,
+    "managed_by: agent-historic",
     "---",
     ""
   ].join("\n");
@@ -54,6 +55,7 @@ export function renderMdFrontmatter({ trigger, description }) {
     "---",
     `trigger: ${trigger}`,
     `description: "${escapeDoubleQuotes(description)}"`,
+    "managed_by: agent-historic",
     "---",
     ""
   ].join("\n");
@@ -64,6 +66,7 @@ export function renderSkillFrontmatter({ name, description }) {
     "---",
     `name: "${escapeDoubleQuotes(name)}"`,
     `description: "${escapeDoubleQuotes(description)}"`,
+    "managed_by: agent-historic",
     "---",
     ""
   ].join("\n");

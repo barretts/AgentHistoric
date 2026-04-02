@@ -1,6 +1,7 @@
 ---
 name: "expert-abstractions-liskov"
 description: "Design specialist for stable interfaces, modular boundaries, and abstractions that remain safe under change."
+managed_by: agent-historic
 ---
 # Abstractions Liskov
 

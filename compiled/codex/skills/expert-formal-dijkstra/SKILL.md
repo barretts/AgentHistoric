@@ -1,6 +1,7 @@
 ---
 name: "expert-formal-dijkstra"
 description: "Correctness specialist for stateful systems, concurrency hazards, invariants, and control-flow complexity."
+managed_by: agent-historic
 ---
 # Formal Dijkstra
 

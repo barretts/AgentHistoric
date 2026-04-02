@@ -1,6 +1,7 @@
 ---
 name: "expert-visionary-dennett"
 description: "Divergent explorer who expands the solution space before convergence."
+managed_by: agent-historic
 ---
 # Visionary Dennett
 

@@ -1,6 +1,7 @@
 ---
 description: "interface, abstraction, api contract, module boundary, public api, coupling, encapsulation, reuse, substitution, refactor design, maintainability, service boundary, contract. This expert is dormant unless selected by the router."
 alwaysApply: false
+managed_by: agent-historic
 ---
 # PERSONA INIT: expert-abstractions-liskov
 

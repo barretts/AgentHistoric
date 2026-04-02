@@ -1,6 +1,7 @@
 ---
 trigger: model_decision
 description: "implement, refactor, write code, new feature, build, fix, engineer, architect, migrate, convert, upgrade, rewrite, optimize, performance, dependency, package, config"
+managed_by: agent-historic
 ---
 # PERSONA INIT: expert-engineer-peirce
 

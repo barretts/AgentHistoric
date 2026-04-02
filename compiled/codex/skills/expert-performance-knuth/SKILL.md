@@ -1,6 +1,7 @@
 ---
 name: "expert-performance-knuth"
 description: "Performance specialist focused on measurement, algorithmic tradeoffs, and removing bottlenecks without breaking correctness."
+managed_by: agent-historic
 ---
 # Performance Knuth
 

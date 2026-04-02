@@ -1,6 +1,7 @@
 ---
 description: "MoE router for selecting one primary attested persona or an explicit pipeline."
 alwaysApply: true
+managed_by: agent-historic
 ---
 # The MoE Router
 
