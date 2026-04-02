@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # install.sh -- Install Agent Historic persona rules into AI coding editors
-# Run from the project root: bash install.sh [--claude] [--cursor] [--windsurf] [--codex] [--all]
+# Run from the project root: bash install.sh [--claude] [--cursor] [--windsurf] [--codex] [--opencode] [--all]
 # Use --gpt to install sparse/GPT-optimized rules for Cursor and Windsurf instead of rich
 # No flags = auto-detect installed editors
 
@@ -15,12 +15,14 @@ SRC_CURSOR_GPT="$REPO_DIR/dot-cursor/rules/gpt"
 SRC_WINDSURF="$REPO_DIR/dot-windsurf/rules"
 SRC_WINDSURF_GPT="$REPO_DIR/dot-windsurf/rules/gpt"
 SRC_CODEX="$REPO_DIR/dot-codex"
+SRC_OPENCODE="$SRC_CLAUDE"
 
 # --- Target directories (user home) ---
 DEST_CLAUDE="$HOME/.claude/rules"
 DEST_CURSOR="$HOME/.cursor/rules"
 DEST_WINDSURF="$HOME/.windsurf/rules"
 DEST_CODEX="$HOME/.codex"
+DEST_OPENCODE="$HOME/.config/opencode/rules"
 
 # --- Backup ---
 
@@ -34,6 +36,57 @@ backup_dir() {
   fi
 }
 
+# --- Loader-header injection ---
+# Writes (or replaces) a marked block at the top of a file that tells the IDE
+# to always load the init + router rules. Idempotent: re-runs replace the block.
+MARKER_BEGIN="<!-- agent-historic:loader-begin -->"
+MARKER_END="<!-- agent-historic:loader-end -->"
+
+inject_loader_header() {
+  local file="$1"
+  local rules_dir="$2"
+  local title="$3"
+
+  local block
+  block="$(cat <<HEADER
+$MARKER_BEGIN
+# $title
+
+Always load and apply the following rule files from \`$rules_dir\` at the start of every conversation:
+
+1. \`$rules_dir/00-init.md\` — Global runtime (constraints, logging, voice, definition of done)
+2. \`$rules_dir/01-router.md\` — MoE router (expert selection, pipelines, disambiguation)
+
+These two files are always active. All other expert files in \`$rules_dir\` are activated by model decision based on their description field.
+$MARKER_END
+HEADER
+)"
+
+  if [[ -f "$file" ]]; then
+    if grep -q "$MARKER_BEGIN" "$file" 2>/dev/null; then
+      # Replace the existing block between markers (inclusive)
+      local tmp
+      tmp="$(mktemp)"
+      awk -v begin="$MARKER_BEGIN" -v end="$MARKER_END" -v repl="$block" '
+        $0 == begin { skip=1; printed=0 }
+        skip && $0 == end { skip=0; if(!printed){print repl; printed=1}; next }
+        !skip { print }
+      ' "$file" > "$tmp"
+      mv "$tmp" "$file"
+    else
+      # Prepend block to existing content
+      local tmp
+      tmp="$(mktemp)"
+      { echo "$block"; echo ""; cat "$file"; } > "$tmp"
+      mv "$tmp" "$file"
+    fi
+  else
+    mkdir -p "$(dirname "$file")"
+    echo "$block" > "$file"
+  fi
+  echo "    Loader:   $file"
+}
+
 # --- Install functions ---
 
 install_claude() {
@@ -43,6 +96,7 @@ install_claude() {
     cp "$f" "$DEST_CLAUDE/$(basename "$f")"
     echo "    Claude:   $DEST_CLAUDE/$(basename "$f")"
   done
+  inject_loader_header "$HOME/.claude/CLAUDE.md" "~/.claude/rules" "Claude Code Instructions"
 }
 
 install_cursor() {
@@ -87,6 +141,16 @@ install_codex() {
   mkdir -p "$DEST_CODEX"
   cp -r "$SRC_CODEX"/* "$DEST_CODEX/"
   echo "    Codex:    $DEST_CODEX/"
+}
+
+install_opencode() {
+  mkdir -p "$DEST_OPENCODE"
+  for f in "$SRC_OPENCODE"/*.md; do
+    [[ -f "$f" ]] || continue
+    cp "$f" "$DEST_OPENCODE/$(basename "$f")"
+    echo "    OpenCode: $DEST_OPENCODE/$(basename "$f")"
+  done
+  inject_loader_header "$HOME/.config/opencode/AGENTS.md" "~/.config/opencode/rules" "Agent Instructions"
 }
 
 # --- List functions ---
@@ -138,6 +202,23 @@ list_codex() {
   echo "      $dest  [$status]"
 }
 
+list_opencode() {
+  echo "    OpenCode (~/.config/opencode/rules/):"
+  for f in "$SRC_OPENCODE"/*.md; do
+    [[ -f "$f" ]] || continue
+    local name
+    name="$(basename "$f")"
+    local dest="$DEST_OPENCODE/$name"
+    local status="not found"
+    [[ -f "$dest" ]] && status="installed"
+    echo "      $dest  [$status]"
+  done
+  local agents="$HOME/.config/opencode/AGENTS.md"
+  local astatus="not found"
+  [[ -f "$agents" ]] && astatus="installed"
+  echo "      $agents  [$astatus]"
+}
+
 # --- Auto-detection ---
 
 detect_editors() {
@@ -146,6 +227,7 @@ detect_editors() {
   [[ -d "$HOME/.cursor" ]] && detected+=("cursor")
   [[ -d "$HOME/.windsurf" || -d "$HOME/.codeium/windsurf" ]] && detected+=("windsurf")
   [[ -d "$HOME/.codex" ]] && detected+=("codex")
+  [[ -d "$HOME/.config/opencode" ]] && detected+=("opencode")
   echo "${detected[@]}"
 }
 
@@ -170,7 +252,9 @@ print_post_install() {
     case "$target" in
       claude)
         echo "  Claude Code"
-        echo "    Rules auto-loaded from ~/.claude/rules/ — no extra config needed."
+        echo "    Rules installed to ~/.claude/rules/."
+        echo "    CLAUDE.md loader header injected into ~/.claude/CLAUDE.md."
+        echo "    No extra config needed."
         echo ""
         ;;
       cursor)
@@ -199,6 +283,13 @@ print_post_install() {
         echo "    No extra config needed."
         echo ""
         ;;
+      opencode)
+        echo "  OpenCode"
+        echo "    Rules installed to ~/.config/opencode/rules/."
+        echo "    AGENTS.md loader header injected into ~/.config/opencode/AGENTS.md."
+        echo "    No extra config needed."
+        echo ""
+        ;;
     esac
   done
 
@@ -220,7 +311,8 @@ while [[ $# -gt 0 ]]; do
     --cursor)    TARGETS+=("cursor"); shift ;;
     --windsurf)  TARGETS+=("windsurf"); shift ;;
     --codex)     TARGETS+=("codex"); shift ;;
-    --all)       TARGETS=("claude" "cursor" "windsurf" "codex"); shift ;;
+    --opencode)  TARGETS+=("opencode"); shift ;;
+    --all)       TARGETS=("claude" "cursor" "windsurf" "codex" "opencode"); shift ;;
     # --gpt installs deprecated sparse rules alongside rich (opt-in)
     --gpt)       USE_GPT=true; shift ;;
     --list)      DO_LIST=true; shift ;;
@@ -234,6 +326,7 @@ while [[ $# -gt 0 ]]; do
       echo "  --cursor       Install rules for Cursor"
       echo "  --windsurf     Install rules for Windsurf"
       echo "  --codex        Install rules for Codex"
+      echo "  --opencode     Install rules for OpenCode"
       echo "  --all          Install for all editors"
       echo "  --gpt          [DEPRECATED] Also install sparse/GPT-optimized rules in gpt/ subfolder"
       echo "                 Rich rules are now the universal default for all models."
@@ -280,7 +373,7 @@ if [[ ${#TARGETS[@]} -eq 0 ]]; then
 fi
 
 if [[ ${#TARGETS[@]} -eq 0 ]]; then
-  echo "ERROR: No supported editors detected. Use --claude, --cursor, --windsurf, or --codex."
+  echo "ERROR: No supported editors detected. Use --claude, --cursor, --windsurf, --codex, or --opencode."
   exit 1
 fi
 
@@ -313,6 +406,7 @@ for target in "${TARGETS[@]}"; do
     cursor)   backup_dir "$DEST_CURSOR" ;;
     windsurf) backup_dir "$DEST_WINDSURF" ;;
     codex)    backup_dir "$DEST_CODEX" ;;
+    opencode) backup_dir "$DEST_OPENCODE" ;;
   esac
 done
 

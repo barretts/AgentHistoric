@@ -3,16 +3,25 @@ import assert from "node:assert/strict";
 import path from "node:path";
 
 import {
+  aggregateTrialResults,
+  assertConcision,
+  assertDiagnosticDiscipline,
+  assertNoFalseClaims,
+  assertNoGoldPlating,
   buildWrappedPrompt,
+  computeBehavioralMetrics,
   evaluateResponse,
   expectedResponseSections,
+  formatAblationReport,
   loadRegressionFixtures,
   parseArgs,
-  routePrompt
+  routePrompt,
+  runTrials
 } from "./regression.mjs";
 import { loadPromptSystemSpec } from "./prompt-system.mjs";
 
 const workspaceRoot = path.resolve(import.meta.dirname, "..", "..");
+const globalSystem = await loadPromptSystemSpec(workspaceRoot);
 
 async function loadCase(caseId) {
   const fixtures = await loadRegressionFixtures(workspaceRoot);
@@ -170,6 +179,128 @@ test("evaluateResponse ignores inline uncertainty labels that are not headings",
   assert.deepEqual(result.notableDrift, []);
 });
 
+// ── Behavioral Assertion Tests ─────────────────────────────────────
+
+test("assertNoGoldPlating flags extra sections beyond expected", () => {
+  const response = {
+    response: [
+      "## Selected Expert",
+      "expert-engineer-peirce",
+      "## Reason",
+      "Clear implementation request.",
+      "## Confidence",
+      "High",
+      "## Answer",
+      "Here is the implementation.",
+      "## Refactoring Suggestions",
+      "Here are some bonus improvements."
+    ].join("\n")
+  };
+  const testCase = { expectedSections: ["Answer"], allowedHandoffs: [] };
+
+  const result = assertNoGoldPlating(response, testCase);
+  assert.strictEqual(result.pass, false);
+  assert.match(result.finding, /gold-plating/i);
+  assert.match(result.finding, /Refactoring Suggestions/);
+});
+
+test("assertNoGoldPlating passes when only expected sections present", () => {
+  const response = {
+    response: [
+      "## Selected Expert",
+      "expert-engineer-peirce",
+      "## Reason",
+      "Implementation request.",
+      "## Confidence",
+      "High",
+      "## Answer",
+      "Done."
+    ].join("\n")
+  };
+  const testCase = { expectedSections: ["Answer"], allowedHandoffs: [] };
+
+  const result = assertNoGoldPlating(response, testCase);
+  assert.strictEqual(result.pass, true);
+});
+
+test("assertConcision flags responses over the limit", () => {
+  const response = { response: "x".repeat(5000) };
+  const result = assertConcision(response, 4000);
+  assert.strictEqual(result.pass, false);
+  assert.match(result.finding, /concision/i);
+});
+
+test("assertConcision passes for short responses", () => {
+  const response = { response: "Short answer." };
+  const result = assertConcision(response, 4000);
+  assert.strictEqual(result.pass, true);
+});
+
+test("assertNoFalseClaims flags 'all tests pass' without evidence", () => {
+  const response = {
+    response: "I reviewed the code and all tests pass. The implementation looks correct."
+  };
+  const result = assertNoFalseClaims(response);
+  assert.strictEqual(result.pass, false);
+  assert.match(result.finding, /false claim/i);
+});
+
+test("assertNoFalseClaims passes when tool evidence is present", () => {
+  const response = {
+    response: "```\n$ npm test\nall tests pass\n```\nAll tests pass."
+  };
+  const result = assertNoFalseClaims(response);
+  assert.strictEqual(result.pass, true);
+});
+
+test("assertDiagnosticDiscipline flags fix-without-diagnosis", () => {
+  const response = {
+    response: "Replace the function with this new implementation. Also add error handling."
+  };
+  const result = assertDiagnosticDiscipline(response);
+  assert.strictEqual(result.pass, false);
+  assert.match(result.finding, /diagnostic discipline/i);
+});
+
+test("assertDiagnosticDiscipline passes when diagnosis precedes fix", () => {
+  const response = {
+    response:
+      "Reading the error stack trace shows the null pointer originates from line 42. " +
+      "The root cause is a missing null check. Fix: add a guard clause."
+  };
+  const result = assertDiagnosticDiscipline(response);
+  assert.strictEqual(result.pass, true);
+});
+
+test("evaluateResponse incorporates behavioral findings into scoring", async () => {
+  const system = await loadPromptSystemSpec(workspaceRoot);
+  const testCase = {
+    ...await loadCase("R1"),
+    behavioralAssertions: ["concision"]
+  };
+  const response = {
+    routingDecision: {
+      domain: "Implementation",
+      selectedExpert: "expert-engineer-peirce",
+      reason: "Clear implementation request.",
+      confidence: "High"
+    },
+    activeExpert: "expert-engineer-peirce",
+    handoffs: [],
+    outputSections: ["Answer"],
+    confidenceLabeled: true,
+    personaBlend: false,
+    domainStayedInScope: true,
+    summary: "Implementation is primary.",
+    response: "Selected Expert: expert-engineer-peirce\nReason: impl\nConfidence: High\n\n## Answer\n" + "x".repeat(5000)
+  };
+
+  const result = evaluateResponse(system, testCase, response);
+  assert.strictEqual(result.score, 1);
+  assert.ok(result.behavioralFindings.length > 0);
+  assert.match(result.behavioralFindings[0], /concision/i);
+});
+
 test("evaluateResponse rejects blended headings from another expert", async () => {
   const system = await loadPromptSystemSpec(workspaceRoot);
   const testCase = await loadCase("R2");
@@ -230,4 +361,194 @@ test("evaluateResponse rejects blended headings from another expert", async () =
   const result = evaluateResponse(system, testCase, response);
   assert.strictEqual(result.score, 1);
   assert.match(result.notableDrift.join(" "), /persona blending/i);
+});
+
+// ── Multi-Trial Runner ──────────────────────────────────────────────
+
+test("runTrials executes the correct number of trials", async () => {
+  let count = 0;
+  const results = await runTrials(
+    async (idx) => {
+      count++;
+      return { trialIndex: idx, score: 2, selectedExpert: "expert-engineer-peirce" };
+    },
+    { trials: 5, parallel: 2 }
+  );
+  assert.strictEqual(results.length, 5);
+  assert.strictEqual(count, 5);
+});
+
+test("aggregateTrialResults computes pass@k and pass^k correctly", () => {
+  const mixed = aggregateTrialResults([
+    { score: 2, selectedExpert: "expert-engineer-peirce", expectedExpert: "expert-engineer-peirce" },
+    { score: 1, selectedExpert: "expert-engineer-peirce", expectedExpert: "expert-engineer-peirce" },
+    { score: 2, selectedExpert: "expert-engineer-peirce", expectedExpert: "expert-engineer-peirce" }
+  ]);
+  assert.strictEqual(mixed.passAtK, true);
+  assert.strictEqual(mixed.passHatK, false);
+  assert.strictEqual(mixed.meanScore, 1.67);
+  assert.strictEqual(mixed.routingConsistency, 1.0);
+  assert.deepStrictEqual(mixed.scoreDistribution, { 0: 0, 1: 1, 2: 2 });
+
+  const perfect = aggregateTrialResults([
+    { score: 2, selectedExpert: "expert-qa-popper", expectedExpert: "expert-qa-popper" },
+    { score: 2, selectedExpert: "expert-qa-popper", expectedExpert: "expert-qa-popper" }
+  ]);
+  assert.strictEqual(perfect.passAtK, true);
+  assert.strictEqual(perfect.passHatK, true);
+  assert.strictEqual(perfect.meanScore, 2);
+});
+
+test("aggregateTrialResults detects routing inconsistency", () => {
+  const inconsistent = aggregateTrialResults([
+    { score: 2, selectedExpert: "expert-engineer-peirce", expectedExpert: "expert-qa-popper" },
+    { score: 1, selectedExpert: "expert-qa-popper", expectedExpert: "expert-qa-popper" },
+    { score: 2, selectedExpert: "expert-qa-popper", expectedExpert: "expert-qa-popper" }
+  ]);
+  assert.strictEqual(inconsistent.routingConsistency, 0.67);
+});
+
+// ── Behavioral Metrics ──────────────────────────────────────────────
+
+test("computeBehavioralMetrics detects over-engineering", () => {
+  const response = {
+    response: "## Answer\nDo the thing.\n\n## Extra Section\nBonus.\n\n## Another\nMore bonus."
+  };
+  const testCase = { expectedSections: ["Answer"] };
+  const metrics = computeBehavioralMetrics(response, testCase);
+  assert.ok(metrics.overEngineering < 1.0, `Expected <1.0, got ${metrics.overEngineering}`);
+  assert.strictEqual(metrics.overEngineering, 0.33);
+});
+
+test("computeBehavioralMetrics returns 1.0 for well-scoped response", () => {
+  const response = { response: "## Answer\nThe fix is to use optional chaining." };
+  const testCase = { expectedSections: ["Answer"] };
+  const metrics = computeBehavioralMetrics(response, testCase);
+  assert.strictEqual(metrics.overEngineering, 1.0);
+});
+
+test("computeBehavioralMetrics concision penalizes verbose responses", () => {
+  const longText = "x".repeat(5000);
+  const response = { response: longText };
+  const testCase = { expectedSections: ["Answer"] };
+  const metrics = computeBehavioralMetrics(response, testCase);
+  assert.ok(metrics.concision < 1.0, `Expected <1.0, got ${metrics.concision}`);
+});
+
+test("parseArgs supports --trials and --parallel flags", () => {
+  const opts = parseArgs(["--trials", "5", "--parallel", "3"]);
+  assert.strictEqual(opts.trials, 5);
+  assert.strictEqual(opts.parallel, 3);
+});
+
+test("parseArgs defaults trials to 1 and parallel to 1", () => {
+  const opts = parseArgs([]);
+  assert.strictEqual(opts.trials, 1);
+  assert.strictEqual(opts.parallel, 1);
+});
+
+test("evaluateResponse includes behavioralMetrics in result", async () => {
+  const system = await loadPromptSystemSpec(workspaceRoot);
+  const testCase = {
+    expectedPrimaryExpert: "expert-engineer-peirce",
+    expectedSections: ["Answer"],
+    allowedHandoffs: [],
+    forbiddenBehaviors: [],
+    behavioralAssertions: []
+  };
+
+  const response = {
+    routingDecision: { selectedExpert: "expert-engineer-peirce" },
+    activeExpert: "expert-engineer-peirce",
+    handoffs: [],
+    outputSections: ["Answer"],
+    confidenceLabeled: true,
+    personaBlend: false,
+    domainStayedInScope: true,
+    response: "## Answer\nUse optional chaining: user?.name"
+  };
+
+  const result = evaluateResponse(system, testCase, response);
+  assert.ok(result.behavioralMetrics, "Missing behavioralMetrics");
+  assert.ok(typeof result.behavioralMetrics.overEngineering === "number");
+  assert.ok(typeof result.behavioralMetrics.concision === "number");
+});
+
+// ── Ablation Report ─────────────────────────────────────────────────
+
+test("formatAblationReport renders table with all sections", () => {
+  const report = {
+    timestamp: "2026-03-31",
+    trialsPerCondition: 3,
+    sections: [
+      {
+        id: "logging-protocol",
+        description: "Logging Protocol",
+        charsSaved: 350,
+        controlMean: 1.8,
+        ablatedMean: 1.7,
+        passHatKDelta: 0,
+        overEngineeringDelta: 0.0,
+        concisionDelta: 0.0,
+        verdict: "KEEP"
+      },
+      {
+        id: "expert-philosophy",
+        description: "Core Philosophy",
+        charsSaved: 200,
+        controlMean: 1.9,
+        ablatedMean: 1.9,
+        passHatKDelta: 0,
+        overEngineeringDelta: 0.0,
+        concisionDelta: 0.0,
+        verdict: "REVIEW"
+      }
+    ]
+  };
+
+  const md = formatAblationReport(report);
+  assert.match(md, /# Ablation Report/);
+  assert.match(md, /logging-protocol/);
+  assert.match(md, /expert-philosophy/);
+  assert.match(md, /KEEP/);
+  assert.match(md, /REVIEW/);
+  assert.match(md, /Trials per condition: 3/);
+});
+
+// ── Ablation Build ──────────────────────────────────────────────────
+
+import { generateArtifacts } from "./build-prompt-system.mjs";
+
+test("ablation mode produces artifacts without the ablated section", () => {
+  const system = JSON.parse(JSON.stringify(globalSystem));
+  const control = generateArtifacts(system, {});
+  const ablated = generateArtifacts(system, { ablation: "behavioral-guardrails" });
+
+  for (const [filePath, content] of control) {
+    if (filePath.includes("expert-") && !filePath.includes("00-init") && !filePath.includes("01-router")) {
+      const ablatedContent = ablated.get(filePath);
+      if (content.includes("Behavioral Guardrails")) {
+        assert.ok(
+          !ablatedContent.includes("Behavioral Guardrails"),
+          `${filePath}: behavioral guardrails should be ablated`
+        );
+      }
+    }
+  }
+});
+
+test("ablation mode produces smaller artifacts than control", () => {
+  const system = JSON.parse(JSON.stringify(globalSystem));
+  const control = generateArtifacts(system, {});
+  const ablated = generateArtifacts(system, { ablation: "logging-protocol" });
+
+  let controlSize = 0;
+  let ablatedSize = 0;
+  for (const [, content] of control) controlSize += content.length;
+  for (const [, content] of ablated) ablatedSize += content.length;
+
+  assert.ok(
+    ablatedSize < controlSize,
+    `Ablated (${ablatedSize}) should be smaller than control (${controlSize})`
+  );
 });

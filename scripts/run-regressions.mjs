@@ -4,6 +4,7 @@ import path from "node:path";
 import { writeFile } from "node:fs/promises";
 import { loadPromptSystemSpec } from "./lib/prompt-system.mjs";
 import {
+  aggregateTrialResults,
   buildWrappedPrompt,
   compareTargets,
   createTimestamp,
@@ -14,6 +15,7 @@ import {
   parseArgs,
   parseCodexJsonlResult,
   runCommandLogged,
+  runTrials,
   scoreCase,
   selectCases
 } from "./lib/regression.mjs";
@@ -30,8 +32,10 @@ const run = {
   suite: options.suite,
   targets: options.targets,
   timestamp,
+  trialsPerCase: options.trials,
   caseCount: cases.length,
   results: [],
+  aggregated: [],
   parity: []
 };
 
@@ -41,30 +45,57 @@ for (const testCase of cases) {
   for (const target of options.targets.filter((item) =>
     testCase.targets.includes(item)
   )) {
-    const wrappedPrompt = buildWrappedPrompt(testCase);
-    const rawLogPath = path.join(
-      logDir,
-      `regression-${timestamp}-${testCase.id}-${target}.log`
+    const trialResults = await runTrials(
+      async (trialIndex) => {
+        const wrappedPrompt = buildWrappedPrompt(testCase);
+        const trialSuffix = options.trials > 1 ? `-t${trialIndex}` : "";
+        const rawLogPath = path.join(
+          logDir,
+          `regression-${timestamp}-${testCase.id}-${target}${trialSuffix}.log`
+        );
+
+        const response = await runTarget({
+          target,
+          wrappedPrompt,
+          rawLogPath
+        });
+
+        const score = scoreCase(system, testCase, response);
+        return {
+          caseId: testCase.id,
+          caseName: testCase.name,
+          target,
+          trialIndex,
+          rawLogPath: path.relative(workspaceRoot, rawLogPath),
+          response,
+          score,
+          selectedExpert: score.selectedExpert,
+          expectedExpert: testCase.expectedPrimaryExpert
+        };
+      },
+      { trials: options.trials, parallel: options.parallel }
     );
 
-    const response = await runTarget({
-      target,
-      wrappedPrompt,
-      rawLogPath
-    });
+    for (const result of trialResults) {
+      run.results.push(result);
+    }
 
-    const score = scoreCase(system, testCase, response);
-    const result = {
-      caseId: testCase.id,
-      caseName: testCase.name,
-      target,
-      rawLogPath: path.relative(workspaceRoot, rawLogPath),
-      response,
-      score
-    };
+    if (options.trials > 1) {
+      const agg = aggregateTrialResults(
+        trialResults.map((r) => ({
+          score: r.score.score,
+          selectedExpert: r.score.selectedExpert,
+          expectedExpert: testCase.expectedPrimaryExpert
+        }))
+      );
+      run.aggregated.push({
+        caseId: testCase.id,
+        target,
+        ...agg
+      });
+    }
 
-    resultsByTarget[target] = result;
-    run.results.push(result);
+    resultsByTarget[target] = trialResults[0];
   }
 
   const parity = compareTargets(resultsByTarget);

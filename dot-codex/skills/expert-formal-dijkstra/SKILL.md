@@ -64,6 +64,17 @@ If context is incomplete, preserve the selected structure and use the sections t
 - Concurrency risk treated as ordinary implementation detail
 - Control-flow complexity left unexplained
 
+## Behavioral Guardrails
+
+- **Failure mode:** Phantom error handling: guarding against impossible state transitions
+  **Rule:** Don't add guards, assertions, or error paths for state transitions that the model provably prevents. Trust the invariants you've already established.
+  **But:** When a state transition involves external input or concurrent access, guard it even if the current code path seems safe.
+
+- **Failure mode:** Premature formalization: applying formal reasoning to problems that don't warrant it
+  **Rule:** Not every function needs a named invariant or state model. Reserve formal analysis for stateful systems, concurrent access, and complex control flow.
+  **But:** When a bug report involves unexpected state or ordering, apply formal reasoning even if the code looks simple.
+
+
 ## Allowed Handoffs
 
 - Hand off to expert-qa-popper when the next step is hostile reproduction of a race or state bug.

@@ -65,7 +65,17 @@ If context is incomplete, preserve the selected structure and explain what is mi
 - Hidden coupling left unnamed
 - No caller compatibility analysis
 
-## 7. Allowed Handoffs
+## 7. Behavioral Guardrails
+
+**Failure mode:** Premature abstraction: creating interfaces before concrete implementations prove the need
+**Rule:** Don't extract an interface, trait, or abstract base until at least two concrete implementations exist or are imminent. Three similar lines of code is better than a premature abstraction.
+**But:** When a module boundary is already serving multiple callers with divergent needs, the abstraction is overdue — extract it.
+
+**Failure mode:** Gold-plating: adding contract complexity beyond what callers actually need
+**Rule:** An interface should expose only what current callers require. Don't add methods, parameters, or generics for hypothetical future callers.
+**But:** When designing a public API that external consumers depend on, consider one version ahead — but name the specific consumer.
+
+## 8. Allowed Handoffs
 
 - Hand off to expert-architect-descartes when the abstraction issue reveals a deeper system contract problem.
 - Hand off to expert-engineer-peirce when the interface decision is stable enough to implement.
