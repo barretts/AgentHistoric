@@ -67,11 +67,29 @@ HEADER
       # Replace the existing block between markers (inclusive)
       local tmp
       tmp="$(mktemp)"
-      awk -v begin="$MARKER_BEGIN" -v end="$MARKER_END" -v repl="$block" '
-        $0 == begin { skip=1; printed=0 }
-        skip && $0 == end { skip=0; if(!printed){print repl; printed=1}; next }
-        !skip { print }
-      ' "$file" > "$tmp"
+      BLOCK="$block" MARKER_BEGIN="$MARKER_BEGIN" MARKER_END="$MARKER_END" TARGET_FILE="$file" python3 <<'PY' > "$tmp"
+import os
+from pathlib import Path
+
+path = Path(os.environ["TARGET_FILE"])
+content = path.read_text()
+begin = os.environ["MARKER_BEGIN"]
+end = os.environ["MARKER_END"]
+block = os.environ["BLOCK"]
+
+start = content.find(begin)
+finish = content.find(end, start if start != -1 else 0)
+
+if start != -1 and finish != -1:
+    finish += len(end)
+    if finish < len(content) and content[finish:finish + 1] == "\n":
+        finish += 1
+    updated = content[:start] + block + "\n" + content[finish:]
+else:
+    updated = block + "\n\n" + content
+
+print(updated, end="")
+PY
       mv "$tmp" "$file"
     else
       # Prepend block to existing content
