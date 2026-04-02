@@ -9,8 +9,8 @@ const workspaceRoot = path.resolve(import.meta.dirname, "..", "..");
 const system = await loadPromptSystemSpec(workspaceRoot);
 const artifacts = generateArtifacts(system);
 
-const CURSOR_RICH = "dot-cursor/rules";
-const CURSOR_SPARSE = "dot-cursor/rules/gpt";
+const CURSOR_RICH = "compiled/cursor/rules";
+const CURSOR_SPARSE = "compiled/cursor/rules/gpt";
 const MAX_CHARS = 15000;
 
 function artifactsInDir(dir, ext) {
@@ -67,7 +67,7 @@ test("every cursor .mdc artifact has valid frontmatter", () => {
 test("every windsurf/claude .md artifact has valid frontmatter", () => {
   const mdArtifacts = [...artifacts].filter(
     ([p]) =>
-      (p.startsWith("dot-windsurf/rules/") || p.startsWith("dot-claude/rules/")) &&
+      (p.startsWith("compiled/windsurf/rules/") || p.startsWith("compiled/claude/rules/")) &&
       p.endsWith(".md") &&
       !p.includes("/gpt/")
   );
@@ -125,7 +125,7 @@ test("cursor init and router are alwaysApply:true, experts are alwaysApply:false
 test("windsurf init and router are trigger:always, experts are trigger:model_decision", () => {
   const windsurfMd = [...artifacts].filter(
     ([p]) =>
-      p.startsWith("dot-windsurf/rules/") &&
+      p.startsWith("compiled/windsurf/rules/") &&
       p.endsWith(".md") &&
       !p.includes("/gpt/")
   );
@@ -152,7 +152,7 @@ test("windsurf init and router are trigger:always, experts are trigger:model_dec
 test("claude init and router are trigger:always, experts are trigger:model_decision", () => {
   const claudeMd = [...artifacts].filter(
     ([p]) =>
-      p.startsWith("dot-claude/rules/") &&
+      p.startsWith("compiled/claude/rules/") &&
       p.endsWith(".md") &&
       !p.includes("/gpt/")
   );
@@ -202,6 +202,30 @@ test("init prompts contain required sections", () => {
   }
 });
 
+test("rich init prompts render routing-first and protocol-over-velocity rules", () => {
+  const richInitFiles = [...artifacts].filter(([p]) =>
+    ["compiled/claude/rules/00-init.md", "compiled/windsurf/rules/00-init.md", "compiled/cursor/rules/00-init.mdc"].includes(p)
+  );
+
+  for (const [filePath, content] of richInitFiles) {
+    assert.match(
+      content,
+      /Before the first tool call, skill invocation, or code edit, complete the routing step and state the routing decision\./,
+      `${filePath}: missing routing-first execution binding`
+    );
+    assert.match(
+      content,
+      /Never prioritize task velocity over protocol compliance\./,
+      `${filePath}: missing protocol-over-velocity rule`
+    );
+    assert.match(
+      content,
+      /The user's assignment outranks opportunistic quick wins unless the user explicitly requests a quick-win approach\./,
+      `${filePath}: missing assignment-over-quick-wins constraint`
+    );
+  }
+});
+
 // ── Required Sections: Router ───────────────────────────────────────
 
 test("router prompts contain required sections", () => {
@@ -221,6 +245,45 @@ test("router prompts contain required sections", () => {
       );
     }
   }
+});
+
+test("rich router prompts render the router contract rules", () => {
+  const richRouterFiles = [...artifacts].filter(([p]) =>
+    ["compiled/claude/rules/01-router.md", "compiled/windsurf/rules/01-router.md", "compiled/cursor/rules/01-router.mdc"].includes(p)
+  );
+
+  for (const [filePath, content] of richRouterFiles) {
+    assert.match(
+      content,
+      /Routing is mandatory before the first tool call, skill invocation, or code edit\./,
+      `${filePath}: missing routing-first router contract`
+    );
+    assert.match(
+      content,
+      /Prefer protocol compliance over task velocity when they compete\./,
+      `${filePath}: missing protocol-over-velocity router contract`
+    );
+  }
+});
+
+test("codex runtime renders execution binding and router contract rules", () => {
+  const content = artifacts.get("compiled/codex/AGENTS.md");
+  assert.ok(content, "Missing compiled/codex/AGENTS.md artifact");
+  assert.match(
+    content,
+    /Before the first tool call, skill invocation, or code edit, complete the routing step and state the routing decision\./,
+    "compiled/codex/AGENTS.md: missing routing-first execution binding"
+  );
+  assert.match(
+    content,
+    /Never prioritize task velocity over protocol compliance\./,
+    "compiled/codex/AGENTS.md: missing protocol-over-velocity rule"
+  );
+  assert.match(
+    content,
+    /Routing is mandatory before the first tool call, skill invocation, or code edit\./,
+    "compiled/codex/AGENTS.md: missing router contract rule"
+  );
 });
 
 // ── Required Sections: Expert ───────────────────────────────────────

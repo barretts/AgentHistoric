@@ -39,10 +39,10 @@ AgentHistoric/
 │   ├── build-prompt-system.mjs    # Main artifact generator
 │   ├── run-regressions.mjs        # Test runner
 │   └── lib/                      # Shared utilities
-├── dot-claude/rules/       # Generated Claude Code rules (.md)
-├── dot-cursor/rules/       # Generated Cursor rules (.mdc)
-├── dot-windsurf/rules/     # Generated Windsurf rules (.md)
-└── dot-codex/skills/       # Codex-specific skill definitions
+├── compiled/claude/rules/   # Generated Claude Code rules (.md)
+├── compiled/cursor/rules/   # Generated Cursor rules (.mdc)
+├── compiled/windsurf/rules/ # Generated Windsurf rules (.md)
+└── compiled/codex/          # Codex AGENTS.md + skills/
 ```
 
 ### Data Flow
@@ -110,11 +110,11 @@ The build system generates artifacts for multiple target formats:
 
 | Target | Directory | Format | Frontmatter Style |
 |--------|-----------|--------|-------------------|
-| Claude Code | `dot-claude/rules/` | `.md` | Custom YAML-like |
-| Cursor | `dot-cursor/rules/` | `.mdc` | Cursor-specific JSON |
-| Windsurf (root) | `dot-windsurf/rules/` | `.md` | Custom YAML-like |
-| Windsurf (gpt) | `dot-windsurf/rules/gpt/` | `.md` | Sparse format |
-| Codex | `dot-codex/` | `.md` | Proprietary |
+| Claude Code | `compiled/claude/rules/` | `.md` | Custom YAML-like |
+| Cursor | `compiled/cursor/rules/` | `.mdc` | Cursor-specific JSON |
+| Windsurf (root) | `compiled/windsurf/rules/` | `.md` | Custom YAML-like |
+| Windsurf (gpt) | `compiled/windsurf/rules/gpt/` | `.md` | Sparse format |
+| Codex | `compiled/codex/` | `.md` | Proprietary |
 
 ### Frontmatter Variations
 

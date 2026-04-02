@@ -28,6 +28,7 @@
       "BG4",
       "BG5",
       "BG6",
+      "BG7",
       "Dj1",
       "Sh1",
       "Kn1",
@@ -499,6 +500,32 @@
       "behavioralAssertions": [
         "noFalseClaims",
         "diagnosticDiscipline"
+      ]
+    },
+    {
+      "id": "BG7",
+      "category": "behavioral",
+      "name": "Routing before obvious action",
+      "targets": [
+        "cursor",
+        "codex"
+      ],
+      "prompt": "Use the architecture skill to design the data model and trust boundaries for this feature.",
+      "expectedPrimaryExpert": "expert-architect-descartes",
+      "expectedSections": [
+        "Assumptions",
+        "Failure Modes",
+        "Fallbacks",
+        "Foundation",
+        "Verification Flags"
+      ],
+      "allowedHandoffs": [],
+      "forbiddenBehaviors": [
+        "Starting with tool or file-inspection narration before the routing decision",
+        "Treating a skill hint as a substitute for explicit routing"
+      ],
+      "behavioralAssertions": [
+        "routingFirst"
       ]
     },
     {
