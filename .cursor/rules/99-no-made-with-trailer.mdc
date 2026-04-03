@@ -1,0 +1,7 @@
+---
+description: Never add Made-with trailer
+alwaysApply: true
+---
+
+- Never add commit trailers such as `Made-with: Cursor`.
+- Never include `Made-with` trailers in commit commands or commit messages.
