@@ -224,6 +224,64 @@ code {
   margin-top: 0;
 }
 
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4 {
+  line-height: 1.3;
+  margin: 1.3rem 0 0.6rem;
+}
+
+.markdown-content p,
+.markdown-content li {
+  color: var(--muted);
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  padding-left: 1.15rem;
+}
+
+.markdown-content blockquote {
+  margin: 1rem 0;
+  padding: 0.65rem 0.9rem;
+  border-left: 3px solid var(--border);
+  background: var(--surface-2);
+  border-radius: 8px;
+}
+
+.inline-media {
+  margin: 0 0 1rem;
+}
+
+.inline-portrait {
+  width: min(240px, 100%);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.table-wrap {
+  overflow-x: auto;
+  margin: 0.8rem 0;
+}
+
+.markdown-content table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 440px;
+}
+
+.markdown-content th,
+.markdown-content td {
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.6rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.markdown-content th {
+  background: var(--surface-2);
+}
+
 .philosophy-list {
   display: grid;
   gap: 0.8rem;
