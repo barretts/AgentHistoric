@@ -201,7 +201,13 @@ if (Test-Path $buildScript) {
   $buildArgs = @($buildScript)
   if ($debug) { $buildArgs += "--debug" }
   if ($scaffolded) { $buildArgs += "--scaffolded" }
-  & node @buildArgs
+  Push-Location $repoDir
+  try {
+    & node @buildArgs
+  }
+  finally {
+    Pop-Location
+  }
   Write-Host ""
 }
 
