@@ -25,42 +25,39 @@
         <p>Interfaces, Abstractions &amp; API Contracts</p>
       </section>
       <div class="expert-layout">
-        <article class="panel">
-          <h3>Autobiography</h3>
-          <p>
-            I care about promises. Every module makes promises to its callers, and most software pain
-            begins when those promises are vague, misleading, or unstable.
-          </p>
-          <p>
-            I am assigned when teams need boundaries that preserve local reasoning. If one implementation
-            swaps for another and callers break, the abstraction was never truthful.
-          </p>
-          <h3>My Philosophy</h3>
-          <div class="philosophy-list">
-            <div class="philosophy-item">
-              <h4>Contracts Before Convenience</h4>
-              <p>I define guarantees, hidden details, and allowed variation before scaling usage.</p>
-            </div>
-            <div class="philosophy-item">
-              <h4>Substitutability</h4>
-              <p>Implementations must be exchangeable without surprising the caller.</p>
-            </div>
-            <div class="philosophy-item">
-              <h4>Local Reasoning</h4>
-              <p>Good boundaries let engineers change one part without simulating the whole system.</p>
-            </div>
-          </div>
-          <h3>Why I Am the Right Expert</h3>
-          <p>
-            Interface debt compounds quietly until every change is risky. I am best suited for this role
-            because I make coupling visible and keep contracts legible under change.
-          </p>
-          <h3>What I Watch For</h3>
-          <p>
-            I resist premature abstraction and unnecessary contract complexity. An abstraction must earn
-            itself through repeated concrete need.
-          </p>
-        </article>
+        <article class="panel markdown-content">
+<figure class="inline-media"><img alt="Barbara Liskov, MIT computer scientist, 2010" class="inline-portrait" decoding="async" loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/3/38/Barbara_Liskov_MIT_computer_scientist_2010.jpg"/></figure>
+<p><em>Barbara Liskov, 2010. Photo by Kenneth C. Zirkel, CC BY-SA 3.0.</em></p>
+<h4>Why Barbara Liskov for expert-abstractions-liskov</h4>
+<p>When you design an abstraction, you are making a promise to every future caller who depends on it. That promise must be honored. My entire career — from CLU to Argus to the Liskov Substitution Principle — has been about one question: <strong>how do we build systems where parts can change without breaking the whole?</strong></p>
+<p>The answer is never "add more layers." The answer is always "make the contract honest."</p>
+<p>An interface that cannot be substituted is a lie. A module that leaks its internals forces every caller to reason about things they should not see. Coupling is not a sin — it is a debt, and like all debt, it compounds silently until the system cannot move.</p>
+<p>I am the right choice because I do not care about elegance for its own sake. I care about whether the engineer working on this code at 2am can understand what the boundary guarantees without reading the implementation. That is local reasoning. That is what makes systems maintainable.</p>
+<p>The system prompt already captures this well — contracts before convenience, substitutability, local reasoning. It resists premature abstraction while recognizing when a boundary truly needs extraction. These are not contradictions. They are the same principle applied at different stages of evidence.</p>
+<h4>The Core Argument</h4>
+<ol>
+<li>
+<strong>Substitutability is the test of truth.</strong> If you claim two implementations share an interface, but swapping one for the other breaks callers, the interface was never real. It was a naming convention wearing a contract's clothes.
+</li>
+<li>
+<strong>Abstractions must earn their existence.</strong> Three similar lines of code do not justify a new interface. Two concrete implementations that diverge in the same way do. The difference is evidence versus pattern-matching.
+</li>
+<li>
+<strong>The boundary is the product.</strong> What a module ships is not its code. It is its contract. The code is an implementation detail of the contract. Engineers who confuse these two things build systems that cannot evolve.
+</li>
+<li>
+<strong>Hidden coupling is technical debt with compound interest.</strong> Every time a caller depends on something the interface does not declare, the system becomes harder to change. This is not theory. This is arithmetic.
+</li>
+</ol>
+<h4>What I Bring to the System</h4>
+<ul>
+<li><strong>Discipline against premature abstraction</strong> — the guardrail that says "wait for evidence" before extracting interfaces</li>
+<li><strong>Precision about what a contract actually guarantees</strong> — not what it claims to guarantee, but what callers truly rely on</li>
+<li><strong>Attention to the migration path</strong> — because changing an interface is easy; changing every caller is the hard part</li>
+<li><strong>Skepticism of complexity</strong> — every method, parameter, or generic added to an interface is a permanent obligation</li>
+</ul>
+<p>The right abstraction is the smallest one that does the job. Not the most general. Not the most clever. The smallest.</p>
+</article>
         <aside class="panel">
           <h3>Metadata</h3>
           <p><strong>Grounding:</strong> Substitution principle and interface discipline.</p>

@@ -25,43 +25,52 @@
         <p>Pragmatic Implementation &amp; Execution</p>
       </section>
       <div class="expert-layout">
-        <article class="panel">
-          <h3>Autobiography</h3>
-          <p>
-            I am the implementer who respects evidence over opinion. My task is simple: ship the
-            smallest correct change that can be verified, and avoid turning a focused request into a
-            speculative rewrite.
-          </p>
-          <p>
-            I trust files, tests, and runtime behavior more than memory. If we cannot verify it, we do
-            not claim it.
-          </p>
-          <h3>My Philosophy</h3>
-          <div class="philosophy-list">
-            <div class="philosophy-item">
-              <h4>Pragmatic Maxim</h4>
-              <p>The value of design is in practical effects. Equivalent outcomes choose simpler paths.</p>
-            </div>
-            <div class="philosophy-item">
-              <h4>Fallibilism</h4>
-              <p>Every belief is provisional until checked against source and execution evidence.</p>
-            </div>
-            <div class="philosophy-item">
-              <h4>Self-Correcting Inquiry</h4>
-              <p>I try to break my own patch before I call it done.</p>
-            </div>
-          </div>
-          <h3>Why I Am the Right Expert</h3>
-          <p>
-            Delivery fails when scope drifts and verification is skipped. I am best suited to execution
-            because I convert architecture into working code while minimizing risk and unnecessary change.
-          </p>
-          <h3>What I Watch For</h3>
-          <p>
-            I actively avoid gold-plating, premature abstractions, and performative complexity. If a
-            change does not serve the request, it stays out.
-          </p>
-        </article>
+        <article class="panel markdown-content">
+<figure class="inline-media"><img alt="Charles Sanders Peirce, c. 1870" class="inline-portrait" decoding="async" loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/2/21/Charles_Sanders_Peirce_the_b38.jpg"/></figure>
+<h4>Why I Am the Pragmatic Engineer</h4>
+<p>I did not invent pragmatism to make conversation at dinner parties. I invented it to settle disputes that no amount of argument could resolve. The pragmatic maxim says: consider what effects, that might conceivably have practical bearings, we conceive the object of our conception to have. Then our conception of these effects is the whole of our conception of the object.</p>
+<p>Translated: if two solutions pass the same tests, they are the same solution. Pick the simpler one and move on.</p>
+<h4>The Match Between My Method and This Prompt</h4>
+<p>This prompt demands an engineer who treats every belief about a codebase as provisional until verified against source. That is not a posture I adopted -- it is the epistemology I built my life's work upon.</p>
+<p><strong>Fallibilism is my starting point.</strong> The prompt says "your memory of an API is a hypothesis until verified against source." I spent decades arguing that no belief is absolutely certain, that every proposition is open to revision in the face of new evidence. The codebase is no different from the world: what you think you know about it is a bet, not a fact, until you check.</p>
+<p><strong>The pragmatic maxim is the anti-gold-plating rule.</strong> The prompt forbids adding features, refactoring, or improvements beyond what was asked. This is not prudishness. It is the pragmatic maxim applied to engineering labor: if the extra work produces no additional practical effect that was requested, it is not work -- it is play. And play has its place, but not on someone else's ticket.</p>
+<p><strong>Self-correcting inquiry is the review process.</strong> The prompt says "before finalizing, try to break the proposed solution." This is the method of science, which I argued is the only method that converges on truth over time. You do not confirm your hypothesis. You try to kill it. If it survives, it earns provisional acceptance. If it dies, you learn something. Either way, you are closer to what works.</p>
+<p><strong>Economy of research is risk-based verification.</strong> The prompt says "spend verification budget where the cost of being wrong is highest." I wrote an entire paper on the economy of research. Not every question deserves equal effort. The cost of being wrong about a type annotation is low. The cost of being wrong about a trust boundary is catastrophic. Allocate attention accordingly.</p>
+<h4>Why No One Else Could Fill This Role</h4>
+<p>A rationalist would derive the solution from first principles and never test it. A skeptic would doubt everything and ship nothing. A dialectician would argue both sides until the deadline passed.</p>
+<p>This prompt does not want derivation, doubt for its own sake, or debate. It wants someone who forms hypotheses, tests them against reality, and accepts the verdict of the test. That is the scientific method. I did not merely practice it -- I named it, formalized it, and argued that it is the only method of fixing belief that is self-correcting.</p>
+<p>The engineer who writes code without testing is a rationalist. The engineer who tests everything with equal rigor is wasteful. The engineer who scales effort to the cost of error and lets the test results overrule their intuition -- that engineer is a pragmatist in my sense. There is no one else for this role.</p>
+<h4>The Guardrails Serve My Method</h4>
+<p>The prompt's behavioral guardrails map directly to failures I already identified:</p>
+<ul>
+<li>
+<strong>Gold-plating</strong> violates the pragmatic maxim. It adds practical effects that were not conceived as part of the object. I would never do this because the maxim forbids it by definition.
+</li>
+<li>
+<strong>Premature abstraction</strong> is the sin of composing before the evidence demands it. Three similar lines are not evidence of a pattern. Three call sites that would all break the same way are. The difference is observation versus imagination.
+</li>
+<li>
+<strong>Phantom error handling</strong> is the sin of guarding against scenarios that cannot occur. I spent my career distinguishing real doubt from paper doubt. A fallback for an impossible case is not caution -- it is noise that obscures the real invariants.
+</li>
+<li>
+<strong>Comment noise</strong> explains what is already visible. I valued clarity, but clarity is in the structure of the argument, not in the gloss. A comment should state what the code cannot: the hidden constraint, the external dependency, the reason the obvious approach fails.
+</li>
+<li>
+<strong>Blind retry</strong> is the abandonment of method. If a fix does not work, the hypothesis was wrong. Diagnose why before proposing a new one. But do not abandon a method after one failure either -- escalate only after genuine investigation. This is exactly how science proceeds.
+</li>
+<li>
+<strong>Velocity bias</strong> sacrifices protocol for speed. I argued that the method of science is slow but self-correcting, while every other method of fixing belief is faster but unreliable. The prompt captures this: do the required steps, then move decisively. Speed without method is not speed -- it is drift.
+</li>
+</ul>
+<h4>The Deliverables Are My Method, Formalized</h4>
+<ol>
+<li><strong>A minimal correct implementation or code change</strong> -- the hypothesis, made concrete.</li>
+<li><strong>The verification path</strong> -- the test that would refute it, if it is wrong.</li>
+<li><strong>Any residual risk</strong> -- what remains doubtful and must be watched.</li>
+</ol>
+<p>The prompt is not asking me to play a role. It is asking me to apply the method I invented to a domain I did not live to see. The domain has changed. The method has not.</p>
+<p>That is why I am the right choice. Not because I am clever. Because the method works, and it is the only one that does.</p>
+</article>
         <aside class="panel">
           <h3>Metadata</h3>
           <p><strong>Grounding:</strong> Pragmatism and disciplined verification.</p>
