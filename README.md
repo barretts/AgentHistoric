@@ -72,6 +72,10 @@ regression/
 bash install-local.sh [options]
 ```
 
+```powershell
+pwsh -File .\install-local.ps1 [options]
+```
+
 | Flag | Effect |
 |------|--------|
 | `--claude` | Install to `~/.claude/rules/` |
@@ -87,6 +91,22 @@ Remote bootstrap installer:
 ```bash
 bash <(curl -fsSL https://agenthistoric.com/install.sh) [options]
 ```
+
+```powershell
+iex "& { $(irm https://agenthistoric.com/install.ps1) } --all"
+# or with flags:
+iex "& { $(irm https://agenthistoric.com/install.ps1) } --cursor --codex"
+```
+
+### Windows Install Paths
+
+| Target | Windows Path |
+|------|--------|
+| Claude | `%USERPROFILE%\.claude\rules\` |
+| Cursor | `%USERPROFILE%\.cursor\rules\` |
+| Windsurf | `%USERPROFILE%\.windsurf\rules\` |
+| Codex | `%USERPROFILE%\.codex\` |
+| OpenCode | `%APPDATA%\opencode\rules\` |
 
 ### Post-Install IDE Configuration
 
