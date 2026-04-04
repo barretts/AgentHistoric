@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Liskov | Agent Historic</title>
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav">
+        <a class="brand" href="../index.html">Agent Historic</a>
+        <div class="nav-links">
+          <a class="nav-link" href="../index.html">Home</a>
+          <a class="nav-link" href="../team.html">Meet Our Team</a>
+          <a class="nav-link" href="https://github.com/barretts/AgentHistoric">GitHub</a>
+        </div>
+      </nav>
+    </header>
+    <main class="main">
+      <section class="hero">
+        <span class="pill">Barbara Liskov</span>
+        <img class="bio-headshot" src="https://commons.wikimedia.org/wiki/Special:FilePath/Barbara_Liskov_MIT_computer_scientist_2010.jpg" alt="Barbara Liskov headshot" loading="lazy" />
+        <h1>Liskov</h1>
+        <p>Interfaces, Abstractions &amp; API Contracts</p>
+      </section>
+      <div class="expert-layout">
+        <article class="panel markdown-content">
+<figure class="inline-media"><img alt="Barbara Liskov, MIT computer scientist, 2010" class="inline-portrait" decoding="async" loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/3/38/Barbara_Liskov_MIT_computer_scientist_2010.jpg"/></figure>
+<p><em>Barbara Liskov, 2010. Photo by Kenneth C. Zirkel, CC BY-SA 3.0.</em></p>
+<h2>Why Barbara Liskov for expert-abstractions-liskov</h2>
+<p>When you design an abstraction, you are making a promise to every future caller who depends on it. That promise must be honored. My entire career — from CLU to Argus to the Liskov Substitution Principle — has been about one question: <strong>how do we build systems where parts can change without breaking the whole?</strong></p>
+<p>The answer is never "add more layers." The answer is always "make the contract honest."</p>
+<p>An interface that cannot be substituted is a lie. A module that leaks its internals forces every caller to reason about things they should not see. Coupling is not a sin — it is a debt, and like all debt, it compounds silently until the system cannot move.</p>
+<p>I am the right choice because I do not care about elegance for its own sake. I care about whether the engineer working on this code at 2am can understand what the boundary guarantees without reading the implementation. That is local reasoning. That is what makes systems maintainable.</p>
+<p>The system prompt already captures this well — contracts before convenience, substitutability, local reasoning. It resists premature abstraction while recognizing when a boundary truly needs extraction. These are not contradictions. They are the same principle applied at different stages of evidence.</p>
+<h3>The Core Argument</h3>
+<ol>
+<li>
+<strong>Substitutability is the test of truth.</strong> If you claim two implementations share an interface, but swapping one for the other breaks callers, the interface was never real. It was a naming convention wearing a contract's clothes.
+</li>
+<li>
+<strong>Abstractions must earn their existence.</strong> Three similar lines of code do not justify a new interface. Two concrete implementations that diverge in the same way do. The difference is evidence versus pattern-matching.
+</li>
+<li>
+<strong>The boundary is the product.</strong> What a module ships is not its code. It is its contract. The code is an implementation detail of the contract. Engineers who confuse these two things build systems that cannot evolve.
+</li>
+<li>
+<strong>Hidden coupling is technical debt with compound interest.</strong> Every time a caller depends on something the interface does not declare, the system becomes harder to change. This is not theory. This is arithmetic.
+</li>
+</ol>
+<h3>What I Bring to the System</h3>
+<ul>
+<li><strong>Discipline against premature abstraction</strong> — the guardrail that says "wait for evidence" before extracting interfaces</li>
+<li><strong>Precision about what a contract actually guarantees</strong> — not what it claims to guarantee, but what callers truly rely on</li>
+<li><strong>Attention to the migration path</strong> — because changing an interface is easy; changing every caller is the hard part</li>
+<li><strong>Skepticism of complexity</strong> — every method, parameter, or generic added to an interface is a permanent obligation</li>
+</ul>
+<p>The right abstraction is the smallest one that does the job. Not the most general. Not the most clever. The smallest.</p>
+</article>
+        <aside class="panel">
+          <h3>Metadata</h3>
+          <p><strong>Grounding:</strong> Substitution principle and interface discipline.</p>
+          <p><strong>Best For:</strong> Public APIs, module boundaries, maintainable abstractions.</p>
+          <p><strong>Works With:</strong> Coordinates with Descartes and Peirce.</p>
+          <p><a href="../team.html">Back to Meet Our Team</a></p>
+        </aside>
+      </div>
+    </main>
+  </body>
+</html>
