@@ -236,6 +236,24 @@ code {
   color: var(--muted);
 }
 
+.persona-disclaimer,
+.team-disclaimer {
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  background: var(--surface-2);
+  border-radius: 8px;
+  padding: 0.7rem 0.85rem;
+  color: var(--text);
+}
+
+.persona-disclaimer {
+  margin: 0 0 1rem;
+}
+
+.team-disclaimer {
+  margin: 1rem 0 0;
+}
+
 .markdown-content ul,
 .markdown-content ol {
   padding-left: 1.15rem;
