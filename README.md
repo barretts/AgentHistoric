@@ -29,10 +29,13 @@ A Mixture-of-Experts (MoE) routing layer assigns the right persona to every requ
 npm run build:prompts
 
 # 2. Install rules into your editors (auto-detects installed editors)
-bash install.sh
+bash install-local.sh
 
 # 3. Or install for specific editors
-bash install.sh --cursor --windsurf
+bash install-local.sh --cursor --windsurf
+
+# 4. Remote bootstrap install (served from GitHub Pages)
+bash <(curl -fsSL https://agenthistoric.com/install.sh) --all
 
 ```
 
@@ -66,7 +69,7 @@ regression/
 ## Install
 
 ```bash
-bash install.sh [options]
+bash install-local.sh [options]
 ```
 
 | Flag | Effect |
@@ -78,6 +81,12 @@ bash install.sh [options]
 | `--all` | All editors |
 | `--list` | Show installed files without modifying anything |
 | *(no flags)* | Auto-detect installed editors |
+
+Remote bootstrap installer:
+
+```bash
+bash <(curl -fsSL https://agenthistoric.com/install.sh) [options]
+```
 
 ### Post-Install IDE Configuration
 
