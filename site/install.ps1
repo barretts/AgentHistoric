@@ -21,15 +21,26 @@ $tmpDir = Join-Path ([IO.Path]::GetTempPath()) ("agent-historic-" + [Guid]::NewG
 New-Item -ItemType Directory -Path $tmpDir -Force | Out-Null
 
 try {
-  $downloadUrl = "https://raw.githubusercontent.com/$repoSlug/$repoRef/$localInstaller"
-  $targetScript = Join-Path $tmpDir $localInstaller
+  $archiveUrl = "https://github.com/$repoSlug/archive/refs/heads/$repoRef.zip"
+  $archivePath = Join-Path $tmpDir "agent-historic.zip"
 
   Write-Host "==> agent-historic remote bootstrap (PowerShell)"
   Write-Host "    Repo: $repoSlug@$repoRef"
-  Write-Host "    URL:  $downloadUrl"
+  Write-Host "    URL:  $archiveUrl"
   Write-Host ""
 
-  Invoke-WebRequest -Uri $downloadUrl -OutFile $targetScript
+  Invoke-WebRequest -Uri $archiveUrl -OutFile $archivePath
+  Expand-Archive -Path $archivePath -DestinationPath $tmpDir -Force
+
+  $repoDir = Get-ChildItem -Path $tmpDir -Directory | Select-Object -First 1
+  if (-not $repoDir) {
+    throw "ERROR: Unable to locate extracted repository directory."
+  }
+
+  $targetScript = Join-Path $repoDir.FullName $localInstaller
+  if (-not (Test-Path $targetScript)) {
+    throw "ERROR: $localInstaller not found in extracted repository."
+  }
 
   Write-Host "--> Running local installer..."
   & pwsh -NoProfile -ExecutionPolicy Bypass -File $targetScript @InstallerArgs

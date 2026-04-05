@@ -3,7 +3,6 @@
 # Usage: pwsh -File .\install-local.ps1 [--claude] [--cursor] [--windsurf] [--codex] [--opencode] [--all]
 # No flags = auto-detect installed editors.
 
-[CmdletBinding()]
 param(
   [switch]$claude,
   [switch]$cursor,
