@@ -70,7 +70,7 @@ function Cleanup-ManagedFiles([string]$destDir) {
   if (-not (Test-Path $destDir)) { return }
   Get-ChildItem -Path $destDir -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
     $f = $_.FullName
-    if (Select-String -Path $f -Pattern [Regex]::Escape($managedMarker) -Quiet -ErrorAction SilentlyContinue) {
+    if (Select-String -Path $f -Pattern ([Regex]::Escape($managedMarker)) -Quiet -ErrorAction SilentlyContinue) {
       Remove-Item -Path $f -Force
       Write-Host "    Removed stale: $f"
     }
