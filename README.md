@@ -6,6 +6,8 @@ Agent Historic is an open library of persona architectures for Large Language Mo
 
 A Mixture-of-Experts (MoE) routing layer assigns the right persona to every request, generating rules for **Claude**, **Cursor**, **Windsurf**, and **Codex** from one canonical source.
 
+The routing layer includes negative routing guards, diversified sub-domain heuristics, progressive two-pass routing, a judge-mediated deliberation council for ambiguous tasks, and an adversarial verification pipeline for high-stakes implementations.
+
 ## Attested Personas
 
 | Persona | Role | Grounding |
@@ -126,6 +128,51 @@ npm run build:prompts
 
 Regenerates all output directories from the canonical JSON in `prompt-system/`.
 
+## Routing Evolution Features
+
+Five features enhance the routing layer beyond basic signal matching. All are defined in `prompt-system/router.json`, rendered into every target by the build system, and covered by dedicated test suites.
+
+### Negative Routing Examples
+
+Anti-pattern rules that prevent common mis-routes. The router checks `negativeExamples` *before* confirming a positive signal match. For example, "refactor" normally matches Peirce, but when combined with "module boundaries" or "coupling" the negative guard redirects to Liskov.
+
+- **Data:** `router.json` → `negativeExamples` (`doNotRouteToPeirce`, `doNotRouteToPopper`, `doNotRouteToDennett`)
+- **Rendered as:** "Routing Anti-Patterns" section in every router artifact
+- **Test suite:** `negative` (NE1-NE4)
+
+### Diversified Routing Heuristics
+
+Broad domains like "Pragmatic Implementation" and "Debug Firefighting" are split into granular sub-domains (18+ heuristics, up from 13) with specific lead experts, reducing Peirce/Popper over-selection. New sub-domains include Test Failure Diagnosis, Build & Config Errors, Quick Fix & Patch, General Implementation, Refactoring & Restructuring, Test Authoring, and Runtime Error Investigation.
+
+Disambiguation is expanded to 9 expert keys (added `routeToLiskov`, `routeToSimon`, `routeToShannon`, `routeToKnuth`, `routeToDescartes`).
+
+- **Data:** `router.json` → `routingHeuristics`, `disambiguation`
+- **Test suite:** `diversity` (RB1-RB9)
+
+### Progressive Two-Pass Routing
+
+For ambiguous prompts, the router classifies the broad domain first, then refines to a specific expert based on task nuance. A contract rule mandates two-pass routing for ambiguous requests.
+
+- **Data:** `router.json` → `refinementHeuristics`
+- **Rendered as:** "Two-Pass Routing Refinement" section in every router artifact
+- **Test suite:** `twopass` (TP1-TP3)
+
+### Deliberation Council Pipeline
+
+A judge-mediated multi-expert pipeline for tasks spanning multiple concerns. The router selects 2-3 experts, each contributes from their domain, and the router synthesizes a consensus. Triggered when confidence < 0.65 with 2+ matching domains, or when the user explicitly requests multiple perspectives.
+
+- **Data:** `router.json` → `pipelines["Deliberation Council"]` with `triggerSignals` and `autoTrigger`
+- **Design rationale:** Based on ICLR 2025 findings that judge-mediated debate outperforms naive multi-agent debate
+- **Test suite:** `council` (CC1-CC4; CC4 is a negative case)
+
+### Adversarial Verification Pipeline
+
+After implementation, a separate adversarial verification step by Popper prevents self-verification bias. Popper's `verificationContract` (7 rules) requires running code, testing boundary conditions, and issuing exactly one of `VERDICT: PASS` or `VERDICT: FAIL`.
+
+- **Data:** `router.json` → `pipelines["Implement & Verify"]`, `expert-qa-popper.json` → `verificationContract`
+- **Design rationale:** Inspired by Claude Code's verification agent pattern; explicitly rejects rationalization patterns
+- **Test suite:** `verification` (AV1-AV3)
+
 ## Testing
 
 ### Unit Tests
@@ -134,22 +181,23 @@ Regenerates all output directories from the canonical JSON in `prompt-system/`.
 npm run test:unit
 ```
 
-32 tests across 3 test files:
+78 tests across 3 test files:
 
 | File | Tests | Scope |
 |------|:-----:|-------|
-| `prompt-smoke.test.mjs` | 12 | Frontmatter validity, required sections, expert cross-references, guardrail completeness, token budgets |
+| `prompt-smoke.test.mjs` | 41 | Frontmatter validity, required sections, expert cross-references, guardrail completeness, token budgets, routing evolution rendering, pipeline structure, disambiguation expansion |
 | `prompt-system.test.mjs` | 4 | Section resolution, generated artifact sync |
-| `regression.test.mjs` | 16 | Routing, evaluator, behavioral assertions |
+| `regression.test.mjs` | 33 | Routing, evaluator, behavioral assertions, negative routing guards, diversity routing |
 
 ### Behavioral Assertions
 
-The regression evaluator includes four code-based graders that detect behavioral anti-patterns in LLM output:
+The regression evaluator includes five code-based graders that detect behavioral anti-patterns in LLM output:
 
 - **`assertNoGoldPlating`** — flags extra sections beyond the output contract
 - **`assertConcision`** — flags responses exceeding a character budget
 - **`assertNoFalseClaims`** — flags success claims without execution evidence
 - **`assertDiagnosticDiscipline`** — flags fix proposals without prior diagnosis
+- **`assertRoutingFirst`** — flags preamble content before the routing decision
 
 ### Regression Suites
 
@@ -158,12 +206,23 @@ npm run test:regressions:smoke   # Quick smoke suite
 npm run test:regressions         # Full suite
 ```
 
+New feature-specific suites:
+
+```bash
+node scripts/run-regressions.mjs --suite negative     # NE1-NE4: negative routing guards
+node scripts/run-regressions.mjs --suite diversity     # RB1-RB9: expert variety
+node scripts/run-regressions.mjs --suite twopass       # TP1-TP3: progressive routing
+node scripts/run-regressions.mjs --suite council       # CC1-CC4: deliberation council
+node scripts/run-regressions.mjs --suite verification  # AV1-AV3: adversarial verification
+```
+
 Target filtering and model overrides:
 
 ```bash
 node scripts/run-regressions.mjs --suite smoke --targets cursor
 node scripts/run-regressions.mjs --suite full --targets codex
 node scripts/run-regressions.mjs --suite smoke --cursor-model gpt-5.4-medium
+node scripts/run-regressions.mjs --suite diversity --trials 3  # Multi-trial for consistency
 ```
 
 ### Scores
