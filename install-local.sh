@@ -327,7 +327,7 @@ while [[ $# -gt 0 ]]; do
       echo "  --list         List installed files and their status (no changes made)"
       echo "  --scaffolded   Use scaffolded voice (externalized reasoning with HYPOTHESIS/VERIFIED labels)"
       echo "                 Default is voice-calibrated (internalized, peer-like prose)."
-      echo "  --debug        Include self-identification routing preamble in generated rules"
+      echo "  --debug        Build with debug routing output (Selected Expert / Reason / Confidence visible)"
       echo "  -h, --help     Show this help"
       echo ""
       echo "No flags = auto-detect installed editors."
@@ -346,14 +346,17 @@ done
 
 # --- Build ---
 
-if [[ -d "$SRC_CLAUDE" ]] && ls "$SRC_CLAUDE"/*.md >/dev/null 2>&1; then
-  echo "--> Compiled files found, skipping build."
-elif [[ -f "$REPO_DIR/scripts/build-prompt-system.mjs" ]]; then
-  echo "--> Building prompt system..."
+if ($DEBUG_MODE || $SCAFFOLDED_MODE) && [[ -f "$REPO_DIR/scripts/build-prompt-system.mjs" ]]; then
+  echo "--> Rebuilding prompt system (custom flags)..."
   BUILD_FLAGS=""
   $DEBUG_MODE && BUILD_FLAGS="$BUILD_FLAGS --debug"
   $SCAFFOLDED_MODE && BUILD_FLAGS="$BUILD_FLAGS --scaffolded"
   node "$REPO_DIR/scripts/build-prompt-system.mjs" $BUILD_FLAGS
+elif [[ -d "$SRC_CLAUDE" ]] && ls "$SRC_CLAUDE"/*.md >/dev/null 2>&1; then
+  echo "--> Compiled files found, skipping build."
+elif [[ -f "$REPO_DIR/scripts/build-prompt-system.mjs" ]]; then
+  echo "--> Building prompt system..."
+  node "$REPO_DIR/scripts/build-prompt-system.mjs" --no-debug
 else
   echo "ERROR: Generated files not found and no build script available."
   exit 1

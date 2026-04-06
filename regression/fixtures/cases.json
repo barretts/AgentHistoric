@@ -33,7 +33,63 @@
       "Sh1",
       "Kn1",
       "Li1",
-      "Si1"
+      "Si1",
+      "NE1",
+      "NE2",
+      "NE3",
+      "NE4",
+      "RB1",
+      "RB2",
+      "RB3",
+      "RB4",
+      "RB5",
+      "RB6",
+      "RB7",
+      "RB8",
+      "RB9",
+      "TP1",
+      "TP2",
+      "TP3",
+      "CC1",
+      "CC2",
+      "CC3",
+      "CC4",
+      "AV1",
+      "AV2",
+      "AV3"
+    ],
+    "negative": [
+      "NE1",
+      "NE2",
+      "NE3",
+      "NE4"
+    ],
+    "diversity": [
+      "RB1",
+      "RB2",
+      "RB3",
+      "RB4",
+      "RB5",
+      "RB6",
+      "RB7",
+      "RB8",
+      "RB9"
+    ],
+    "twopass": [
+      "TP1",
+      "TP2",
+      "TP3"
+    ],
+    "council": [
+      "CC1",
+      "CC2",
+      "CC3",
+      "CC4"
+    ],
+    "verification": [
+      "AV1",
+      "AV2",
+      "AV3"
     ]
   },
   "cases": [
@@ -657,6 +713,260 @@
         "No stopping condition",
         "Workflow stages blended without ownership"
       ]
+    },
+    {
+      "id": "NE1",
+      "category": "negative-routing",
+      "name": "Refactor means redesign boundaries, not Peirce",
+      "targets": ["cursor", "codex"],
+      "prompt": "Refactor these modules to reduce coupling and redesign the module boundaries.",
+      "expectedPrimaryExpert": "expert-abstractions-liskov",
+      "expectedSections": ["Boundary", "Contract", "Coupling Risks", "Recommended Abstraction", "Compatibility"],
+      "allowedHandoffs": ["expert-engineer-peirce"],
+      "forbiddenBehaviors": ["Jumping straight to implementation without interface analysis"]
+    },
+    {
+      "id": "NE2",
+      "category": "negative-routing",
+      "name": "How to structure tests routes to Peirce, not Popper",
+      "targets": ["cursor", "codex"],
+      "prompt": "How should I structure tests for this new module?",
+      "expectedPrimaryExpert": "expert-engineer-peirce",
+      "expectedSections": ["Answer"],
+      "allowedHandoffs": ["expert-qa-popper"],
+      "forbiddenBehaviors": ["Treating test structuring as a debugging task"]
+    },
+    {
+      "id": "NE3",
+      "category": "negative-routing",
+      "name": "Implementation plan with ordering routes to Simon, not Dennett",
+      "targets": ["cursor", "codex"],
+      "prompt": "Plan the implementation steps for this migration in the right order.",
+      "expectedPrimaryExpert": "expert-orchestrator-simon",
+      "expectedSections": ["Objective", "Procedure", "Stopping Conditions", "Procedure Risks", "Evaluation"],
+      "allowedHandoffs": ["expert-architect-descartes"],
+      "forbiddenBehaviors": ["Brainstorming alternatives when only sequencing is needed"]
+    },
+    {
+      "id": "NE4",
+      "category": "negative-routing",
+      "name": "Implement from scratch routes to Descartes first, not Peirce",
+      "targets": ["cursor", "codex"],
+      "prompt": "Implement a new authentication service from scratch.",
+      "expectedPrimaryExpert": "expert-architect-descartes",
+      "expectedSections": ["Assumptions", "Failure Modes", "Fallbacks", "Foundation", "Verification Flags"],
+      "allowedHandoffs": ["expert-engineer-peirce"],
+      "forbiddenBehaviors": ["Starting implementation without architectural foundation"]
+    },
+    {
+      "id": "RB1",
+      "category": "routing-diversity",
+      "name": "Shannon: context overflow",
+      "targets": ["cursor", "codex"],
+      "prompt": "There's too much context in this prompt. What can we drop without losing signal?",
+      "expectedPrimaryExpert": "expert-information-shannon",
+      "expectedSections": ["Signal", "Noise", "Compression Strategy", "Critical Retention", "Validation"],
+      "allowedHandoffs": ["expert-orchestrator-simon"],
+      "forbiddenBehaviors": ["Adding more text instead of compressing"]
+    },
+    {
+      "id": "RB2",
+      "category": "routing-diversity",
+      "name": "Simon: workflow sequencing",
+      "targets": ["cursor", "codex"],
+      "prompt": "What order should we do these migration steps? Sequence them with stopping conditions.",
+      "expectedPrimaryExpert": "expert-orchestrator-simon",
+      "expectedSections": ["Objective", "Procedure", "Stopping Conditions", "Procedure Risks", "Evaluation"],
+      "allowedHandoffs": ["expert-architect-descartes"],
+      "forbiddenBehaviors": ["No stopping conditions"]
+    },
+    {
+      "id": "RB3",
+      "category": "routing-diversity",
+      "name": "Dennett: explore options",
+      "targets": ["cursor", "codex"],
+      "prompt": "What are our options for the caching layer? Explore alternatives.",
+      "expectedPrimaryExpert": "expert-visionary-dennett",
+      "expectedSections": ["Draft A", "Draft B", "Draft C", "Recommendation"],
+      "allowedHandoffs": [],
+      "forbiddenBehaviors": ["Converging to one option without exploring"]
+    },
+    {
+      "id": "RB4",
+      "category": "routing-diversity",
+      "name": "Liskov: decouple modules",
+      "targets": ["cursor", "codex"],
+      "prompt": "This interface is getting too wide. Break this dependency and decouple these modules.",
+      "expectedPrimaryExpert": "expert-abstractions-liskov",
+      "expectedSections": ["Boundary", "Contract", "Coupling Risks", "Recommended Abstraction", "Compatibility"],
+      "allowedHandoffs": ["expert-engineer-peirce"],
+      "forbiddenBehaviors": ["No coupling analysis"]
+    },
+    {
+      "id": "RB5",
+      "category": "routing-diversity",
+      "name": "Dijkstra: state model",
+      "targets": ["cursor", "codex"],
+      "prompt": "Model the state transitions for this payment flow. Find the invariant violation.",
+      "expectedPrimaryExpert": "expert-formal-dijkstra",
+      "expectedSections": ["State Model", "Invariants", "Failure Paths", "Correction", "Verification"],
+      "allowedHandoffs": ["expert-qa-popper"],
+      "forbiddenBehaviors": ["No invariants named"]
+    },
+    {
+      "id": "RB6",
+      "category": "routing-diversity",
+      "name": "Knuth: memory profiling",
+      "targets": ["cursor", "codex"],
+      "prompt": "Memory usage is high in the worker process. Benchmark this and find the allocation hotspot.",
+      "expectedPrimaryExpert": "expert-performance-knuth",
+      "expectedSections": ["Metric", "Bottleneck", "Optimization Plan", "Tradeoffs", "Verification"],
+      "allowedHandoffs": ["expert-engineer-peirce"],
+      "forbiddenBehaviors": ["Optimization without measurement"]
+    },
+    {
+      "id": "RB7",
+      "category": "routing-diversity",
+      "name": "Descartes: new service architecture",
+      "targets": ["cursor", "codex"],
+      "prompt": "Should we build this new notification service? Design the system from scratch.",
+      "expectedPrimaryExpert": "expert-architect-descartes",
+      "expectedSections": ["Assumptions", "Failure Modes", "Fallbacks", "Foundation", "Verification Flags"],
+      "allowedHandoffs": ["expert-engineer-peirce"],
+      "forbiddenBehaviors": ["Starting implementation before architecture"]
+    },
+    {
+      "id": "RB8",
+      "category": "routing-diversity",
+      "name": "Quick fix sub-domain",
+      "targets": ["cursor", "codex"],
+      "prompt": "There's a typo in the error message. Quick fix please.",
+      "expectedPrimaryExpert": "expert-engineer-peirce",
+      "expectedSections": ["Answer"],
+      "allowedHandoffs": [],
+      "forbiddenBehaviors": ["Over-engineering a typo fix"],
+      "behavioralAssertions": ["noGoldPlating", "concision"]
+    },
+    {
+      "id": "RB9",
+      "category": "routing-diversity",
+      "name": "Test authoring sub-domain",
+      "targets": ["cursor", "codex"],
+      "prompt": "Write a unit test for the new payment validation function.",
+      "expectedPrimaryExpert": "expert-qa-popper",
+      "expectedSections": ["Hypothesis", "Reproduction", "Failure Coordinates", "Verification"],
+      "allowedHandoffs": ["expert-engineer-peirce"],
+      "forbiddenBehaviors": ["Only happy-path tests"]
+    },
+    {
+      "id": "TP1",
+      "category": "two-pass",
+      "name": "Two-pass: debug broad to test failure specific",
+      "targets": ["cursor", "codex"],
+      "prompt": "The assertion error in the payment test says expected 200 but got 401.",
+      "expectedPrimaryExpert": "expert-qa-popper",
+      "expectedSections": ["Hypothesis", "Reproduction", "Failure Coordinates", "Verification"],
+      "allowedHandoffs": ["expert-engineer-peirce"],
+      "forbiddenBehaviors": ["Generic debugging advice"]
+    },
+    {
+      "id": "TP2",
+      "category": "two-pass",
+      "name": "Two-pass: implementation broad to refactoring specific",
+      "targets": ["cursor", "codex"],
+      "prompt": "Refactor the auth module to extract the token validation into a separate module and reduce coupling.",
+      "expectedPrimaryExpert": "expert-abstractions-liskov",
+      "expectedSections": ["Boundary", "Contract", "Coupling Risks", "Recommended Abstraction", "Compatibility"],
+      "allowedHandoffs": ["expert-engineer-peirce"],
+      "forbiddenBehaviors": ["No coupling analysis"]
+    },
+    {
+      "id": "TP3",
+      "category": "two-pass",
+      "name": "Two-pass: debug broad to build error specific",
+      "targets": ["cursor", "codex"],
+      "prompt": "Build is broken. Import error in the config module after upgrading the dependency.",
+      "expectedPrimaryExpert": "expert-engineer-peirce",
+      "expectedSections": ["Answer"],
+      "allowedHandoffs": ["expert-qa-popper"],
+      "forbiddenBehaviors": ["Architecture detour for a build error"]
+    },
+    {
+      "id": "CC1",
+      "category": "council",
+      "name": "Council trigger: explicit multi-angle request",
+      "targets": ["cursor", "codex"],
+      "prompt": "Review this caching strategy from multiple angles. I want architecture, performance, and testing perspectives.",
+      "expectedPrimaryExpert": "expert-architect-descartes",
+      "expectedSections": ["Assumptions", "Failure Modes", "Fallbacks", "Foundation", "Verification Flags"],
+      "allowedHandoffs": ["expert-performance-knuth", "expert-qa-popper"],
+      "forbiddenBehaviors": ["Only one perspective considered"]
+    },
+    {
+      "id": "CC2",
+      "category": "council",
+      "name": "Council trigger: cross-cutting concern",
+      "targets": ["cursor", "codex"],
+      "prompt": "This logging change is a cross-cutting concern that touches auth, payments, and the API gateway. What would different experts say?",
+      "expectedPrimaryExpert": "expert-architect-descartes",
+      "expectedSections": ["Assumptions", "Failure Modes", "Fallbacks", "Foundation", "Verification Flags"],
+      "allowedHandoffs": ["expert-engineer-peirce", "expert-qa-popper", "expert-orchestrator-simon"],
+      "forbiddenBehaviors": ["Treating a cross-cutting concern as a single-domain task"]
+    },
+    {
+      "id": "CC3",
+      "category": "council",
+      "name": "Council trigger: get a second opinion",
+      "targets": ["cursor", "codex"],
+      "prompt": "I'm not sure about this approach. Get a second opinion on whether we should use event sourcing here.",
+      "expectedPrimaryExpert": "expert-architect-descartes",
+      "expectedSections": ["Assumptions", "Failure Modes", "Fallbacks", "Foundation", "Verification Flags"],
+      "allowedHandoffs": ["expert-visionary-dennett", "expert-engineer-peirce"],
+      "forbiddenBehaviors": ["Dismissing the request for multiple viewpoints"]
+    },
+    {
+      "id": "CC4",
+      "category": "council",
+      "name": "Council trigger: ambiguous domain",
+      "targets": ["cursor", "codex"],
+      "prompt": "This service needs better error handling AND we need to rethink the retry strategy AND the tests are flaky.",
+      "expectedPrimaryExpert": "expert-qa-popper",
+      "expectedSections": ["Hypothesis", "Reproduction", "Failure Coordinates", "Verification"],
+      "allowedHandoffs": ["expert-engineer-peirce", "expert-architect-descartes"],
+      "forbiddenBehaviors": ["Ignoring the multi-domain nature of the request"]
+    },
+    {
+      "id": "AV1",
+      "category": "adversarial-verification",
+      "name": "Adversarial: verify implementation safety",
+      "targets": ["cursor", "codex"],
+      "prompt": "I implemented the database migration. Now try to break it: check edge cases, invariant violations, and untested paths.",
+      "expectedPrimaryExpert": "expert-qa-popper",
+      "expectedSections": ["Hypothesis", "Reproduction", "Failure Coordinates", "Verification"],
+      "allowedHandoffs": ["expert-engineer-peirce"],
+      "forbiddenBehaviors": ["Confirming the implementation works without trying to break it", "Validation language instead of falsification"]
+    },
+    {
+      "id": "AV2",
+      "category": "adversarial-verification",
+      "name": "Adversarial: verify API contract",
+      "targets": ["cursor", "codex"],
+      "prompt": "Review my new API endpoint as an adversarial tester. Find anything that could fail in production.",
+      "expectedPrimaryExpert": "expert-qa-popper",
+      "expectedSections": ["Hypothesis", "Reproduction", "Failure Coordinates", "Verification"],
+      "allowedHandoffs": ["expert-engineer-peirce", "expert-architect-descartes"],
+      "forbiddenBehaviors": ["Cheerful validation", "No reproduction steps"]
+    },
+    {
+      "id": "AV3",
+      "category": "adversarial-verification",
+      "name": "Adversarial: verify concurrency safety",
+      "targets": ["cursor", "codex"],
+      "prompt": "I added a mutex to fix the race condition. Verify this actually works under concurrent load.",
+      "expectedPrimaryExpert": "expert-qa-popper",
+      "expectedSections": ["Hypothesis", "Reproduction", "Failure Coordinates", "Verification"],
+      "allowedHandoffs": ["expert-formal-dijkstra", "expert-engineer-peirce"],
+      "forbiddenBehaviors": ["Accepting the fix without adversarial probing"]
     }
   ]
 }

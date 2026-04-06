@@ -39,7 +39,10 @@
         "workflow",
         "planning",
         "stopping condition",
-        "decision procedure"
+        "decision procedure",
+        "what order",
+        "sequence these",
+        "plan this migration"
       ]
     },
     {
@@ -54,8 +57,10 @@
         "brainstorm",
         "explore",
         "alternatives",
-        "new feature",
-        "possibilities"
+        "possibilities",
+        "what are our options",
+        "should we go with",
+        "compare approaches"
       ]
     },
     {
@@ -70,7 +75,10 @@
         "system design",
         "security model",
         "types",
-        "interfaces"
+        "from scratch",
+        "new service",
+        "scaffold",
+        "bootstrap"
       ]
     },
     {
@@ -87,12 +95,44 @@
         "public api",
         "module boundary",
         "coupling",
-        "contract"
+        "contract",
+        "decouple",
+        "break this dependency"
+      ]
+    },
+    {
+      "priority": 5.5,
+      "domain": "Refactoring & Restructuring",
+      "experts": [
+        "expert-abstractions-liskov",
+        "expert-engineer-peirce"
+      ],
+      "signals": [
+        "restructure",
+        "extract module",
+        "rename module",
+        "reduce coupling",
+        "refactor the module",
+        "refactor the architecture"
       ]
     },
     {
       "priority": 6,
-      "domain": "Pragmatic Implementation",
+      "domain": "Quick Fix & Patch",
+      "experts": [
+        "expert-engineer-peirce"
+      ],
+      "signals": [
+        "fix this",
+        "patch",
+        "one-line",
+        "typo",
+        "quick fix"
+      ]
+    },
+    {
+      "priority": 6.5,
+      "domain": "General Implementation",
       "experts": [
         "expert-engineer-peirce"
       ],
@@ -101,7 +141,8 @@
         "implement",
         "write code",
         "refactor",
-        "how to"
+        "how to",
+        "add this feature"
       ]
     },
     {
@@ -118,23 +159,69 @@
         "latency",
         "throughput",
         "memory",
-        "benchmark"
+        "benchmark",
+        "profiling",
+        "allocating"
+      ]
+    },
+    {
+      "priority": 7.5,
+      "domain": "Test Authoring",
+      "experts": [
+        "expert-qa-popper",
+        "expert-engineer-peirce"
+      ],
+      "signals": [
+        "write test",
+        "add test",
+        "test coverage",
+        "missing tests",
+        "unit test for"
       ]
     },
     {
       "priority": 8,
-      "domain": "Debug Firefighting & Test Failures",
+      "domain": "Test Failure Diagnosis",
       "experts": [
         "expert-qa-popper",
-        "expert-engineer-peirce",
-        "expert-manager-blackmore"
+        "expert-engineer-peirce"
       ],
       "signals": [
         "test fail",
-        "build error",
-        "broken",
-        "debug",
+        "assertion error",
+        "expected but got",
         "null pointer"
+      ]
+    },
+    {
+      "priority": 8.5,
+      "domain": "Runtime Error Investigation",
+      "experts": [
+        "expert-qa-popper",
+        "expert-formal-dijkstra",
+        "expert-engineer-peirce"
+      ],
+      "signals": [
+        "crash",
+        "segfault",
+        "stack overflow",
+        "runtime error",
+        "exception thrown"
+      ]
+    },
+    {
+      "priority": 8.7,
+      "domain": "Build & Config Errors",
+      "experts": [
+        "expert-engineer-peirce",
+        "expert-qa-popper"
+      ],
+      "signals": [
+        "build error",
+        "config error",
+        "import error",
+        "dependency error",
+        "broken"
       ]
     },
     {
@@ -163,7 +250,6 @@
       "signals": [
         "edge case",
         "vulnerability",
-        "race condition",
         "code review"
       ]
     },
@@ -181,7 +267,9 @@
         "compression",
         "signal to noise",
         "prompt length",
-        "token budget"
+        "token budget",
+        "too much context",
+        "summarize this for the prompt"
       ]
     },
     {
@@ -223,36 +311,75 @@
     ],
     "routeToPeirce": [
       "how do I write a test for",
-      "refactor the test suite",
       "how should I structure tests"
     ],
     "routeToKnuth": [
       "why is this slow",
       "profile this",
-      "optimize this path"
+      "optimize this path",
+      "benchmark this",
+      "memory usage is high",
+      "this query is slow"
     ],
     "routeToLiskov": [
       "design this interface",
       "refactor this abstraction",
-      "public api design"
+      "public api design",
+      "decouple these modules",
+      "this interface is getting too wide",
+      "break this dependency",
+      "reduce coupling"
     ],
     "routeToDijkstra": [
       "check the invariant",
       "reason about the state machine",
-      "fix this race condition"
+      "fix this race condition",
+      "model the state",
+      "find the invariant violation"
     ],
     "routeToSimon": [
       "design the agent loop",
       "how should this workflow route",
-      "define stopping conditions"
+      "define stopping conditions",
+      "plan this migration",
+      "sequence these steps",
+      "what order should we"
     ],
     "routeToShannon": [
       "compress this context",
       "improve retrieval quality",
-      "reduce prompt noise"
+      "reduce prompt noise",
+      "too much context",
+      "summarize this for the prompt",
+      "what can we drop"
     ],
     "routeToDennett": [
-      "should we add tests for"
+      "should we add tests for",
+      "what are our options",
+      "should we go with",
+      "explore alternatives"
+    ],
+    "routeToDescartes": [
+      "should we build this",
+      "design the system",
+      "create from scratch",
+      "new service from scratch"
+    ]
+  },
+  "negativeExamples": {
+    "doNotRouteToPeirce": [
+      "When the task is primarily about understanding or analyzing existing code structure, prefer Liskov or Descartes.",
+      "When 'refactor' means redesigning module boundaries or reducing coupling, prefer Liskov.",
+      "When 'implement' means 'design from scratch with no prior architecture', prefer Descartes first.",
+      "When the question is 'should we build this?', prefer Descartes or Dennett."
+    ],
+    "doNotRouteToPopper": [
+      "When the user asks 'how should I write tests?' or 'how to structure tests', prefer Peirce (test authoring, not debugging).",
+      "When there is no existing failure to diagnose, prefer Peirce for implementation."
+    ],
+    "doNotRouteToDennett": [
+      "When the user asks for a concrete implementation plan with steps and ordering, prefer Simon.",
+      "When only one viable approach exists, do not fabricate artificial alternatives."
     ]
   },
   "pipelines": [
@@ -290,6 +417,34 @@
         { "expert": "expert-qa-popper", "task": "Run automation against a known failure point. Prove it works." },
         { "expert": "expert-manager-blackmore", "task": "Register the automation in project rules." }
       ]
+    },
+    {
+      "name": "Deliberation Council",
+      "description": "Multi-perspective deliberation for ambiguous or high-stakes tasks where a single expert view is insufficient.",
+      "triggerSignals": [
+        "review from multiple angles",
+        "get a second opinion",
+        "what would different experts say",
+        "cross-cutting concern"
+      ],
+      "autoTrigger": "When routing confidence is below 0.5 AND two or more domains score within 0.15 of each other, automatically invoke the council.",
+      "steps": [
+        { "expert": "router", "task": "Identify the top 2-3 candidate experts. State the ambiguity and why each candidate is relevant." },
+        { "expert": "primary", "task": "Deliver the primary analysis using the highest-ranked expert's full method." },
+        { "expert": "secondary", "task": "Critique the primary analysis from the second expert's perspective. Identify blind spots, missing constraints, or alternative framings." },
+        { "expert": "tertiary", "task": "(Optional) If a third perspective adds non-redundant value, provide it. Otherwise skip." },
+        { "expert": "router", "task": "Synthesize the perspectives into a final recommendation. State which expert's view dominated and why. Note unresolved tensions." }
+      ]
+    },
+    {
+      "name": "Implement & Verify",
+      "description": "Adversarial verification pipeline where a separate expert actively tries to break the implementation.",
+      "steps": [
+        { "expert": "expert-engineer-peirce", "task": "Implement the solution. Write code + tests. State assumptions explicitly." },
+        { "expert": "expert-qa-popper", "task": "Adversarial review. Try to break the implementation: edge cases, invariant violations, untested paths. Issue VERDICT: PASS or VERDICT: FAIL with evidence." },
+        { "expert": "expert-engineer-peirce", "task": "If VERDICT: FAIL, fix the issues identified. Re-submit for verification." },
+        { "expert": "expert-manager-blackmore", "task": "Document the fix, the adversarial findings, and any patterns extracted." }
+      ]
     }
   ],
   "contracts": [
@@ -299,6 +454,25 @@
     "Prefer the user's stated assignment over opportunistic quick wins unless the user explicitly asks for a quick-win path.",
     "Never blend expert personas by default.",
     "When a handoff is required, name the current expert and the next expert explicitly.",
-    "If a task is ambiguous, still choose one primary expert and explain why."
-  ]
+    "If a task is ambiguous, still choose one primary expert and explain why.",
+    "Check negative routing examples before finalizing the expert selection. If a negative example matches, re-route to the suggested alternative.",
+    "For non-trivial tasks, use two-pass routing: first identify the broad domain, then refine to the specific sub-domain and lead expert within it."
+  ],
+  "refinementHeuristics": {
+    "description": "Second-pass refinement targets. After the first pass identifies a broad domain, refine using these sub-domain distinctions.",
+    "refinements": [
+      {
+        "broadDomain": "Debug Firefighting & Test Failures",
+        "subDomains": ["Test Failure Diagnosis", "Runtime Error Investigation", "Build & Config Errors"]
+      },
+      {
+        "broadDomain": "Pragmatic Implementation",
+        "subDomains": ["Quick Fix & Patch", "General Implementation", "Refactoring & Restructuring"]
+      },
+      {
+        "broadDomain": "Interfaces & Abstractions",
+        "subDomains": ["Interfaces & Abstractions", "Refactoring & Restructuring"]
+      }
+    ]
+  }
 }
