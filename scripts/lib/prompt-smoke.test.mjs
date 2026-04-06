@@ -386,13 +386,13 @@ test("every guardrail triple has all three required fields", () => {
 
 // ── Constraint Hierarchy ────────────────────────────────────────────
 
-test("system.json defines a constraintHierarchy with 3 layers", () => {
+test("system.json defines a constraintHierarchy with 4 layers", () => {
   assert.ok(system.constraintHierarchy, "Missing constraintHierarchy");
   assert.ok(system.constraintHierarchy.invariant, "Missing invariant");
   assert.strictEqual(
     system.constraintHierarchy.layers.length,
-    3,
-    "Expected 3 constraint layers"
+    4,
+    "Expected 4 constraint layers (Global Runtime, Router, Modifier, Expert Persona)"
   );
 });
 
@@ -631,6 +631,138 @@ test("no generated artifact exceeds the character budget", () => {
       `${filePath} is ${content.length} chars (max ${MAX_CHARS})`
     );
   }
+});
+
+// ── Modifier System ─────────────────────────────────────────────────
+
+test("system.modifiers is a non-empty array", () => {
+  assert.ok(
+    Array.isArray(system.modifiers) && system.modifiers.length > 0,
+    "Expected at least one modifier in prompt-system/modifiers/"
+  );
+});
+
+test("every modifier has required fields", () => {
+  for (const mod of system.modifiers) {
+    assert.ok(mod.id, `Modifier missing id`);
+    assert.ok(mod.name, `${mod.id}: missing name`);
+    assert.ok(mod.trigger, `${mod.id}: missing trigger`);
+    assert.ok(mod.description, `${mod.id}: missing description`);
+    assert.ok(
+      Array.isArray(mod.activationSignals) && mod.activationSignals.length > 0,
+      `${mod.id}: missing or empty activationSignals`
+    );
+    assert.ok(
+      Array.isArray(mod.deactivationSignals) && mod.deactivationSignals.length > 0,
+      `${mod.id}: missing or empty deactivationSignals`
+    );
+    assert.ok(
+      Array.isArray(mod.intensityLevels) && mod.intensityLevels.length > 0,
+      `${mod.id}: missing or empty intensityLevels`
+    );
+    assert.ok(mod.defaultIntensity, `${mod.id}: missing defaultIntensity`);
+    assert.ok(
+      Array.isArray(mod.boundaries) && mod.boundaries.length > 0,
+      `${mod.id}: missing or empty boundaries`
+    );
+    assert.ok(
+      Array.isArray(mod.safetyValves) && mod.safetyValves.length > 0,
+      `${mod.id}: missing or empty safetyValves`
+    );
+  }
+});
+
+test("every modifier intensity level has level, description, and rules", () => {
+  for (const mod of system.modifiers) {
+    for (const level of mod.intensityLevels) {
+      assert.ok(level.level, `${mod.id}: intensity missing level name`);
+      assert.ok(level.description, `${mod.id}/${level.level}: missing description`);
+      assert.ok(
+        Array.isArray(level.rules) && level.rules.length > 0,
+        `${mod.id}/${level.level}: missing or empty rules`
+      );
+    }
+  }
+});
+
+test("every modifier safety valve has condition and action", () => {
+  for (const mod of system.modifiers) {
+    for (const sv of mod.safetyValves) {
+      assert.ok(sv.condition, `${mod.id}: safety valve missing condition`);
+      assert.ok(sv.action, `${mod.id}: safety valve missing action`);
+    }
+  }
+});
+
+test("rich init renders Modifiers section when modifiers exist", () => {
+  const initFiles = [...artifacts].filter(([p]) => p.includes("00-init"));
+  for (const [filePath, content] of initFiles) {
+    assert.match(
+      content,
+      /## Modifiers/,
+      `${filePath}: missing Modifiers section`
+    );
+    assert.match(
+      content,
+      /Caveman Edict/,
+      `${filePath}: missing Caveman Edict modifier`
+    );
+    assert.match(
+      content,
+      /Safety Valves/,
+      `${filePath}: missing Safety Valves in modifier section`
+    );
+  }
+});
+
+test("codex AGENTS.md renders Modifiers section", () => {
+  const content = artifacts.get("compiled/codex/AGENTS.md");
+  assert.ok(content, "Missing compiled/codex/AGENTS.md");
+  assert.match(
+    content,
+    /## Modifiers/,
+    "compiled/codex/AGENTS.md: missing Modifiers section"
+  );
+  assert.match(
+    content,
+    /Caveman Edict/,
+    "compiled/codex/AGENTS.md: missing Caveman Edict modifier"
+  );
+});
+
+test("modifier section does not appear in expert artifacts", () => {
+  const experts = expertArtifacts(CURSOR_RICH, ".mdc");
+  for (const [filePath, content] of experts) {
+    assert.ok(
+      !content.includes("## Modifiers"),
+      `${filePath}: expert artifact should not contain a Modifiers section`
+    );
+  }
+});
+
+test("router renders Modifier Activation section", () => {
+  const routerFiles = [...artifacts].filter(([p]) => p.includes("01-router"));
+  for (const [filePath, content] of routerFiles) {
+    assert.match(
+      content,
+      /Modifier Activation/,
+      `${filePath}: missing Modifier Activation section`
+    );
+  }
+});
+
+test("constraint hierarchy includes Modifier layer", () => {
+  const layerNames = system.constraintHierarchy.layers.map((l) => l.name);
+  assert.ok(
+    layerNames.includes("Modifier"),
+    "constraintHierarchy missing Modifier layer"
+  );
+  const modIdx = layerNames.indexOf("Modifier");
+  const expertIdx = layerNames.indexOf("Expert Persona");
+  assert.ok(
+    modIdx < expertIdx,
+    "Modifier layer must come before Expert Persona layer"
+  );
 });
 
 // ── Ablation Manifest ───────────────────────────────────────────────

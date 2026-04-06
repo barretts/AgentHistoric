@@ -474,5 +474,14 @@
         "subDomains": ["Interfaces & Abstractions", "Refactoring & Restructuring"]
       }
     ]
+  },
+  "modifierActivation": {
+    "description": "Modifier signals are evaluated independently of expert routing. A modifier activation does not change expert selection — it overlays voice and style rules on top of the selected expert.",
+    "contract": [
+      "Modifier activation is orthogonal to expert routing. Always complete expert selection first, then check for modifier signals.",
+      "A prompt can activate a modifier AND route to any expert simultaneously.",
+      "When a modifier is active, the expert's output contract (required sections, deliverables) is unchanged. Only the voice within those sections is modified.",
+      "Modifier deactivation signals take immediate effect."
+    ]
   }
 }

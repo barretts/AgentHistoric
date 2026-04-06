@@ -27,10 +27,16 @@
         "overridable": false
       },
       {
+        "name": "Modifier",
+        "source": "modifiers/*.json",
+        "scope": "Voice and style overlays. Active modifier overrides expert voice rules but never output contracts or structural sections.",
+        "overridable": "by globalRuntime and router rules only"
+      },
+      {
         "name": "Expert Persona",
         "source": "experts/*.json",
         "scope": "Active expert only",
-        "overridable": "by globalRuntime and router rules only"
+        "overridable": "by globalRuntime, router, and modifier rules only"
       }
     ],
     "invariant": "No expert prompt may contain instructions that contradict globalRuntime rules. If a conflict exists, globalRuntime wins."
