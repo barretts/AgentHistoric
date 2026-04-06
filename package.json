@@ -9,6 +9,7 @@
     "build:prompts:release": "node scripts/build-prompt-system.mjs --no-debug",
     "test:regressions": "node scripts/run-regressions.mjs",
     "test:regressions:smoke": "node scripts/run-regressions.mjs --suite smoke",
-    "test:ablation": "node scripts/run-ablation.mjs"
+    "test:ablation": "node scripts/run-ablation.mjs",
+    "test:experiment": "node scripts/run-experiment.mjs"
   }
 }

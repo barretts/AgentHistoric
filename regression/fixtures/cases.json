@@ -59,7 +59,29 @@
       "AV3",
       "MO1",
       "MO2",
-      "MO3"
+      "MO3",
+      "TP4",
+      "TP5",
+      "TP6",
+      "SP-Li1",
+      "SP-Li2",
+      "SP-Sh1",
+      "SP-Sh2",
+      "SP-Si1",
+      "SP-Si2",
+      "SP-Dj1",
+      "SP-Dj2",
+      "SP-Kn1",
+      "SP-Kn2",
+      "SP-Bl1",
+      "SP-Bl2",
+      "MI1",
+      "MI2",
+      "MI3",
+      "PN1",
+      "PN2",
+      "PN3",
+      "PN4"
     ],
     "modifier": [
       "MO1",
@@ -86,7 +108,10 @@
     "twopass": [
       "TP1",
       "TP2",
-      "TP3"
+      "TP3",
+      "TP4",
+      "TP5",
+      "TP6"
     ],
     "council": [
       "CC1",
@@ -98,6 +123,31 @@
       "AV1",
       "AV2",
       "AV3"
+    ],
+    "specialist-pressure": [
+      "SP-Li1",
+      "SP-Li2",
+      "SP-Sh1",
+      "SP-Sh2",
+      "SP-Si1",
+      "SP-Si2",
+      "SP-Dj1",
+      "SP-Dj2",
+      "SP-Kn1",
+      "SP-Kn2",
+      "SP-Bl1",
+      "SP-Bl2"
+    ],
+    "mixed-intent": [
+      "MI1",
+      "MI2",
+      "MI3"
+    ],
+    "persona-vs-neutral": [
+      "PN1",
+      "PN2",
+      "PN3",
+      "PN4"
     ]
   },
   "cases": [
@@ -900,6 +950,39 @@
       "forbiddenBehaviors": ["Architecture detour for a build error"]
     },
     {
+      "id": "TP4",
+      "category": "two-pass",
+      "name": "Two-pass: performance broad to memory profiling specific",
+      "targets": ["cursor", "codex"],
+      "prompt": "The worker process keeps getting OOM-killed. Find out what is leaking and where the allocations spike.",
+      "expectedPrimaryExpert": "expert-performance-knuth",
+      "expectedSections": ["Metric", "Bottleneck", "Optimization Plan", "Tradeoffs", "Verification"],
+      "allowedHandoffs": ["expert-engineer-peirce"],
+      "forbiddenBehaviors": ["Treating an OOM as a generic bug", "No profiling strategy"]
+    },
+    {
+      "id": "TP5",
+      "category": "two-pass",
+      "name": "Two-pass: implementation broad to interface design specific",
+      "targets": ["cursor", "codex"],
+      "prompt": "Add webhook support to the notification service. The main challenge is defining a stable callback contract that third-party integrators can rely on.",
+      "expectedPrimaryExpert": "expert-abstractions-liskov",
+      "expectedSections": ["Boundary", "Contract", "Coupling Risks", "Recommended Abstraction", "Compatibility"],
+      "allowedHandoffs": ["expert-engineer-peirce", "expert-architect-descartes"],
+      "forbiddenBehaviors": ["Implementing without designing the contract first"]
+    },
+    {
+      "id": "TP6",
+      "category": "two-pass",
+      "name": "Two-pass: debug broad to concurrency formal specific",
+      "targets": ["cursor", "codex"],
+      "prompt": "Users are seeing stale data intermittently. The cache invalidation and the database write happen in separate goroutines with no synchronization.",
+      "expectedPrimaryExpert": "expert-formal-dijkstra",
+      "expectedSections": ["State Model", "Invariants", "Failure Paths", "Correction", "Verification"],
+      "allowedHandoffs": ["expert-qa-popper", "expert-engineer-peirce"],
+      "forbiddenBehaviors": ["Treating a concurrency issue as a simple cache bug", "No state model"]
+    },
+    {
       "id": "CC1",
       "category": "council",
       "name": "Council trigger: explicit multi-angle request",
@@ -1025,6 +1108,226 @@
       ],
       "expectedModifier": "modifier-caveman-edict",
       "behavioralAssertions": ["safetyValveActive"]
+    },
+
+    {
+      "id": "SP-Li1",
+      "category": "specialist-pressure",
+      "name": "Liskov: API versioning contract",
+      "targets": ["cursor", "codex"],
+      "prompt": "Our REST API needs backward-compatible versioning. Design the contract so old clients don't break when we add new fields.",
+      "expectedPrimaryExpert": "expert-abstractions-liskov",
+      "expectedSections": ["Boundary", "Contract", "Coupling Risks", "Recommended Abstraction", "Compatibility"],
+      "allowedHandoffs": ["expert-architect-descartes"],
+      "forbiddenBehaviors": ["Jumping to implementation without interface analysis", "No compatibility discussion"]
+    },
+    {
+      "id": "SP-Li2",
+      "category": "specialist-pressure",
+      "name": "Liskov: dependency inversion",
+      "targets": ["cursor", "codex"],
+      "prompt": "The payment service directly imports the email service. Invert this dependency so they communicate through an interface.",
+      "expectedPrimaryExpert": "expert-abstractions-liskov",
+      "expectedSections": ["Boundary", "Contract", "Coupling Risks", "Recommended Abstraction", "Compatibility"],
+      "allowedHandoffs": ["expert-engineer-peirce"],
+      "forbiddenBehaviors": ["Implementing without defining the interface first", "No coupling analysis"]
+    },
+    {
+      "id": "SP-Sh1",
+      "category": "specialist-pressure",
+      "name": "Shannon: log noise reduction",
+      "targets": ["cursor", "codex"],
+      "prompt": "Our logging pipeline produces 10GB per day but most of it is noise. Identify what signal matters and design a filtering strategy.",
+      "expectedPrimaryExpert": "expert-information-shannon",
+      "expectedSections": ["Signal", "Noise", "Compression Strategy", "Critical Retention", "Validation"],
+      "allowedHandoffs": ["expert-engineer-peirce"],
+      "forbiddenBehaviors": ["Adding more logging instead of filtering", "No validation of what is retained"]
+    },
+    {
+      "id": "SP-Sh2",
+      "category": "specialist-pressure",
+      "name": "Shannon: prompt compression",
+      "targets": ["cursor", "codex"],
+      "prompt": "The system prompt is 12,000 tokens and we need it under 4,000. Compress without losing the critical instructions.",
+      "expectedPrimaryExpert": "expert-information-shannon",
+      "expectedSections": ["Signal", "Noise", "Compression Strategy", "Critical Retention", "Validation"],
+      "allowedHandoffs": ["expert-orchestrator-simon"],
+      "forbiddenBehaviors": ["Arbitrary truncation without signal analysis", "No validation of compressed output"]
+    },
+    {
+      "id": "SP-Si1",
+      "category": "specialist-pressure",
+      "name": "Simon: CI pipeline design",
+      "targets": ["cursor", "codex"],
+      "prompt": "Design the CI pipeline for this monorepo. Define the stages, stopping conditions for each gate, and rollback procedure.",
+      "expectedPrimaryExpert": "expert-orchestrator-simon",
+      "expectedSections": ["Objective", "Procedure", "Stopping Conditions", "Procedure Risks", "Evaluation"],
+      "allowedHandoffs": ["expert-architect-descartes"],
+      "forbiddenBehaviors": ["No stopping conditions", "Pipeline stages with no ownership"]
+    },
+    {
+      "id": "SP-Si2",
+      "category": "specialist-pressure",
+      "name": "Simon: release workflow",
+      "targets": ["cursor", "codex"],
+      "prompt": "Define the release workflow: what gets deployed first, what gates block progression, and when do we rollback.",
+      "expectedPrimaryExpert": "expert-orchestrator-simon",
+      "expectedSections": ["Objective", "Procedure", "Stopping Conditions", "Procedure Risks", "Evaluation"],
+      "allowedHandoffs": ["expert-manager-blackmore"],
+      "forbiddenBehaviors": ["No rollback criteria", "No evaluation of workflow success"]
+    },
+    {
+      "id": "SP-Dj1",
+      "category": "specialist-pressure",
+      "name": "Dijkstra: deadlock analysis",
+      "targets": ["cursor", "codex"],
+      "prompt": "Two services hold locks on each other's resources. Model the lock ordering and prove whether a deadlock is possible.",
+      "expectedPrimaryExpert": "expert-formal-dijkstra",
+      "expectedSections": ["State Model", "Invariants", "Failure Paths", "Correction", "Verification"],
+      "allowedHandoffs": ["expert-qa-popper"],
+      "forbiddenBehaviors": ["No formal state model", "Treating the deadlock as a simple bug fix"]
+    },
+    {
+      "id": "SP-Dj2",
+      "category": "specialist-pressure",
+      "name": "Dijkstra: proof of loop termination",
+      "targets": ["cursor", "codex"],
+      "prompt": "This retry loop might not terminate. Define the variant and prove it always decreases.",
+      "expectedPrimaryExpert": "expert-formal-dijkstra",
+      "expectedSections": ["State Model", "Invariants", "Failure Paths", "Correction", "Verification"],
+      "allowedHandoffs": ["expert-engineer-peirce"],
+      "forbiddenBehaviors": ["No invariants defined", "Treating termination as an implementation detail"]
+    },
+    {
+      "id": "SP-Kn1",
+      "category": "specialist-pressure",
+      "name": "Knuth: database query optimization",
+      "targets": ["cursor", "codex"],
+      "prompt": "This SQL query scans 2M rows and takes 8 seconds. Profile the execution plan and find the algorithmic bottleneck.",
+      "expectedPrimaryExpert": "expert-performance-knuth",
+      "expectedSections": ["Metric", "Bottleneck", "Optimization Plan", "Tradeoffs", "Verification"],
+      "allowedHandoffs": ["expert-engineer-peirce"],
+      "forbiddenBehaviors": ["Optimization without examining the execution plan", "No measurement baseline"]
+    },
+    {
+      "id": "SP-Kn2",
+      "category": "specialist-pressure",
+      "name": "Knuth: memory leak profiling",
+      "targets": ["cursor", "codex"],
+      "prompt": "The Node.js process grows to 2GB over 24 hours. Profile heap allocations and identify the leak.",
+      "expectedPrimaryExpert": "expert-performance-knuth",
+      "expectedSections": ["Metric", "Bottleneck", "Optimization Plan", "Tradeoffs", "Verification"],
+      "allowedHandoffs": ["expert-engineer-peirce"],
+      "forbiddenBehaviors": ["Guessing without profiling", "No verification that the leak is fixed"]
+    },
+    {
+      "id": "SP-Bl1",
+      "category": "specialist-pressure",
+      "name": "Blackmore: incident retrospective",
+      "targets": ["cursor", "codex"],
+      "prompt": "Production went down for 30 minutes last night. Run the post-mortem: root cause, timeline, and preventive automation.",
+      "expectedPrimaryExpert": "expert-manager-blackmore",
+      "expectedSections": ["Root Cause", "Solution Pattern", "Automation Opportunity", "Verification"],
+      "allowedHandoffs": ["expert-qa-popper"],
+      "forbiddenBehaviors": ["No timeline", "No automation recommendation"]
+    },
+    {
+      "id": "SP-Bl2",
+      "category": "specialist-pressure",
+      "name": "Blackmore: onboarding pattern extraction",
+      "targets": ["cursor", "codex"],
+      "prompt": "New developers keep making the same config mistake. Extract the pattern and create a reusable onboarding checklist.",
+      "expectedPrimaryExpert": "expert-manager-blackmore",
+      "expectedSections": ["Root Cause", "Solution Pattern", "Automation Opportunity", "Verification"],
+      "allowedHandoffs": [],
+      "forbiddenBehaviors": ["No reusable pattern", "Only fixing the symptom"]
+    },
+
+    {
+      "id": "MI1",
+      "category": "mixed-intent",
+      "name": "Mixed: starts broad, should narrow to Liskov",
+      "targets": ["cursor", "codex"],
+      "prompt": "Refactor the auth module. The main problem is the token validator is tightly coupled to three different services through a shared interface that keeps changing.",
+      "expectedPrimaryExpert": "expert-abstractions-liskov",
+      "expectedSections": ["Boundary", "Contract", "Coupling Risks", "Recommended Abstraction", "Compatibility"],
+      "allowedHandoffs": ["expert-engineer-peirce"],
+      "forbiddenBehaviors": ["Treating this as a simple code refactor without interface analysis"]
+    },
+    {
+      "id": "MI2",
+      "category": "mixed-intent",
+      "name": "Mixed: starts as debug, should narrow to Knuth",
+      "targets": ["cursor", "codex"],
+      "prompt": "Something is wrong with the search endpoint. It used to return in 200ms but now it takes 5 seconds. No errors in the logs.",
+      "expectedPrimaryExpert": "expert-performance-knuth",
+      "expectedSections": ["Metric", "Bottleneck", "Optimization Plan", "Tradeoffs", "Verification"],
+      "allowedHandoffs": ["expert-qa-popper", "expert-engineer-peirce"],
+      "forbiddenBehaviors": ["Treating this as a bug when it is a performance regression", "No measurement"]
+    },
+    {
+      "id": "MI3",
+      "category": "mixed-intent",
+      "name": "Mixed: starts as implementation, should narrow to Simon",
+      "targets": ["cursor", "codex"],
+      "prompt": "We need to migrate 50 microservices from REST to gRPC. Build the implementation plan with phases, gates, and rollback criteria.",
+      "expectedPrimaryExpert": "expert-orchestrator-simon",
+      "expectedSections": ["Objective", "Procedure", "Stopping Conditions", "Procedure Risks", "Evaluation"],
+      "allowedHandoffs": ["expert-architect-descartes"],
+      "forbiddenBehaviors": ["Starting implementation without a phased plan", "No stopping conditions"]
+    },
+
+    {
+      "id": "PN1",
+      "category": "persona-vs-neutral",
+      "name": "Persona test: objective implementation task",
+      "targets": ["cursor", "codex"],
+      "prompt": "Write a function that validates email addresses using RFC 5322 rules. Include edge cases.",
+      "expectedPrimaryExpert": "expert-engineer-peirce",
+      "expectedSections": ["Answer"],
+      "allowedHandoffs": [],
+      "forbiddenBehaviors": ["No edge cases covered", "No verification approach"],
+      "experimentTag": "persona-vs-neutral",
+      "experimentHypothesis": "neutral-may-match"
+    },
+    {
+      "id": "PN2",
+      "category": "persona-vs-neutral",
+      "name": "Persona test: objective debugging task",
+      "targets": ["cursor", "codex"],
+      "prompt": "The sort function returns incorrect results for arrays with duplicate values. Find and fix the bug.",
+      "expectedPrimaryExpert": "expert-qa-popper",
+      "expectedSections": ["Hypothesis", "Reproduction", "Failure Coordinates", "Verification"],
+      "allowedHandoffs": ["expert-engineer-peirce"],
+      "forbiddenBehaviors": ["Guessing without analysis"],
+      "experimentTag": "persona-vs-neutral",
+      "experimentHypothesis": "neutral-may-match"
+    },
+    {
+      "id": "PN3",
+      "category": "persona-vs-neutral",
+      "name": "Persona test: subjective design task",
+      "targets": ["cursor", "codex"],
+      "prompt": "Design the architecture for a real-time collaborative document editor. Consider conflict resolution, offline support, and scaling.",
+      "expectedPrimaryExpert": "expert-architect-descartes",
+      "expectedSections": ["Assumptions", "Failure Modes", "Fallbacks", "Foundation", "Verification Flags"],
+      "allowedHandoffs": [],
+      "forbiddenBehaviors": ["No assumptions stated", "Missing failure mode analysis"],
+      "experimentTag": "persona-vs-neutral",
+      "experimentHypothesis": "persona-should-win"
+    },
+    {
+      "id": "PN4",
+      "category": "persona-vs-neutral",
+      "name": "Persona test: subjective exploration task",
+      "targets": ["cursor", "codex"],
+      "prompt": "We need to choose between event sourcing, CQRS, or a traditional CRUD approach for our order management system. Explore all three.",
+      "expectedPrimaryExpert": "expert-visionary-dennett",
+      "expectedSections": ["Draft A", "Draft B", "Draft C", "Recommendation"],
+      "allowedHandoffs": [],
+      "forbiddenBehaviors": ["Only one approach considered", "No trade-off analysis"],
+      "experimentTag": "persona-vs-neutral",
+      "experimentHypothesis": "persona-should-win"
     }
   ]
 }

@@ -43,6 +43,14 @@
         "what order",
         "sequence these",
         "plan this migration"
+      ],
+      "boostSignals": [
+        "phases",
+        "gates",
+        "rollback criteria",
+        "implementation plan with",
+        "stopping conditions",
+        "what gets deployed first"
       ]
     },
     {
@@ -128,6 +136,14 @@
         "one-line",
         "typo",
         "quick fix"
+      ],
+      "antiTriggers": [
+        "interface",
+        "coupling",
+        "module boundary",
+        "public api",
+        "invariant",
+        "state machine"
       ]
     },
     {
@@ -143,6 +159,23 @@
         "refactor",
         "how to",
         "add this feature"
+      ],
+      "antiTriggers": [
+        "interface",
+        "coupling",
+        "module boundary",
+        "public api",
+        "performance",
+        "latency",
+        "memory",
+        "bottleneck",
+        "invariant",
+        "state machine",
+        "concurrency",
+        "workflow",
+        "stopping condition",
+        "compression",
+        "signal to noise"
       ]
     },
     {
@@ -162,6 +195,20 @@
         "benchmark",
         "profiling",
         "allocating"
+      ],
+      "boostSignals": [
+        "slow",
+        "takes too long",
+        "seconds to respond",
+        "high memory",
+        "bottleneck",
+        "execution plan",
+        "heap",
+        "takes 5 seconds",
+        "takes 8 seconds",
+        "used to return in",
+        "oom-killed",
+        "grows to"
       ]
     },
     {
@@ -191,6 +238,13 @@
         "assertion error",
         "expected but got",
         "null pointer"
+      ],
+      "antiTriggers": [
+        "performance",
+        "latency",
+        "slow",
+        "takes too long",
+        "memory"
       ]
     },
     {
@@ -239,6 +293,13 @@
         "shared state",
         "race condition",
         "deadlock"
+      ],
+      "boostSignals": [
+        "prove",
+        "termination",
+        "lock ordering",
+        "variant",
+        "formal"
       ]
     },
     {
@@ -251,6 +312,14 @@
         "edge case",
         "vulnerability",
         "code review"
+      ],
+      "antiTriggers": [
+        "performance",
+        "latency",
+        "interface",
+        "coupling",
+        "workflow",
+        "stopping condition"
       ]
     },
     {
@@ -270,6 +339,17 @@
         "token budget",
         "too much context",
         "summarize this for the prompt"
+      ],
+      "boostSignals": [
+        "noise",
+        "filtering",
+        "what can we drop",
+        "log volume",
+        "10GB",
+        "tokens",
+        "under 4,000",
+        "12,000 tokens",
+        "compress without losing"
       ]
     },
     {
@@ -474,6 +554,12 @@
         "subDomains": ["Interfaces & Abstractions", "Refactoring & Restructuring"]
       }
     ]
+  },
+  "experimentFlags": {
+    "antiTriggers": true,
+    "boostSignals": true,
+    "twoPassRouting": true,
+    "description": "Feature flags for A/B experiment comparisons. Set to false to disable a feature and compare results."
   },
   "modifierActivation": {
     "description": "Modifier signals are evaluated independently of expert routing. A modifier activation does not change expert selection — it overlays voice and style rules on top of the selected expert.",

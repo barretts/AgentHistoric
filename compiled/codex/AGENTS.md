@@ -111,21 +111,21 @@ Safety Valves:
 ## Routing Order
 
 - Massive Codebase Sweeps -> .codex/skills/expert-architect-descartes -> .codex/skills/expert-engineer-peirce -> .codex/skills/expert-qa-popper -> .codex/skills/expert-manager-blackmore
-- Agent Workflows & Orchestration -> .codex/skills/expert-orchestrator-simon -> .codex/skills/expert-architect-descartes -> .codex/skills/expert-manager-blackmore
+- Agent Workflows & Orchestration -> .codex/skills/expert-orchestrator-simon -> .codex/skills/expert-architect-descartes -> .codex/skills/expert-manager-blackmore | Boost: "phases", "gates", "rollback criteria", "implementation plan with", "stopping conditions", "what gets deployed first"
 - Exploration & Ideation -> .codex/skills/expert-visionary-dennett -> .codex/skills/expert-ux-rogers
 - Foundational Architecture -> .codex/skills/expert-architect-descartes
 - Interfaces & Abstractions -> .codex/skills/expert-abstractions-liskov -> .codex/skills/expert-architect-descartes -> .codex/skills/expert-engineer-peirce
 - Refactoring & Restructuring -> .codex/skills/expert-abstractions-liskov -> .codex/skills/expert-engineer-peirce
-- Quick Fix & Patch -> .codex/skills/expert-engineer-peirce
-- General Implementation -> .codex/skills/expert-engineer-peirce
-- Performance & Scaling -> .codex/skills/expert-performance-knuth -> .codex/skills/expert-engineer-peirce -> .codex/skills/expert-architect-descartes
+- Quick Fix & Patch -> .codex/skills/expert-engineer-peirce | Anti-triggers: "interface", "coupling", "module boundary", "public api", "invariant", "state machine"
+- General Implementation -> .codex/skills/expert-engineer-peirce | Anti-triggers: "interface", "coupling", "module boundary", "public api", "performance", "latency", "memory", "bottleneck", "invariant", "state machine", "concurrency", "workflow", "stopping condition", "compression", "signal to noise"
+- Performance & Scaling -> .codex/skills/expert-performance-knuth -> .codex/skills/expert-engineer-peirce -> .codex/skills/expert-architect-descartes | Boost: "slow", "takes too long", "seconds to respond", "high memory", "bottleneck", "execution plan", "heap", "takes 5 seconds", "takes 8 seconds", "used to return in", "oom-killed", "grows to"
 - Test Authoring -> .codex/skills/expert-qa-popper -> .codex/skills/expert-engineer-peirce
-- Test Failure Diagnosis -> .codex/skills/expert-qa-popper -> .codex/skills/expert-engineer-peirce
+- Test Failure Diagnosis -> .codex/skills/expert-qa-popper -> .codex/skills/expert-engineer-peirce | Anti-triggers: "performance", "latency", "slow", "takes too long", "memory"
 - Runtime Error Investigation -> .codex/skills/expert-qa-popper -> .codex/skills/expert-formal-dijkstra -> .codex/skills/expert-engineer-peirce
 - Build & Config Errors -> .codex/skills/expert-engineer-peirce -> .codex/skills/expert-qa-popper
-- State, Concurrency & Invariants -> .codex/skills/expert-formal-dijkstra -> .codex/skills/expert-qa-popper -> .codex/skills/expert-engineer-peirce
-- Bug Hunting & Edge Cases -> .codex/skills/expert-qa-popper
-- Context Compression & Retrieval Quality -> .codex/skills/expert-information-shannon -> .codex/skills/expert-orchestrator-simon -> .codex/skills/expert-engineer-peirce
+- State, Concurrency & Invariants -> .codex/skills/expert-formal-dijkstra -> .codex/skills/expert-qa-popper -> .codex/skills/expert-engineer-peirce | Boost: "prove", "termination", "lock ordering", "variant", "formal"
+- Bug Hunting & Edge Cases -> .codex/skills/expert-qa-popper | Anti-triggers: "performance", "latency", "interface", "coupling", "workflow", "stopping condition"
+- Context Compression & Retrieval Quality -> .codex/skills/expert-information-shannon -> .codex/skills/expert-orchestrator-simon -> .codex/skills/expert-engineer-peirce | Boost: "noise", "filtering", "what can we drop", "log volume", "10GB", "tokens", "under 4,000", "12,000 tokens", "compress without losing"
 - Security & 3PP Vulnerabilities -> .codex/skills/expert-qa-popper -> .codex/skills/expert-engineer-peirce
 - Retrospective & Pattern Extraction -> .codex/skills/expert-manager-blackmore
 

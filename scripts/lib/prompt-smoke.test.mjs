@@ -768,6 +768,126 @@ test("constraint hierarchy includes Modifier layer", () => {
 // ── Ablation Manifest ───────────────────────────────────────────────
 
 import { readFile } from "node:fs/promises";
+import { loadRegressionFixtures, routePrompt } from "./regression.mjs";
+
+// ── Experiment Framework: Suites ──────────────────────────────────
+
+test("cases.json has specialist-pressure suite with at least 12 cases", async () => {
+  const fixtures = await loadRegressionFixtures(workspaceRoot);
+  const suite = fixtures.suites["specialist-pressure"];
+  assert.ok(suite, "Missing specialist-pressure suite");
+  assert.ok(suite.length >= 12, `Expected >= 12 specialist-pressure cases, got ${suite.length}`);
+});
+
+test("cases.json has mixed-intent suite with at least 3 cases", async () => {
+  const fixtures = await loadRegressionFixtures(workspaceRoot);
+  const suite = fixtures.suites["mixed-intent"];
+  assert.ok(suite, "Missing mixed-intent suite");
+  assert.ok(suite.length >= 3, `Expected >= 3 mixed-intent cases, got ${suite.length}`);
+});
+
+test("cases.json has persona-vs-neutral suite with at least 4 cases", async () => {
+  const fixtures = await loadRegressionFixtures(workspaceRoot);
+  const suite = fixtures.suites["persona-vs-neutral"];
+  assert.ok(suite, "Missing persona-vs-neutral suite");
+  assert.ok(suite.length >= 4, `Expected >= 4 persona-vs-neutral cases, got ${suite.length}`);
+});
+
+test("all suite case IDs reference existing cases", async () => {
+  const fixtures = await loadRegressionFixtures(workspaceRoot);
+  const caseIds = new Set(fixtures.cases.map((c) => c.id));
+  for (const [suiteName, ids] of Object.entries(fixtures.suites)) {
+    for (const id of ids) {
+      assert.ok(caseIds.has(id), `Suite "${suiteName}" references non-existent case "${id}"`);
+    }
+  }
+});
+
+test("twopass suite has at least 6 cases after expansion", async () => {
+  const fixtures = await loadRegressionFixtures(workspaceRoot);
+  const suite = fixtures.suites["twopass"];
+  assert.ok(suite.length >= 6, `Expected >= 6 twopass cases, got ${suite.length}`);
+});
+
+// ── Experiment Framework: Anti-Triggers & Boost Signals ───────────
+
+test("router has antiTriggers on at least 3 heuristics", () => {
+  const withAnti = system.router.routingHeuristics.filter((h) => h.antiTriggers?.length > 0);
+  assert.ok(withAnti.length >= 3, `Expected >= 3 heuristics with antiTriggers, got ${withAnti.length}`);
+});
+
+test("router has boostSignals on at least 3 heuristics", () => {
+  const withBoost = system.router.routingHeuristics.filter((h) => h.boostSignals?.length > 0);
+  assert.ok(withBoost.length >= 3, `Expected >= 3 heuristics with boostSignals, got ${withBoost.length}`);
+});
+
+test("router has experimentFlags section", () => {
+  const flags = system.router.experimentFlags;
+  assert.ok(flags, "Missing experimentFlags in router.json");
+  assert.strictEqual(typeof flags.antiTriggers, "boolean", "antiTriggers flag must be boolean");
+  assert.strictEqual(typeof flags.boostSignals, "boolean", "boostSignals flag must be boolean");
+  assert.strictEqual(typeof flags.twoPassRouting, "boolean", "twoPassRouting flag must be boolean");
+});
+
+test("rich router renders anti-triggers in heuristics table", () => {
+  const routerFiles = [...artifacts].filter(([p]) => p.includes("01-router"));
+  for (const [filePath, content] of routerFiles) {
+    assert.match(
+      content,
+      /Anti-Triggers/,
+      `${filePath}: missing Anti-Triggers column in heuristics table`
+    );
+  }
+});
+
+// ── Experiment Framework: persona-vs-neutral cases have experiment tags ─
+
+test("persona-vs-neutral cases have experimentTag and experimentHypothesis", async () => {
+  const fixtures = await loadRegressionFixtures(workspaceRoot);
+  const pnCases = fixtures.cases.filter((c) => c.category === "persona-vs-neutral");
+  assert.ok(pnCases.length >= 4, `Expected >= 4 persona-vs-neutral cases`);
+  for (const c of pnCases) {
+    assert.ok(c.experimentTag, `${c.id}: missing experimentTag`);
+    assert.ok(c.experimentHypothesis, `${c.id}: missing experimentHypothesis`);
+  }
+});
+
+// ── Experiment Framework: Local Routing Smoke Tests ───────────────
+
+test("routePrompt routes specialist-pressure cases to correct experts", async () => {
+  const fixtures = await loadRegressionFixtures(workspaceRoot);
+  const spCases = fixtures.cases.filter((c) => c.category === "specialist-pressure");
+  let correct = 0;
+  const misses = [];
+  for (const c of spCases) {
+    const routed = routePrompt(system, c.prompt);
+    if (routed === c.expectedPrimaryExpert) {
+      correct++;
+    } else {
+      misses.push(`${c.id}: expected ${c.expectedPrimaryExpert}, got ${routed}`);
+    }
+  }
+  const accuracy = correct / spCases.length;
+  assert.ok(
+    accuracy >= 0.5,
+    `Specialist-pressure local routing accuracy is ${(accuracy * 100).toFixed(0)}% (need >= 50%). Misses:\n${misses.join("\n")}`
+  );
+});
+
+test("routePrompt routes mixed-intent cases with at least 50% accuracy", async () => {
+  const fixtures = await loadRegressionFixtures(workspaceRoot);
+  const miCases = fixtures.cases.filter((c) => c.category === "mixed-intent");
+  let correct = 0;
+  for (const c of miCases) {
+    const routed = routePrompt(system, c.prompt);
+    if (routed === c.expectedPrimaryExpert) correct++;
+  }
+  const accuracy = correct / miCases.length;
+  assert.ok(
+    accuracy >= 0.5,
+    `Mixed-intent local routing accuracy is ${(accuracy * 100).toFixed(0)}% (need >= 50%)`
+  );
+});
 
 test("ablation manifest has at least 5 sections with required fields", async () => {
   const raw = await readFile(
