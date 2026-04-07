@@ -138,13 +138,15 @@ export function renderRichRouter(system, options = {}) {
 
   // Routing heuristics table
   out += `## 2. Routing Heuristics\n\n`;
-  out += `Analyze the prompt against these heuristics, in priority order:\n\n`;
-  out += `| Priority | Domain | Expert(s) | Keywords / Signals |\n`;
-  out += `|----------|--------|-----------|-------------------|\n`;
+  out += `Analyze the prompt against these heuristics, in priority order. Anti-triggers deprioritize a domain when present; boost signals increase confidence.\n\n`;
+  out += `| Priority | Domain | Expert(s) | Keywords / Signals | Anti-Triggers | Boost Signals |\n`;
+  out += `|----------|--------|-----------|-------------------|---------------|---------------|\n`;
   for (const h of r.routingHeuristics) {
     const experts = h.experts.map((id) => humanizeExpertId(id)).join(" -> ");
     const signals = h.signals.map((s) => `"${s}"`).join(", ");
-    out += `| ${h.priority} | ${h.domain} | ${experts} | ${signals} |\n`;
+    const antiTriggers = (h.antiTriggers || []).map((s) => `"${s}"`).join(", ") || "-";
+    const boostSignals = (h.boostSignals || []).map((s) => `"${s}"`).join(", ") || "-";
+    out += `| ${h.priority} | ${h.domain} | ${experts} | ${signals} | ${antiTriggers} | ${boostSignals} |\n`;
   }
 
   // Disambiguation

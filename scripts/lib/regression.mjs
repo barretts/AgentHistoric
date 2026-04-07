@@ -176,7 +176,10 @@ export function parseAgentCliResult(rawText) {
     .filter(Boolean);
   const lastLine = lines.at(-1);
   const envelope = JSON.parse(lastLine);
-  return JSON.parse(envelope.result);
+  let result = envelope.result;
+  // Strip markdown code fences that the agent CLI sometimes wraps around JSON
+  result = result.replace(/^```(?:json)?\s*\n?/, "").replace(/\n?```\s*$/, "");
+  return JSON.parse(result);
 }
 
 export function parseCodexJsonlResult(rawText) {
@@ -241,7 +244,7 @@ export function routePrompt(system, prompt) {
     return "expert-visionary-dennett";
   }
 
-  if (text.includes("reusable pattern") || text.includes("keep hitting the same bug")) {
+  if (text.includes("reusable pattern") || text.includes("keep hitting the same bug") || text.includes("extract the pattern") || text.includes("same config mistake")) {
     return "expert-manager-blackmore";
   }
 
@@ -249,13 +252,34 @@ export function routePrompt(system, prompt) {
     return "expert-manager-blackmore";
   }
 
-  // Phase 2: Heuristic signal matching (sorted by priority)
+  // Phase 2: Heuristic signal matching with anti-triggers and boost signals
+  const experimentFlags = router.experimentFlags || {};
+  const useAntiTriggers = experimentFlags.antiTriggers !== false;
+  const useBoostSignals = experimentFlags.boostSignals !== false;
+
   const orderedHeuristics = [...router.routingHeuristics].sort(
     (left, right) => left.priority - right.priority
   );
 
+  // First pass: check for boost signal matches (these get priority)
+  if (useBoostSignals) {
+    for (const heuristic of orderedHeuristics) {
+      if (heuristic.boostSignals && matchesAny(text, heuristic.boostSignals)) {
+        const candidate = heuristic.experts[0];
+        if (!isNegativeMatch(router.negativeExamples, candidate, text)) {
+          return candidate;
+        }
+      }
+    }
+  }
+
+  // Second pass: normal signal matching with anti-trigger filtering
   for (const heuristic of orderedHeuristics) {
     if (matchesAny(text, heuristic.signals)) {
+      // Skip this heuristic if anti-triggers match
+      if (useAntiTriggers && heuristic.antiTriggers && matchesAny(text, heuristic.antiTriggers)) {
+        continue;
+      }
       const candidate = heuristic.experts[0];
       if (!isNegativeMatch(router.negativeExamples, candidate, text)) {
         return candidate;

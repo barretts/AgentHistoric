@@ -61,10 +61,18 @@ export function renderAgents(system, options = {}) {
     `\n\n## Routing Order\n\n` +
     toList(
       system.router.routingHeuristics.map(
-        (h) =>
-          `${h.domain} -> ${h.experts
+        (h) => {
+          let line = `${h.domain} -> ${h.experts
             .map((id) => `.codex/skills/${skillPathForExpert(system, id)}`)
-            .join(" -> ")}`
+            .join(" -> ")}`;
+          if (h.antiTriggers?.length) {
+            line += ` | Anti-triggers: ${h.antiTriggers.map((s) => `"${s}"`).join(", ")}`;
+          }
+          if (h.boostSignals?.length) {
+            line += ` | Boost: ${h.boostSignals.map((s) => `"${s}"`).join(", ")}`;
+          }
+          return line;
+        }
       )
     ) +
     (r.negativeExamples
