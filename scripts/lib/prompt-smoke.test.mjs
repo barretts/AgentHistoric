@@ -903,6 +903,38 @@ test("twopass suite has at least 6 cases after expansion", async () => {
   assert.ok(suite.length >= 6, `Expected >= 6 twopass cases, got ${suite.length}`);
 });
 
+// ── Experiment Framework: Model Parity Suite ──────────────────────
+
+test("cases.json has model-parity suite with at least 10 cases", async () => {
+  const fixtures = await loadRegressionFixtures(workspaceRoot);
+  const suite = fixtures.suites["model-parity"];
+  assert.ok(suite, "Missing model-parity suite");
+  assert.ok(suite.length >= 10, `Expected >= 10 model-parity cases, got ${suite.length}`);
+});
+
+test("model-parity cases have expectedParity field", async () => {
+  const fixtures = await loadRegressionFixtures(workspaceRoot);
+  const parityIds = new Set(fixtures.suites["model-parity"]);
+  const parityCases = fixtures.cases.filter((c) => parityIds.has(c.id));
+  for (const c of parityCases) {
+    assert.strictEqual(
+      typeof c.expectedParity,
+      "boolean",
+      `${c.id}: model-parity case must have expectedParity (boolean)`
+    );
+  }
+});
+
+test("model-parity cases with expectedParity:false have a parityNote", async () => {
+  const fixtures = await loadRegressionFixtures(workspaceRoot);
+  const parityIds = new Set(fixtures.suites["model-parity"]);
+  const divergent = fixtures.cases.filter((c) => parityIds.has(c.id) && c.expectedParity === false);
+  assert.ok(divergent.length >= 1, "Expected at least 1 known-divergent case in model-parity suite");
+  for (const c of divergent) {
+    assert.ok(c.parityNote, `${c.id}: divergent case must have a parityNote explaining the divergence`);
+  }
+});
+
 // ── Experiment Framework: Anti-Triggers & Boost Signals ───────────
 
 test("router has antiTriggers on at least 3 heuristics", () => {
