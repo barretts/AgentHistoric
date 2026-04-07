@@ -148,6 +148,21 @@
       "PN2",
       "PN3",
       "PN4"
+    ],
+    "model-parity": [
+      "R1",
+      "R2",
+      "R3",
+      "R4",
+      "RB1",
+      "RB3",
+      "RB5",
+      "RB6",
+      "RB7",
+      "TP1",
+      "TP2",
+      "SP-Kn2",
+      "MI3"
     ]
   },
   "cases": [
@@ -160,6 +175,7 @@
         "codex"
       ],
       "prompt": "Refactor this function to remove duplication and add tests.",
+      "expectedParity": true,
       "expectedPrimaryExpert": "expert-engineer-peirce",
       "expectedSections": [
         "Answer"
@@ -180,6 +196,7 @@
         "codex"
       ],
       "prompt": "Design the data model and trust boundaries for this feature.",
+      "expectedParity": true,
       "expectedPrimaryExpert": "expert-architect-descartes",
       "expectedSections": [
         "Assumptions",
@@ -203,6 +220,7 @@
         "codex"
       ],
       "prompt": "Tests are failing with a null pointer. Find the root cause.",
+      "expectedParity": true,
       "expectedPrimaryExpert": "expert-qa-popper",
       "expectedSections": [
         "Hypothesis",
@@ -228,6 +246,7 @@
         "codex"
       ],
       "prompt": "Give me three different ways to redesign this workflow.",
+      "expectedParity": true,
       "expectedPrimaryExpert": "expert-visionary-dennett",
       "expectedSections": [
         "Draft A",
@@ -822,6 +841,7 @@
       "name": "Shannon: context overflow",
       "targets": ["cursor", "codex"],
       "prompt": "There's too much context in this prompt. What can we drop without losing signal?",
+      "expectedParity": true,
       "expectedPrimaryExpert": "expert-information-shannon",
       "expectedSections": ["Signal", "Noise", "Compression Strategy", "Critical Retention", "Validation"],
       "allowedHandoffs": ["expert-orchestrator-simon"],
@@ -844,6 +864,7 @@
       "name": "Dennett: explore options",
       "targets": ["cursor", "codex"],
       "prompt": "What are our options for the caching layer? Explore alternatives.",
+      "expectedParity": true,
       "expectedPrimaryExpert": "expert-visionary-dennett",
       "expectedSections": ["Draft A", "Draft B", "Draft C", "Recommendation"],
       "allowedHandoffs": [],
@@ -866,6 +887,7 @@
       "name": "Dijkstra: state model",
       "targets": ["cursor", "codex"],
       "prompt": "Model the state transitions for this payment flow. Find the invariant violation.",
+      "expectedParity": true,
       "expectedPrimaryExpert": "expert-formal-dijkstra",
       "expectedSections": ["State Model", "Invariants", "Failure Paths", "Correction", "Verification"],
       "allowedHandoffs": ["expert-qa-popper"],
@@ -877,6 +899,7 @@
       "name": "Knuth: memory profiling",
       "targets": ["cursor", "codex"],
       "prompt": "Memory usage is high in the worker process. Benchmark this and find the allocation hotspot.",
+      "expectedParity": true,
       "expectedPrimaryExpert": "expert-performance-knuth",
       "expectedSections": ["Metric", "Bottleneck", "Optimization Plan", "Tradeoffs", "Verification"],
       "allowedHandoffs": ["expert-engineer-peirce"],
@@ -888,6 +911,7 @@
       "name": "Descartes: new service architecture",
       "targets": ["cursor", "codex"],
       "prompt": "Should we build this new notification service? Design the system from scratch.",
+      "expectedParity": true,
       "expectedPrimaryExpert": "expert-architect-descartes",
       "expectedSections": ["Assumptions", "Failure Modes", "Fallbacks", "Foundation", "Verification Flags"],
       "allowedHandoffs": ["expert-engineer-peirce"],
@@ -922,6 +946,7 @@
       "name": "Two-pass: debug broad to test failure specific",
       "targets": ["cursor", "codex"],
       "prompt": "The assertion error in the payment test says expected 200 but got 401.",
+      "expectedParity": true,
       "expectedPrimaryExpert": "expert-qa-popper",
       "expectedSections": ["Hypothesis", "Reproduction", "Failure Coordinates", "Verification"],
       "allowedHandoffs": ["expert-engineer-peirce"],
@@ -933,6 +958,7 @@
       "name": "Two-pass: implementation broad to refactoring specific",
       "targets": ["cursor", "codex"],
       "prompt": "Refactor the auth module to extract the token validation into a separate module and reduce coupling.",
+      "expectedParity": true,
       "expectedPrimaryExpert": "expert-abstractions-liskov",
       "expectedSections": ["Boundary", "Contract", "Coupling Risks", "Recommended Abstraction", "Compatibility"],
       "allowedHandoffs": ["expert-engineer-peirce"],
@@ -1218,6 +1244,8 @@
       "name": "Knuth: memory leak profiling",
       "targets": ["cursor", "codex"],
       "prompt": "The Node.js process grows to 2GB over 24 hours. Profile heap allocations and identify the leak.",
+      "expectedParity": false,
+      "parityNote": "GPT routes to Popper (debug), Claude routes correctly to Knuth (performance)",
       "expectedPrimaryExpert": "expert-performance-knuth",
       "expectedSections": ["Metric", "Bottleneck", "Optimization Plan", "Tradeoffs", "Verification"],
       "allowedHandoffs": ["expert-engineer-peirce"],
@@ -1275,6 +1303,8 @@
       "name": "Mixed: starts as implementation, should narrow to Simon",
       "targets": ["cursor", "codex"],
       "prompt": "We need to migrate 50 microservices from REST to gRPC. Build the implementation plan with phases, gates, and rollback criteria.",
+      "expectedParity": false,
+      "parityNote": "Claude routes to Descartes (architecture), GPT routes correctly to Simon (orchestration)",
       "expectedPrimaryExpert": "expert-orchestrator-simon",
       "ambiguousBetween": ["expert-orchestrator-simon", "expert-architect-descartes"],
       "expectedSections": ["Objective", "Procedure", "Stopping Conditions", "Procedure Risks", "Evaluation"],

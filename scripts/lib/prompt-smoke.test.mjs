@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import path from "node:path";
 
 import { generateArtifacts } from "./build-prompt-system.mjs";
-import { loadPromptSystemSpec } from "./prompt-system.mjs";
+import { loadPromptSystemSpec, resolveRequiredSections } from "./prompt-system.mjs";
 
 const workspaceRoot = path.resolve(import.meta.dirname, "..", "..");
 const system = await loadPromptSystemSpec(workspaceRoot);
@@ -36,6 +36,100 @@ function expertArtifacts(dir, ext) {
       !p.includes("01-router")
   );
 }
+
+// ── PROTOCOL: Cross-Target Semantic Equivalence ─────────────────────
+
+function extractExpertReferences(content) {
+  return [...new Set([...content.matchAll(/expert-[\w-]+/g)].map(m => m[0]))].sort();
+}
+
+function extractRoutingDomains(content) {
+  const domains = [];
+  for (const h of system.router.routingHeuristics) {
+    if (content.includes(h.domain)) domains.push(h.domain);
+  }
+  return domains.sort();
+}
+
+function extractContractRules(content) {
+  return system.router.contracts.filter(rule => content.includes(rule));
+}
+
+function extractNegativeExampleKeys(content) {
+  return Object.keys(system.router.negativeExamples).filter(key => {
+    const rules = system.router.negativeExamples[key];
+    return rules.some(rule => content.includes(rule));
+  });
+}
+
+test("PROTOCOL: all targets reference the same set of expert IDs in init artifacts", () => {
+  const claudeInit = artifacts.get("compiled/claude/rules/00-init.md");
+  const cursorInit = artifacts.get("compiled/cursor/rules/00-init.mdc");
+  const codexAgents = artifacts.get("compiled/codex/AGENTS.md");
+
+  const claudeExperts = extractExpertReferences(claudeInit);
+  const cursorExperts = extractExpertReferences(cursorInit);
+  const codexExperts = extractExpertReferences(codexAgents);
+
+  assert.deepEqual(claudeExperts, cursorExperts, "Claude and Cursor init must reference same experts");
+  assert.deepEqual(claudeExperts, codexExperts, "Claude and Codex must reference same experts in init/AGENTS.md");
+});
+
+test("PROTOCOL: all targets render the same routing domains", () => {
+  const claudeRouter = artifacts.get("compiled/claude/rules/01-router.md");
+  const codexAgents = artifacts.get("compiled/codex/AGENTS.md");
+
+  const claudeDomains = extractRoutingDomains(claudeRouter);
+  const codexDomains = extractRoutingDomains(codexAgents);
+
+  assert.deepEqual(claudeDomains, codexDomains, "Rich router and Codex AGENTS.md must render the same routing domains");
+});
+
+test("PROTOCOL: all targets render the same router contract rules", () => {
+  const claudeRouter = artifacts.get("compiled/claude/rules/01-router.md");
+  const codexAgents = artifacts.get("compiled/codex/AGENTS.md");
+
+  const claudeContracts = extractContractRules(claudeRouter);
+  const codexContracts = extractContractRules(codexAgents);
+
+  assert.deepEqual(claudeContracts, codexContracts, "Rich router and Codex must render the same contract rules");
+});
+
+test("PROTOCOL: all targets render the same negative routing example keys", () => {
+  const claudeRouter = artifacts.get("compiled/claude/rules/01-router.md");
+  const codexAgents = artifacts.get("compiled/codex/AGENTS.md");
+
+  const claudeNeg = extractNegativeExampleKeys(claudeRouter);
+  const codexNeg = extractNegativeExampleKeys(codexAgents);
+
+  assert.deepEqual(claudeNeg, codexNeg, "Rich and Codex must render the same negative routing example categories");
+});
+
+test("PROTOCOL: every expert has matching required sections across rich and codex artifacts", () => {
+  for (const expert of system.experts) {
+    const { defaultSections, complexSections } = resolveRequiredSections(expert.requiredSections);
+    const allSections = [...new Set([...defaultSections, ...complexSections])];
+
+    const richContent = artifacts.get(`compiled/cursor/rules/${expert.id}.mdc`);
+    const codexContent = [...artifacts].find(
+      ([p]) => p.includes(expert.codexSkillDir) && p.includes("SKILL.md")
+    )?.[1];
+
+    assert.ok(richContent, `Missing cursor artifact for ${expert.id}`);
+    assert.ok(codexContent, `Missing codex SKILL.md for ${expert.id}`);
+
+    for (const section of allSections) {
+      assert.ok(
+        richContent.includes(section),
+        `${expert.id} cursor artifact missing required section: ${section}`
+      );
+      assert.ok(
+        codexContent.includes(section),
+        `${expert.id} codex SKILL.md missing required section: ${section}`
+      );
+    }
+  }
+});
 
 // ── Frontmatter ─────────────────────────────────────────────────────
 
@@ -807,6 +901,38 @@ test("twopass suite has at least 6 cases after expansion", async () => {
   const fixtures = await loadRegressionFixtures(workspaceRoot);
   const suite = fixtures.suites["twopass"];
   assert.ok(suite.length >= 6, `Expected >= 6 twopass cases, got ${suite.length}`);
+});
+
+// ── Experiment Framework: Model Parity Suite ──────────────────────
+
+test("cases.json has model-parity suite with at least 10 cases", async () => {
+  const fixtures = await loadRegressionFixtures(workspaceRoot);
+  const suite = fixtures.suites["model-parity"];
+  assert.ok(suite, "Missing model-parity suite");
+  assert.ok(suite.length >= 10, `Expected >= 10 model-parity cases, got ${suite.length}`);
+});
+
+test("model-parity cases have expectedParity field", async () => {
+  const fixtures = await loadRegressionFixtures(workspaceRoot);
+  const parityIds = new Set(fixtures.suites["model-parity"]);
+  const parityCases = fixtures.cases.filter((c) => parityIds.has(c.id));
+  for (const c of parityCases) {
+    assert.strictEqual(
+      typeof c.expectedParity,
+      "boolean",
+      `${c.id}: model-parity case must have expectedParity (boolean)`
+    );
+  }
+});
+
+test("model-parity cases with expectedParity:false have a parityNote", async () => {
+  const fixtures = await loadRegressionFixtures(workspaceRoot);
+  const parityIds = new Set(fixtures.suites["model-parity"]);
+  const divergent = fixtures.cases.filter((c) => parityIds.has(c.id) && c.expectedParity === false);
+  assert.ok(divergent.length >= 1, "Expected at least 1 known-divergent case in model-parity suite");
+  for (const c of divergent) {
+    assert.ok(c.parityNote, `${c.id}: divergent case must have a parityNote explaining the divergence`);
+  }
 });
 
 // ── Experiment Framework: Anti-Triggers & Boost Signals ───────────
