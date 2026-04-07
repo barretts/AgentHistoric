@@ -387,7 +387,16 @@
       "tests are failing",
       "got an error",
       "build error in payment service",
-      "help debug this test failure"
+      "help debug this test failure",
+      "run the tests",
+      "test started failing",
+      "check if this migration is safe",
+      "adversarial tester",
+      "try to break it",
+      "find anything that could fail",
+      "find and fix the bug",
+      "verify this actually works",
+      "tests are flaky"
     ],
     "routeToPeirce": [
       "how do I write a test for",
@@ -423,7 +432,9 @@
       "define stopping conditions",
       "plan this migration",
       "sequence these steps",
-      "what order should we"
+      "what order should we",
+      "implementation steps",
+      "in the right order"
     ],
     "routeToShannon": [
       "compress this context",
@@ -437,13 +448,17 @@
       "should we add tests for",
       "what are our options",
       "should we go with",
-      "explore alternatives"
+      "explore alternatives",
+      "explore all three",
+      "choose between"
     ],
     "routeToDescartes": [
       "should we build this",
       "design the system",
       "create from scratch",
-      "new service from scratch"
+      "new service from scratch",
+      "design the architecture",
+      "cross-cutting concern"
     ]
   },
   "negativeExamples": {

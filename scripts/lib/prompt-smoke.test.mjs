@@ -768,7 +768,7 @@ test("constraint hierarchy includes Modifier layer", () => {
 // ── Ablation Manifest ───────────────────────────────────────────────
 
 import { readFile } from "node:fs/promises";
-import { loadRegressionFixtures, routePrompt } from "./regression.mjs";
+import { loadRegressionFixtures, routePrompt, evaluateResponse } from "./regression.mjs";
 
 // ── Experiment Framework: Suites ──────────────────────────────────
 
@@ -886,6 +886,49 @@ test("routePrompt routes mixed-intent cases with at least 50% accuracy", async (
   assert.ok(
     accuracy >= 0.5,
     `Mixed-intent local routing accuracy is ${(accuracy * 100).toFixed(0)}% (need >= 50%)`
+  );
+});
+
+test("ambiguousBetween cases exist and have valid expert references", async () => {
+  const fixtures = await loadRegressionFixtures(workspaceRoot);
+  const ambiguousCases = fixtures.cases.filter((c) => c.ambiguousBetween?.length > 0);
+  assert.ok(ambiguousCases.length >= 3, `Expected >= 3 cases with ambiguousBetween, got ${ambiguousCases.length}`);
+  const expertIds = new Set(system.experts.map((e) => e.id));
+  for (const c of ambiguousCases) {
+    for (const expertId of c.ambiguousBetween) {
+      assert.ok(expertIds.has(expertId), `${c.id}: ambiguousBetween references unknown expert ${expertId}`);
+    }
+    assert.ok(
+      c.ambiguousBetween.includes(c.expectedPrimaryExpert),
+      `${c.id}: expectedPrimaryExpert must be included in ambiguousBetween`
+    );
+  }
+});
+
+test("evaluateResponse gives partial credit for ambiguousBetween match", () => {
+  const mockCase = {
+    expectedPrimaryExpert: "expert-abstractions-liskov",
+    ambiguousBetween: ["expert-abstractions-liskov", "expert-architect-descartes"],
+    expectedSections: ["Answer"],
+    allowedHandoffs: [],
+    forbiddenBehaviors: [],
+    behavioralAssertions: []
+  };
+  const mockResponse = {
+    routingDecision: { selectedExpert: "expert-architect-descartes" },
+    activeExpert: "expert-architect-descartes",
+    outputSections: ["Answer"],
+    confidenceLabeled: true,
+    domainStayedInScope: true,
+    personaBlend: false,
+    handoffs: [],
+    response: "**Selected Expert:** expert-architect-descartes\n\n**Answer:** ..."
+  };
+  const result = evaluateResponse(system, mockCase, mockResponse);
+  assert.strictEqual(result.score, 1, "ambiguousBetween match should get score=1 (partial credit)");
+  assert.ok(
+    result.notableDrift.some((d) => d.includes("Acceptable alternate")),
+    "Should note it as an acceptable alternate"
   );
 });
 

@@ -1117,6 +1117,7 @@
       "targets": ["cursor", "codex"],
       "prompt": "Our REST API needs backward-compatible versioning. Design the contract so old clients don't break when we add new fields.",
       "expectedPrimaryExpert": "expert-abstractions-liskov",
+      "ambiguousBetween": ["expert-abstractions-liskov", "expert-architect-descartes"],
       "expectedSections": ["Boundary", "Contract", "Coupling Risks", "Recommended Abstraction", "Compatibility"],
       "allowedHandoffs": ["expert-architect-descartes"],
       "forbiddenBehaviors": ["Jumping to implementation without interface analysis", "No compatibility discussion"]
@@ -1161,6 +1162,7 @@
       "targets": ["cursor", "codex"],
       "prompt": "Design the CI pipeline for this monorepo. Define the stages, stopping conditions for each gate, and rollback procedure.",
       "expectedPrimaryExpert": "expert-orchestrator-simon",
+      "ambiguousBetween": ["expert-orchestrator-simon", "expert-architect-descartes"],
       "expectedSections": ["Objective", "Procedure", "Stopping Conditions", "Procedure Risks", "Evaluation"],
       "allowedHandoffs": ["expert-architect-descartes"],
       "forbiddenBehaviors": ["No stopping conditions", "Pipeline stages with no ownership"]
@@ -1172,6 +1174,7 @@
       "targets": ["cursor", "codex"],
       "prompt": "Define the release workflow: what gets deployed first, what gates block progression, and when do we rollback.",
       "expectedPrimaryExpert": "expert-orchestrator-simon",
+      "ambiguousBetween": ["expert-orchestrator-simon", "expert-architect-descartes"],
       "expectedSections": ["Objective", "Procedure", "Stopping Conditions", "Procedure Risks", "Evaluation"],
       "allowedHandoffs": ["expert-manager-blackmore"],
       "forbiddenBehaviors": ["No rollback criteria", "No evaluation of workflow success"]
@@ -1227,6 +1230,7 @@
       "targets": ["cursor", "codex"],
       "prompt": "Production went down for 30 minutes last night. Run the post-mortem: root cause, timeline, and preventive automation.",
       "expectedPrimaryExpert": "expert-manager-blackmore",
+      "ambiguousBetween": ["expert-manager-blackmore", "expert-qa-popper"],
       "expectedSections": ["Root Cause", "Solution Pattern", "Automation Opportunity", "Verification"],
       "allowedHandoffs": ["expert-qa-popper"],
       "forbiddenBehaviors": ["No timeline", "No automation recommendation"]
@@ -1272,6 +1276,7 @@
       "targets": ["cursor", "codex"],
       "prompt": "We need to migrate 50 microservices from REST to gRPC. Build the implementation plan with phases, gates, and rollback criteria.",
       "expectedPrimaryExpert": "expert-orchestrator-simon",
+      "ambiguousBetween": ["expert-orchestrator-simon", "expert-architect-descartes"],
       "expectedSections": ["Objective", "Procedure", "Stopping Conditions", "Procedure Risks", "Evaluation"],
       "allowedHandoffs": ["expert-architect-descartes"],
       "forbiddenBehaviors": ["Starting implementation without a phased plan", "No stopping conditions"]

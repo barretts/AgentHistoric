@@ -57,6 +57,15 @@ Analyze the prompt against these heuristics, in priority order. Anti-triggers de
 - "got an error"
 - "build error in payment service"
 - "help debug this test failure"
+- "run the tests"
+- "test started failing"
+- "check if this migration is safe"
+- "adversarial tester"
+- "try to break it"
+- "find anything that could fail"
+- "find and fix the bug"
+- "verify this actually works"
+- "tests are flaky"
 
 **Route To Peirce:**
 - "how do I write a test for"
@@ -93,6 +102,8 @@ Analyze the prompt against these heuristics, in priority order. Anti-triggers de
 - "plan this migration"
 - "sequence these steps"
 - "what order should we"
+- "implementation steps"
+- "in the right order"
 
 **Route To Shannon:**
 - "compress this context"
@@ -107,12 +118,16 @@ Analyze the prompt against these heuristics, in priority order. Anti-triggers de
 - "what are our options"
 - "should we go with"
 - "explore alternatives"
+- "explore all three"
+- "choose between"
 
 **Route To Descartes:**
 - "should we build this"
 - "design the system"
 - "create from scratch"
 - "new service from scratch"
+- "design the architecture"
+- "cross-cutting concern"
 
 ### Routing Anti-Patterns
 
