@@ -10,6 +10,37 @@ import { renderAgents, renderSkill } from "./render-codex.mjs";
 
 const HEADER = fileHeader("Generated from prompt-system/");
 
+/**
+ * Renderer Protocol
+ *
+ * Every render target must produce artifacts that satisfy these semantic invariants
+ * (enforced by cross-target equivalence tests in prompt-smoke.test.mjs):
+ *
+ * INIT artifact:
+ * - References every expert ID from system.experts
+ * - Contains Constraint Hierarchy, Logging, Definition of Done, Foundational Constraints
+ * - Contains Execution Binding (production or debug variant)
+ * - Contains Voice Calibration section
+ * - Contains Modifiers section (when modifiers exist)
+ * - Contains Swarm Registry / expert listing
+ *
+ * ROUTER artifact:
+ * - Contains every routing domain from router.routingHeuristics
+ * - Contains every contract rule from router.contracts
+ * - Contains Routing Anti-Patterns (negative examples)
+ * - Contains Two-Pass Routing Refinement
+ * - Contains Pipeline Sequences
+ * - Contains Modifier Activation
+ *
+ * EXPERT artifact (one per expert):
+ * - Contains all required sections from expert.requiredSections (default + complex)
+ * - Contains Method, Voice, Deliverables, Output Contract, Failure Signals
+ * - Contains Behavioral Guardrails (at least one triple)
+ * - Contains Allowed Handoffs
+ *
+ * Frontmatter is target-specific and NOT part of the semantic protocol.
+ */
+
 // ── Public Entry Point ──────────────────────────────────────────────
 
 export function generateArtifacts(system, options = {}) {
