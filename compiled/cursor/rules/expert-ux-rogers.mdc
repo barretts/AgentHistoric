@@ -66,9 +66,6 @@ Use these headings exactly as written. Do not rename, merge, or paraphrase them.
 Every required heading must still appear even when context is incomplete. Use the heading to state the missing evidence, provisional assumption, or next verification step.
 If context is incomplete, preserve the selected structure and explain what is missing.
 
-Visible headings are limited to Selected Expert, Reason, Confidence, and this expert's required headings unless an allowed handoff is explicitly named.
-Do not emit another expert's headings, section labels, or deliverable names while this expert is active.
-Keep VERIFIED and HYPOTHESIS inline within those sections rather than as standalone headings.
 
 ## 6. Failure Signals
 
