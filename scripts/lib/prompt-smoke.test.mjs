@@ -8,6 +8,7 @@ import { loadPromptSystemSpec } from "./prompt-system.mjs";
 const workspaceRoot = path.resolve(import.meta.dirname, "..", "..");
 const system = await loadPromptSystemSpec(workspaceRoot);
 const artifacts = generateArtifacts(system);
+const debugArtifacts = generateArtifacts(system, { debug: true });
 
 const CURSOR_RICH = "compiled/cursor/rules";
 const MAX_CHARS = 15000;
@@ -198,7 +199,7 @@ test("rich init prompts render routing-first and protocol-over-velocity rules", 
   for (const [filePath, content] of richInitFiles) {
     assert.match(
       content,
-      /Before the first tool call, skill invocation, or code edit, complete the routing step and state the routing decision\./,
+      /Before the first tool call, skill invocation, or code edit, complete the routing step internally\./,
       `${filePath}: missing routing-first execution binding`
     );
     assert.match(
@@ -259,7 +260,7 @@ test("codex runtime renders execution binding and router contract rules", () => 
   assert.ok(content, "Missing compiled/codex/AGENTS.md artifact");
   assert.match(
     content,
-    /Before the first tool call, skill invocation, or code edit, complete the routing step and state the routing decision\./,
+    /Before the first tool call, skill invocation, or code edit, complete the routing step internally\./,
     "compiled/codex/AGENTS.md: missing routing-first execution binding"
   );
   assert.match(
@@ -433,6 +434,192 @@ test("_modelTuning fields are not rendered into generated output", () => {
       `${filePath} contains _modelTuning marker in rendered output`
     );
   }
+});
+
+// ── Debug vs Production Execution Binding ───────────────────────────
+
+test("production init includes production binding and excludes debug binding", () => {
+  const initFiles = [...artifacts].filter(([p]) => p.includes("00-init"));
+
+  for (const [filePath, content] of initFiles) {
+    assert.match(
+      content,
+      /Route internally before acting/,
+      `${filePath}: missing production execution binding`
+    );
+    assert.ok(
+      !content.includes("State the routing decision with Selected Expert, Reason, and Confidence"),
+      `${filePath}: production build must not contain debug routing output instruction`
+    );
+  }
+});
+
+test("debug init includes debug binding and excludes production binding", () => {
+  const initFiles = [...debugArtifacts].filter(([p]) => p.includes("00-init"));
+
+  for (const [filePath, content] of initFiles) {
+    assert.match(
+      content,
+      /State the routing decision with Selected Expert, Reason, and Confidence/,
+      `${filePath} (debug): missing debug execution binding`
+    );
+    assert.ok(
+      !content.includes("Route internally before acting"),
+      `${filePath} (debug): debug build must not contain production routing suppression`
+    );
+  }
+});
+
+test("production codex AGENTS.md includes production binding", () => {
+  const content = artifacts.get("compiled/codex/AGENTS.md");
+  assert.ok(content, "Missing compiled/codex/AGENTS.md");
+  assert.match(
+    content,
+    /Route internally before acting/,
+    "Production codex AGENTS.md: missing production execution binding"
+  );
+  assert.ok(
+    !content.includes("State the routing decision with Selected Expert, Reason, and Confidence"),
+    "Production codex AGENTS.md must not contain debug routing output instruction"
+  );
+});
+
+test("debug codex AGENTS.md includes debug binding", () => {
+  const content = debugArtifacts.get("compiled/codex/AGENTS.md");
+  assert.ok(content, "Missing debug compiled/codex/AGENTS.md");
+  assert.match(
+    content,
+    /State the routing decision with Selected Expert, Reason, and Confidence/,
+    "Debug codex AGENTS.md: missing debug execution binding"
+  );
+});
+
+// ── Routing Evolution: Negative Examples ─────────────────────────────
+
+test("router.json has negativeExamples with at least 3 keys", () => {
+  const ne = system.router.negativeExamples;
+  assert.ok(ne, "Missing negativeExamples in router.json");
+  assert.ok(Object.keys(ne).length >= 3, `Expected >= 3 negative example keys, got ${Object.keys(ne).length}`);
+});
+
+test("rich router renders Routing Anti-Patterns section", () => {
+  const routerFiles = [...artifacts].filter(([p]) => p.includes("01-router"));
+  for (const [filePath, content] of routerFiles) {
+    assert.match(
+      content,
+      /Routing Anti-Patterns/,
+      `${filePath}: missing Routing Anti-Patterns section`
+    );
+  }
+});
+
+test("codex AGENTS.md renders Routing Anti-Patterns section", () => {
+  const content = artifacts.get("compiled/codex/AGENTS.md");
+  assert.ok(content, "Missing compiled/codex/AGENTS.md");
+  assert.match(
+    content,
+    /Routing Anti-Patterns/,
+    "compiled/codex/AGENTS.md: missing Routing Anti-Patterns section"
+  );
+});
+
+// ── Routing Evolution: Sub-Domain Heuristics ─────────────────────────
+
+test("router has at least 18 routing heuristics (expanded sub-domains)", () => {
+  const count = system.router.routingHeuristics.length;
+  assert.ok(count >= 18, `Expected >= 18 routing heuristics, got ${count}`);
+});
+
+test("router has sub-domains for debug and implementation", () => {
+  const domains = system.router.routingHeuristics.map(h => h.domain);
+  assert.ok(domains.includes("Test Failure Diagnosis"), "Missing Test Failure Diagnosis sub-domain");
+  assert.ok(domains.includes("Build & Config Errors"), "Missing Build & Config Errors sub-domain");
+  assert.ok(domains.includes("Quick Fix & Patch"), "Missing Quick Fix & Patch sub-domain");
+  assert.ok(domains.includes("General Implementation"), "Missing General Implementation sub-domain");
+  assert.ok(domains.includes("Refactoring & Restructuring"), "Missing Refactoring & Restructuring sub-domain");
+  assert.ok(domains.includes("Test Authoring"), "Missing Test Authoring sub-domain");
+  assert.ok(domains.includes("Runtime Error Investigation"), "Missing Runtime Error Investigation sub-domain");
+});
+
+// ── Routing Evolution: Pipelines ─────────────────────────────────────
+
+test("router has at least 6 pipelines (including council and verify)", () => {
+  const count = system.router.pipelines.length;
+  assert.ok(count >= 6, `Expected >= 6 pipelines, got ${count}`);
+});
+
+test("Deliberation Council pipeline exists with trigger signals", () => {
+  const council = system.router.pipelines.find(p => p.name === "Deliberation Council");
+  assert.ok(council, "Missing Deliberation Council pipeline");
+  assert.ok(council.triggerSignals?.length >= 3, "Council needs at least 3 trigger signals");
+  assert.ok(council.autoTrigger, "Council needs an auto-trigger condition");
+  assert.ok(council.steps.length >= 4, "Council needs at least 4 steps");
+});
+
+test("Implement & Verify pipeline exists with adversarial step", () => {
+  const verify = system.router.pipelines.find(p => p.name === "Implement & Verify");
+  assert.ok(verify, "Missing Implement & Verify pipeline");
+  assert.ok(verify.steps.length >= 3, "Verify pipeline needs at least 3 steps");
+  const adversarialStep = verify.steps.find(s => s.task.includes("VERDICT"));
+  assert.ok(adversarialStep, "Verify pipeline needs a step with VERDICT keyword");
+});
+
+// ── Routing Evolution: Two-Pass Refinement ───────────────────────────
+
+test("router has refinementHeuristics with at least 3 refinements", () => {
+  const rh = system.router.refinementHeuristics;
+  assert.ok(rh, "Missing refinementHeuristics in router.json");
+  assert.ok(rh.refinements.length >= 3, `Expected >= 3 refinements, got ${rh.refinements.length}`);
+});
+
+test("rich router renders Two-Pass Routing Refinement section", () => {
+  const routerFiles = [...artifacts].filter(([p]) => p.includes("01-router"));
+  for (const [filePath, content] of routerFiles) {
+    assert.match(
+      content,
+      /Two-Pass Routing Refinement/,
+      `${filePath}: missing Two-Pass Routing Refinement section`
+    );
+  }
+});
+
+test("codex AGENTS.md renders Two-Pass Routing Refinement section", () => {
+  const content = artifacts.get("compiled/codex/AGENTS.md");
+  assert.ok(content, "Missing compiled/codex/AGENTS.md");
+  assert.match(
+    content,
+    /Two-Pass Routing Refinement/,
+    "compiled/codex/AGENTS.md: missing Two-Pass Routing Refinement section"
+  );
+});
+
+// ── Routing Evolution: Contracts ─────────────────────────────────────
+
+test("router contracts include negative example and two-pass rules", () => {
+  const contracts = system.router.contracts;
+  const hasNegative = contracts.some(c => c.includes("negative routing examples"));
+  const hasTwoPass = contracts.some(c => c.includes("two-pass routing"));
+  assert.ok(hasNegative, "Missing negative routing examples contract");
+  assert.ok(hasTwoPass, "Missing two-pass routing contract");
+});
+
+// ── Routing Evolution: Verification Contract ─────────────────────────
+
+test("Popper has a verificationContract with rules", () => {
+  const popper = system.experts.find(e => e.id === "expert-qa-popper");
+  assert.ok(popper, "Missing Popper expert");
+  assert.ok(popper.verificationContract, "Missing verificationContract on Popper");
+  assert.ok(popper.verificationContract.rules.length >= 5, "Verification contract needs at least 5 rules");
+  const hasVerdict = popper.verificationContract.rules.some(r => r.includes("VERDICT"));
+  assert.ok(hasVerdict, "Verification contract must mention VERDICT");
+});
+
+// ── Routing Evolution: Disambiguation Expansion ──────────────────────
+
+test("disambiguation has entries for all 9 experts", () => {
+  const keys = Object.keys(system.router.disambiguation);
+  assert.ok(keys.length >= 9, `Expected >= 9 disambiguation keys, got ${keys.length}`);
+  assert.ok(keys.includes("routeToDescartes"), "Missing routeToDescartes disambiguation");
 });
 
 // ── Token Budget ────────────────────────────────────────────────────

@@ -202,19 +202,32 @@ export function parseCodexJsonlResult(rawText) {
 
 export function routePrompt(system, prompt) {
   const text = normalizeText(prompt);
+  const router = system.router;
 
-  if (matchesAny(text, system.router.disambiguation.routeToPopper)) {
-    return "expert-qa-popper";
+  // Phase 1: Disambiguation (explicit examples override heuristics)
+  const disambiguationMap = {
+    routeToPopper: "expert-qa-popper",
+    routeToPeirce: "expert-engineer-peirce",
+    routeToKnuth: "expert-performance-knuth",
+    routeToLiskov: "expert-abstractions-liskov",
+    routeToDijkstra: "expert-formal-dijkstra",
+    routeToSimon: "expert-orchestrator-simon",
+    routeToShannon: "expert-information-shannon",
+    routeToDennett: "expert-visionary-dennett",
+    routeToDescartes: "expert-architect-descartes"
+  };
+
+  for (const [key, expertId] of Object.entries(disambiguationMap)) {
+    const examples = router.disambiguation[key];
+    if (examples && matchesAny(text, examples)) {
+      // Phase 1b: Check negative examples before confirming
+      if (!isNegativeMatch(router.negativeExamples, expertId, text)) {
+        return expertId;
+      }
+    }
   }
 
-  if (matchesAny(text, system.router.disambiguation.routeToPeirce)) {
-    return "expert-engineer-peirce";
-  }
-
-  if (matchesAny(text, system.router.disambiguation.routeToDennett)) {
-    return "expert-visionary-dennett";
-  }
-
+  // Phase 1c: Hard-coded UX/Blackmore signals not in disambiguation
   if (
     text.includes("feels confusing")
     || text.includes("improve the flow")
@@ -236,25 +249,75 @@ export function routePrompt(system, prompt) {
     return "expert-manager-blackmore";
   }
 
-  if (text.includes("should we build this")) {
-    return "expert-architect-descartes";
-  }
-
-  if (text.includes("design the system")) {
-    return "expert-architect-descartes";
-  }
-
-  const orderedHeuristics = [...system.router.routingHeuristics].sort(
+  // Phase 2: Heuristic signal matching (sorted by priority)
+  const orderedHeuristics = [...router.routingHeuristics].sort(
     (left, right) => left.priority - right.priority
   );
 
   for (const heuristic of orderedHeuristics) {
     if (matchesAny(text, heuristic.signals)) {
-      return heuristic.experts[0];
+      const candidate = heuristic.experts[0];
+      if (!isNegativeMatch(router.negativeExamples, candidate, text)) {
+        return candidate;
+      }
+      // If the lead expert is negatively matched, try the next expert in the list
+      for (let i = 1; i < heuristic.experts.length; i++) {
+        if (!isNegativeMatch(router.negativeExamples, heuristic.experts[i], text)) {
+          return heuristic.experts[i];
+        }
+      }
+      return candidate; // fallback to lead if all are negative-matched
     }
   }
 
   return "expert-engineer-peirce";
+}
+
+function isNegativeMatch(negativeExamples, expertId, text) {
+  if (!negativeExamples) return false;
+
+  const negativeKeyMap = {
+    "expert-engineer-peirce": "doNotRouteToPeirce",
+    "expert-qa-popper": "doNotRouteToPopper",
+    "expert-visionary-dennett": "doNotRouteToDennett"
+  };
+
+  const key = negativeKeyMap[expertId];
+  if (!key || !negativeExamples[key]) return false;
+
+  // Negative examples are prose rules, not simple signal matches.
+  // We check for key phrases within the negative rules that suggest
+  // the current prompt context matches the anti-pattern.
+  const rules = negativeExamples[key];
+  for (const rule of rules) {
+    const ruleLower = normalizeText(rule);
+    // Extract the quoted condition patterns from the rule
+    if (ruleLower.includes("'refactor' means redesigning") && text.includes("refactor") && (text.includes("module boundar") || text.includes("coupling") || text.includes("decouple"))) {
+      return true;
+    }
+    if (ruleLower.includes("'implement' means 'design from scratch") && text.includes("implement") && (text.includes("from scratch") || text.includes("new service"))) {
+      return true;
+    }
+    if (ruleLower.includes("'should we build this'") && text.includes("should we build this")) {
+      return true;
+    }
+    if (ruleLower.includes("how should i write tests") && (text.includes("how should i write tests") || text.includes("how to structure tests"))) {
+      return true;
+    }
+    if (ruleLower.includes("no existing failure to diagnose") && !text.includes("fail") && !text.includes("error") && !text.includes("broken") && !text.includes("bug")) {
+      // Only apply this if the prompt doesn't mention any failure
+      if (text.includes("write test") || text.includes("add test") || text.includes("test coverage")) {
+        return true;
+      }
+    }
+    if (ruleLower.includes("concrete implementation plan") && text.includes("plan") && (text.includes("steps") || text.includes("order") || text.includes("sequence"))) {
+      return true;
+    }
+    if (ruleLower.includes("only one viable approach") && !text.includes("option") && !text.includes("alternative") && !text.includes("compare")) {
+      // This is hard to detect locally; skip for now
+    }
+  }
+  return false;
 }
 
 export function evaluateResponse(system, testCase, response) {

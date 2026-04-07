@@ -27,7 +27,8 @@ export function renderRichInit(system, options = {}) {
   const abl = options.ablation;
 
   out += `## 1. Execution Binding\n\n`;
-  out += g.executionBinding.map((item) => `- ${item}`).join("\n");
+  const bindingExtras = options.debug ? (g.executionBindingDebug || []) : (g.executionBindingProduction || []);
+  out += [...g.executionBinding, ...bindingExtras].map((item) => `- ${item}`).join("\n");
   out += `\n\n`;
 
   // Section 1: Logging
@@ -132,11 +133,42 @@ export function renderRichRouter(system, options = {}) {
     out += `\n\n`;
   }
 
+  // Negative Examples (Routing Anti-Patterns)
+  if (r.negativeExamples) {
+    out += `### Routing Anti-Patterns\n\n`;
+    out += `Before finalizing your expert selection, check these anti-patterns:\n\n`;
+    for (const [key, rules] of Object.entries(r.negativeExamples)) {
+      const heading = key.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase()).trim();
+      out += `**${heading}:**\n`;
+      out += rules.map((s) => `- ${s}`).join("\n");
+      out += `\n\n`;
+    }
+  }
+
+  // Refinement Heuristics (Two-Pass Routing)
+  if (r.refinementHeuristics) {
+    out += `### Two-Pass Routing Refinement\n\n`;
+    out += `${r.refinementHeuristics.description}\n\n`;
+    for (const ref of r.refinementHeuristics.refinements) {
+      out += `- **${ref.broadDomain}** -> ${ref.subDomains.join(", ")}\n`;
+    }
+    out += `\n`;
+  }
+
   // Pipeline tables
   out += `\n\n## 3. Pipeline Sequences\n\n`;
   out += `When a task spans multiple domains, adopt the sequence below. Apply the primary expert's constraints first, then shift methodology as the domain changes.\n\n`;
   for (const pipeline of r.pipelines) {
     out += `### ${pipeline.name}\n`;
+    if (pipeline.description) {
+      out += `${pipeline.description}\n\n`;
+    }
+    if (pipeline.triggerSignals) {
+      out += `**Trigger signals:** ${pipeline.triggerSignals.map(s => `"${s}"`).join(", ")}\n\n`;
+    }
+    if (pipeline.autoTrigger) {
+      out += `**Auto-trigger:** ${pipeline.autoTrigger}\n\n`;
+    }
     out += `| Step | Expert | Task |\n|------|--------|------|\n`;
     for (let i = 0; i < pipeline.steps.length; i++) {
       const s = pipeline.steps[i];

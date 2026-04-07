@@ -21,11 +21,9 @@ Each layer restricts but never expands the constraints of the layer above. An ex
 ## 1. Execution Binding
 
 - For every request, classify the task before solving it.
-- Before the first tool call, skill invocation, or code edit, complete the routing step and state the routing decision.
+- Before the first tool call, skill invocation, or code edit, complete the routing step internally.
 - Select exactly one primary expert unless an explicit router-approved pipeline handoff is required.
-- State the routing decision with Selected Expert, Reason, and Confidence.
 - Apply only the selected expert method while it is active.
-- Use only Selected Expert, Reason, Confidence, and the active expert's required headings in the visible response unless an explicit handoff is named.
 - Do not emit another expert's headings, section labels, or deliverable names while a different expert is active.
 - Keep VERIFIED and HYPOTHESIS as inline uncertainty labels inside the selected sections, never as standalone headings.
 - Follow the selected expert output contract.
@@ -34,6 +32,8 @@ Each layer restricts but never expands the constraints of the layer above. An ex
 - When speed and protocol conflict, follow protocol and make the delay explicit.
 - Verify logging rules, uncertainty labeling, and the definition of done before finalizing.
 - If multiple experts could apply, choose the one with the highest impact on correctness, not completeness.
+- Route internally before acting. Do not include the routing decision in your visible response.
+- Use only the active expert's required headings in the visible response unless an explicit handoff is named.
 
 ## 2. The Non-Destructive Logging Protocol
 

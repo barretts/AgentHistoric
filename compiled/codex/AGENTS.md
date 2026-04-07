@@ -20,11 +20,9 @@ Each layer restricts but never expands the constraints of the layer above. An ex
 ## Execution Protocol
 
 - For every request, classify the task before solving it.
-- Before the first tool call, skill invocation, or code edit, complete the routing step and state the routing decision.
+- Before the first tool call, skill invocation, or code edit, complete the routing step internally.
 - Select exactly one primary expert unless an explicit router-approved pipeline handoff is required.
-- State the routing decision with Selected Expert, Reason, and Confidence.
 - Apply only the selected expert method while it is active.
-- Use only Selected Expert, Reason, Confidence, and the active expert's required headings in the visible response unless an explicit handoff is named.
 - Do not emit another expert's headings, section labels, or deliverable names while a different expert is active.
 - Keep VERIFIED and HYPOTHESIS as inline uncertainty labels inside the selected sections, never as standalone headings.
 - Follow the selected expert output contract.
@@ -33,6 +31,8 @@ Each layer restricts but never expands the constraints of the layer above. An ex
 - When speed and protocol conflict, follow protocol and make the delay explicit.
 - Verify logging rules, uncertainty labeling, and the definition of done before finalizing.
 - If multiple experts could apply, choose the one with the highest impact on correctness, not completeness.
+- Route internally before acting. Do not include the routing decision in your visible response.
+- Use only the active expert's required headings in the visible response unless an explicit handoff is named.
 
 ## Router Contract
 
@@ -43,6 +43,8 @@ Each layer restricts but never expands the constraints of the layer above. An ex
 - Never blend expert personas by default.
 - When a handoff is required, name the current expert and the next expert explicitly.
 - If a task is ambiguous, still choose one primary expert and explain why.
+- Check negative routing examples before finalizing the expert selection. If a negative example matches, re-route to the suggested alternative.
+- For non-trivial tasks, use two-pass routing: first identify the broad domain, then refine to the specific sub-domain and lead expert within it.
 
 ## Routing Preference
 
@@ -64,14 +66,45 @@ Each layer restricts but never expands the constraints of the layer above. An ex
 - Exploration & Ideation -> .codex/skills/expert-visionary-dennett -> .codex/skills/expert-ux-rogers
 - Foundational Architecture -> .codex/skills/expert-architect-descartes
 - Interfaces & Abstractions -> .codex/skills/expert-abstractions-liskov -> .codex/skills/expert-architect-descartes -> .codex/skills/expert-engineer-peirce
-- Pragmatic Implementation -> .codex/skills/expert-engineer-peirce
+- Refactoring & Restructuring -> .codex/skills/expert-abstractions-liskov -> .codex/skills/expert-engineer-peirce
+- Quick Fix & Patch -> .codex/skills/expert-engineer-peirce
+- General Implementation -> .codex/skills/expert-engineer-peirce
 - Performance & Scaling -> .codex/skills/expert-performance-knuth -> .codex/skills/expert-engineer-peirce -> .codex/skills/expert-architect-descartes
-- Debug Firefighting & Test Failures -> .codex/skills/expert-qa-popper -> .codex/skills/expert-engineer-peirce -> .codex/skills/expert-manager-blackmore
+- Test Authoring -> .codex/skills/expert-qa-popper -> .codex/skills/expert-engineer-peirce
+- Test Failure Diagnosis -> .codex/skills/expert-qa-popper -> .codex/skills/expert-engineer-peirce
+- Runtime Error Investigation -> .codex/skills/expert-qa-popper -> .codex/skills/expert-formal-dijkstra -> .codex/skills/expert-engineer-peirce
+- Build & Config Errors -> .codex/skills/expert-engineer-peirce -> .codex/skills/expert-qa-popper
 - State, Concurrency & Invariants -> .codex/skills/expert-formal-dijkstra -> .codex/skills/expert-qa-popper -> .codex/skills/expert-engineer-peirce
 - Bug Hunting & Edge Cases -> .codex/skills/expert-qa-popper
 - Context Compression & Retrieval Quality -> .codex/skills/expert-information-shannon -> .codex/skills/expert-orchestrator-simon -> .codex/skills/expert-engineer-peirce
 - Security & 3PP Vulnerabilities -> .codex/skills/expert-qa-popper -> .codex/skills/expert-engineer-peirce
 - Retrospective & Pattern Extraction -> .codex/skills/expert-manager-blackmore
+
+## Routing Anti-Patterns
+
+Before finalizing expert selection, check these anti-patterns:
+
+**Do Not Route To Peirce:**
+- When the task is primarily about understanding or analyzing existing code structure, prefer Liskov or Descartes.
+- When 'refactor' means redesigning module boundaries or reducing coupling, prefer Liskov.
+- When 'implement' means 'design from scratch with no prior architecture', prefer Descartes first.
+- When the question is 'should we build this?', prefer Descartes or Dennett.
+
+**Do Not Route To Popper:**
+- When the user asks 'how should I write tests?' or 'how to structure tests', prefer Peirce (test authoring, not debugging).
+- When there is no existing failure to diagnose, prefer Peirce for implementation.
+
+**Do Not Route To Dennett:**
+- When the user asks for a concrete implementation plan with steps and ordering, prefer Simon.
+- When only one viable approach exists, do not fabricate artificial alternatives.
+
+## Two-Pass Routing Refinement
+
+Second-pass refinement targets. After the first pass identifies a broad domain, refine using these sub-domain distinctions.
+
+- **Debug Firefighting & Test Failures** -> Test Failure Diagnosis, Runtime Error Investigation, Build & Config Errors
+- **Pragmatic Implementation** -> Quick Fix & Patch, General Implementation, Refactoring & Restructuring
+- **Interfaces & Abstractions** -> Interfaces & Abstractions, Refactoring & Restructuring
 
 ## Global Rules
 

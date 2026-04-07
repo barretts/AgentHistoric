@@ -27,7 +27,7 @@ export function renderAgents(system, options = {}) {
         `\n\n**Invariant:** ${system.constraintHierarchy.invariant}\n\n`
       : "") +
     `## Execution Protocol\n\n` +
-    toList(g.executionBinding) +
+    toList([...g.executionBinding, ...(options.debug ? (g.executionBindingDebug || []) : (g.executionBindingProduction || []))]) +
     `\n\n## Router Contract\n\n` +
     toList(r.contracts) +
     `\n\n## Routing Preference\n\n` +
@@ -49,6 +49,21 @@ export function renderAgents(system, options = {}) {
             .join(" -> ")}`
       )
     ) +
+    (r.negativeExamples
+      ? `\n\n## Routing Anti-Patterns\n\n` +
+        `Before finalizing expert selection, check these anti-patterns:\n\n` +
+        Object.entries(r.negativeExamples)
+          .map(([key, rules]) => {
+            const heading = key.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase()).trim();
+            return `**${heading}:**\n` + rules.map((s) => `- ${s}`).join("\n");
+          })
+          .join("\n\n")
+      : "") +
+    (r.refinementHeuristics
+      ? `\n\n## Two-Pass Routing Refinement\n\n` +
+        `${r.refinementHeuristics.description}\n\n` +
+        toList(r.refinementHeuristics.refinements.map((ref) => `**${ref.broadDomain}** -> ${ref.subDomains.join(", ")}`))
+      : "") +
     `\n\n## Global Rules\n\n` +
     (abl !== "uncertainty-rules" ? toList(g.uncertaintyRules) + `\n\n` : "") +
     (abl !== "foundational-constraints" ? toList(g.foundationalConstraints) : "") +
