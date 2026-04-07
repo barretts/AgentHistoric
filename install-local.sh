@@ -346,19 +346,19 @@ done
 
 # --- Build ---
 
-if [[ -f "$REPO_DIR/scripts/build-prompt-system.mjs" ]]; then
+if [[ -d "$SRC_CLAUDE" ]] && ls "$SRC_CLAUDE"/*.md >/dev/null 2>&1; then
+  echo "--> Compiled files found, skipping build."
+elif [[ -f "$REPO_DIR/scripts/build-prompt-system.mjs" ]]; then
   echo "--> Building prompt system..."
   BUILD_FLAGS=""
   $DEBUG_MODE && BUILD_FLAGS="$BUILD_FLAGS --debug"
   $SCAFFOLDED_MODE && BUILD_FLAGS="$BUILD_FLAGS --scaffolded"
   node "$REPO_DIR/scripts/build-prompt-system.mjs" $BUILD_FLAGS
-  echo ""
-fi
-
-if [[ ! -d "$SRC_CLAUDE" ]]; then
+else
   echo "ERROR: Generated files not found and no build script available."
   exit 1
 fi
+echo ""
 
 # --- Auto-detect if no targets specified ---
 
