@@ -40,6 +40,24 @@ export function renderAgents(system, options = {}) {
       ? `\n\n## ${options.scaffolded ? "Scaffolded Voice" : "Voice Calibration"}\n\n` +
         toList(options.scaffolded ? SCAFFOLDED_VOICE : VOICE_CALIBRATION)
       : "") +
+    (system.modifiers?.length
+      ? `\n\n## Modifiers\n\n` +
+        `Modifiers are voice and style overlays activated by user request. They change HOW you write within sections, never WHAT sections you produce.\n\n` +
+        system.modifiers.map((mod) =>
+          `### ${mod.name}\n\n` +
+          `Trigger: ${mod.trigger} | Default intensity: ${mod.defaultIntensity}\n` +
+          `Activation: ${mod.activationSignals.map((s) => `"${s}"`).join(", ")}\n` +
+          `Deactivation: ${mod.deactivationSignals.map((s) => `"${s}"`).join(", ")}\n\n` +
+          mod.intensityLevels.map((level) =>
+            `**${level.level}:** ${level.description}\n` +
+            level.rules.map((r) => `- ${r}`).join("\n")
+          ).join("\n\n") +
+          `\n\nBoundaries:\n` +
+          mod.boundaries.map((b) => `- ${b}`).join("\n") +
+          `\n\nSafety Valves:\n` +
+          mod.safetyValves.map((sv) => `- ${sv.condition}: ${sv.action}`).join("\n")
+        ).join("\n\n")
+      : "") +
     `\n\n## Routing Order\n\n` +
     toList(
       system.router.routingHeuristics.map(

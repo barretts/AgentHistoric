@@ -70,6 +70,29 @@ export function renderRichInit(system, options = {}) {
     out += `\n\n`;
   }
 
+  // Modifiers
+  if (system.modifiers?.length) {
+    out += `## Modifiers\n\n`;
+    out += `Modifiers are voice and style overlays activated by user request. They change HOW you write within sections, never WHAT sections you produce. An active modifier overrides expert voice rules but never output contracts or structural headings.\n\n`;
+    for (const mod of system.modifiers) {
+      out += `### ${mod.name}\n\n`;
+      out += `**Trigger:** ${mod.trigger} | **Default intensity:** ${mod.defaultIntensity}\n\n`;
+      out += `**Activation:** ${mod.activationSignals.map((s) => `"${s}"`).join(", ")}\n`;
+      out += `**Deactivation:** ${mod.deactivationSignals.map((s) => `"${s}"`).join(", ")}\n\n`;
+      for (const level of mod.intensityLevels) {
+        out += `**${level.level}:** ${level.description}\n`;
+        out += level.rules.map((r) => `- ${r}`).join("\n");
+        out += `\n\n`;
+      }
+      out += `**Boundaries:**\n`;
+      out += mod.boundaries.map((b) => `- ${b}`).join("\n");
+      out += `\n\n`;
+      out += `**Safety Valves (revert to normal prose when):**\n`;
+      out += mod.safetyValves.map((sv) => `- ${sv.condition}: ${sv.action}`).join("\n");
+      out += `\n\n`;
+    }
+  }
+
   // Section 4: Done
   out += `## 5. Definition of Done\n\n`;
   out += `"Done" means code + tests + verified. Placeholders, pseudo-code, and "TODOs" in core logic are globally rejected.\n\n`;
@@ -177,8 +200,16 @@ export function renderRichRouter(system, options = {}) {
     out += `\n`;
   }
 
+  // Modifier Activation
+  if (r.modifierActivation) {
+    out += `## 4. Modifier Activation\n\n`;
+    out += `${r.modifierActivation.description}\n\n`;
+    out += r.modifierActivation.contract.map((c) => `- ${c}`).join("\n");
+    out += `\n\n`;
+  }
+
   // Automation
-  out += `## 4. Automation over Attrition\n\n`;
+  out += `## 5. Automation over Attrition\n\n`;
   out += `${r.automationOverAttrition}\n`;
   if (options.debug) {
     out += `\nBefore solving any request, emit a routing block with exactly: **Selected Subfolder**, **Selected Expert**, **Reason**, and **Confidence (0-1)**.\n`;
