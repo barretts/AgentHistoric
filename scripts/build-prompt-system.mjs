@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 
+import fs from "node:fs";
 import path from "node:path";
 import { generateArtifacts } from "./lib/build-prompt-system.mjs";
 import { loadPromptSystemSpec, writeTextFile } from "./lib/prompt-system.mjs";
 
 const workspaceRoot = process.cwd();
-const debug = process.argv.includes("--debug");
+const isSourceRepo = fs.existsSync(path.join(workspaceRoot, "prompt-system", "system.json"));
+const debug = process.argv.includes("--no-debug") ? false : (process.argv.includes("--debug") || isSourceRepo);
 const scaffolded = process.argv.includes("--scaffolded");
 const ablationIdx = process.argv.indexOf("--ablation");
 const ablation = ablationIdx !== -1 ? process.argv[ablationIdx + 1] : null;

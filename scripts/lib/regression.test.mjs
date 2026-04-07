@@ -81,6 +81,38 @@ test("routePrompt matches fixture expectations for representative cases", async 
   }
 });
 
+test("routePrompt handles negative routing examples", async () => {
+  const system = await loadPromptSystemSpec(workspaceRoot);
+  const fixtures = await loadRegressionFixtures(workspaceRoot);
+  const caseIds = ["NE1", "NE2", "NE4"];
+
+  for (const caseId of caseIds) {
+    const testCase = fixtures.cases.find((item) => item.id === caseId);
+    assert.ok(testCase, `Missing fixture ${caseId}`);
+    assert.strictEqual(
+      routePrompt(system, testCase.prompt),
+      testCase.expectedPrimaryExpert,
+      `Unexpected route for ${caseId}: ${testCase.name}`
+    );
+  }
+});
+
+test("routePrompt routes diversity cases to correct experts", async () => {
+  const system = await loadPromptSystemSpec(workspaceRoot);
+  const fixtures = await loadRegressionFixtures(workspaceRoot);
+  const caseIds = ["RB1", "RB2", "RB3", "RB4", "RB5", "RB6", "RB7", "RB8"];
+
+  for (const caseId of caseIds) {
+    const testCase = fixtures.cases.find((item) => item.id === caseId);
+    assert.ok(testCase, `Missing fixture ${caseId}`);
+    assert.strictEqual(
+      routePrompt(system, testCase.prompt),
+      testCase.expectedPrimaryExpert,
+      `Unexpected route for ${caseId}: ${testCase.name}`
+    );
+  }
+});
+
 test("evaluateResponse accepts a valid architecture response", async () => {
   const system = await loadPromptSystemSpec(workspaceRoot);
   const testCase = await loadCase("R2");

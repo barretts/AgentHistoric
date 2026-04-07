@@ -41,6 +41,12 @@
       "description": "Failure Signals section from expert prompts",
       "source": "experts/*.json → failureSignals",
       "expectedImpact": "Avoidance of known failure patterns"
+    },
+    {
+      "id": "modifiers",
+      "description": "Modifier system (voice/style overlays like Caveman Edict)",
+      "source": "modifiers/*.json → rendered into init and router artifacts",
+      "expectedImpact": "Output compression, token efficiency, and voice override behavior"
     }
   ]
 }
