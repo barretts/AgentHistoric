@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 # install.sh -- Remote bootstrap installer for Agent Historic.
 # Usage: bash <(curl -fsSL <host>/install.sh) [install-local options]
+#
+# Downloads the repo tarball and runs install-local.sh from it.
+# Requirements: curl, tar. No git or node needed.
 
 set -euo pipefail
 
 REPO_SLUG="${AGENT_HISTORIC_REPO:-barretts/AgentHistoric}"
 REPO_REF="${AGENT_HISTORIC_REF:-main}"
-LOCAL_INSTALLER="install-local.sh"
 
 TMP_DIR="$(mktemp -d)"
 cleanup() {
@@ -19,16 +21,18 @@ if ! command -v curl >/dev/null 2>&1; then
   exit 1
 fi
 
-DOWNLOAD_URL="https://raw.githubusercontent.com/${REPO_SLUG}/${REPO_REF}/${LOCAL_INSTALLER}"
-TARGET_SCRIPT="$TMP_DIR/$LOCAL_INSTALLER"
+TARBALL_URL="https://github.com/${REPO_SLUG}/archive/refs/heads/${REPO_REF}.tar.gz"
 
 echo "==> agent-historic remote bootstrap"
 echo "    Repo: ${REPO_SLUG}@${REPO_REF}"
-echo "    URL:  ${DOWNLOAD_URL}"
 echo ""
+echo "--> Downloading tarball..."
 
-curl -fsSL "$DOWNLOAD_URL" -o "$TARGET_SCRIPT"
-chmod +x "$TARGET_SCRIPT"
+curl -fsSL "$TARBALL_URL" | tar -xz -C "$TMP_DIR"
 
+# GitHub tarballs extract to <RepoName>-<ref>/
+REPO_DIR="$(ls -d "$TMP_DIR"/*/ | head -1)"
+
+echo ""
 echo "--> Running local installer..."
-bash "$TARGET_SCRIPT" "$@"
+bash "${REPO_DIR}install-local.sh" "$@"
