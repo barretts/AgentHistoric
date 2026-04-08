@@ -27,7 +27,8 @@ export function renderRichInit(system, options = {}) {
   const abl = options.ablation;
 
   out += `## 1. Execution Binding\n\n`;
-  out += g.executionBinding.map((item) => `- ${item}`).join("\n");
+  const bindingExtras = options.debug ? (g.executionBindingDebug || []) : (g.executionBindingProduction || []);
+  out += [...g.executionBinding, ...bindingExtras].map((item) => `- ${item}`).join("\n");
   out += `\n\n`;
 
   // Section 1: Logging
@@ -67,6 +68,29 @@ export function renderRichInit(system, options = {}) {
     out += `## ${voiceHeading}\n\n`;
     out += voiceItems.map((item) => `- ${item}`).join("\n");
     out += `\n\n`;
+  }
+
+  // Modifiers
+  if (system.modifiers?.length) {
+    out += `## Modifiers\n\n`;
+    out += `Modifiers are voice and style overlays activated by user request. They change HOW you write within sections, never WHAT sections you produce. An active modifier overrides expert voice rules but never output contracts or structural headings.\n\n`;
+    for (const mod of system.modifiers) {
+      out += `### ${mod.name}\n\n`;
+      out += `**Trigger:** ${mod.trigger} | **Default intensity:** ${mod.defaultIntensity}\n\n`;
+      out += `**Activation:** ${mod.activationSignals.map((s) => `"${s}"`).join(", ")}\n`;
+      out += `**Deactivation:** ${mod.deactivationSignals.map((s) => `"${s}"`).join(", ")}\n\n`;
+      for (const level of mod.intensityLevels) {
+        out += `**${level.level}:** ${level.description}\n`;
+        out += level.rules.map((r) => `- ${r}`).join("\n");
+        out += `\n\n`;
+      }
+      out += `**Boundaries:**\n`;
+      out += mod.boundaries.map((b) => `- ${b}`).join("\n");
+      out += `\n\n`;
+      out += `**Safety Valves (revert to normal prose when):**\n`;
+      out += mod.safetyValves.map((sv) => `- ${sv.condition}: ${sv.action}`).join("\n");
+      out += `\n\n`;
+    }
   }
 
   // Section 4: Done
@@ -114,13 +138,15 @@ export function renderRichRouter(system, options = {}) {
 
   // Routing heuristics table
   out += `## 2. Routing Heuristics\n\n`;
-  out += `Analyze the prompt against these heuristics, in priority order:\n\n`;
-  out += `| Priority | Domain | Expert(s) | Keywords / Signals |\n`;
-  out += `|----------|--------|-----------|-------------------|\n`;
+  out += `Analyze the prompt against these heuristics, in priority order. Anti-triggers deprioritize a domain when present; boost signals increase confidence.\n\n`;
+  out += `| Priority | Domain | Expert(s) | Keywords / Signals | Anti-Triggers | Boost Signals |\n`;
+  out += `|----------|--------|-----------|-------------------|---------------|---------------|\n`;
   for (const h of r.routingHeuristics) {
     const experts = h.experts.map((id) => humanizeExpertId(id)).join(" -> ");
     const signals = h.signals.map((s) => `"${s}"`).join(", ");
-    out += `| ${h.priority} | ${h.domain} | ${experts} | ${signals} |\n`;
+    const antiTriggers = (h.antiTriggers || []).map((s) => `"${s}"`).join(", ") || "-";
+    const boostSignals = (h.boostSignals || []).map((s) => `"${s}"`).join(", ") || "-";
+    out += `| ${h.priority} | ${h.domain} | ${experts} | ${signals} | ${antiTriggers} | ${boostSignals} |\n`;
   }
 
   // Disambiguation
@@ -132,11 +158,42 @@ export function renderRichRouter(system, options = {}) {
     out += `\n\n`;
   }
 
+  // Negative Examples (Routing Anti-Patterns)
+  if (r.negativeExamples) {
+    out += `### Routing Anti-Patterns\n\n`;
+    out += `Before finalizing your expert selection, check these anti-patterns:\n\n`;
+    for (const [key, rules] of Object.entries(r.negativeExamples)) {
+      const heading = key.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase()).trim();
+      out += `**${heading}:**\n`;
+      out += rules.map((s) => `- ${s}`).join("\n");
+      out += `\n\n`;
+    }
+  }
+
+  // Refinement Heuristics (Two-Pass Routing)
+  if (r.refinementHeuristics) {
+    out += `### Two-Pass Routing Refinement\n\n`;
+    out += `${r.refinementHeuristics.description}\n\n`;
+    for (const ref of r.refinementHeuristics.refinements) {
+      out += `- **${ref.broadDomain}** -> ${ref.subDomains.join(", ")}\n`;
+    }
+    out += `\n`;
+  }
+
   // Pipeline tables
   out += `\n\n## 3. Pipeline Sequences\n\n`;
   out += `When a task spans multiple domains, adopt the sequence below. Apply the primary expert's constraints first, then shift methodology as the domain changes.\n\n`;
   for (const pipeline of r.pipelines) {
     out += `### ${pipeline.name}\n`;
+    if (pipeline.description) {
+      out += `${pipeline.description}\n\n`;
+    }
+    if (pipeline.triggerSignals) {
+      out += `**Trigger signals:** ${pipeline.triggerSignals.map(s => `"${s}"`).join(", ")}\n\n`;
+    }
+    if (pipeline.autoTrigger) {
+      out += `**Auto-trigger:** ${pipeline.autoTrigger}\n\n`;
+    }
     out += `| Step | Expert | Task |\n|------|--------|------|\n`;
     for (let i = 0; i < pipeline.steps.length; i++) {
       const s = pipeline.steps[i];
@@ -145,8 +202,16 @@ export function renderRichRouter(system, options = {}) {
     out += `\n`;
   }
 
+  // Modifier Activation
+  if (r.modifierActivation) {
+    out += `## 4. Modifier Activation\n\n`;
+    out += `${r.modifierActivation.description}\n\n`;
+    out += r.modifierActivation.contract.map((c) => `- ${c}`).join("\n");
+    out += `\n\n`;
+  }
+
   // Automation
-  out += `## 4. Automation over Attrition\n\n`;
+  out += `## 5. Automation over Attrition\n\n`;
   out += `${r.automationOverAttrition}\n`;
   if (options.debug) {
     out += `\nBefore solving any request, emit a routing block with exactly: **Selected Subfolder**, **Selected Expert**, **Reason**, and **Confidence (0-1)**.\n`;

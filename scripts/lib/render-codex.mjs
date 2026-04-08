@@ -27,7 +27,7 @@ export function renderAgents(system, options = {}) {
         `\n\n**Invariant:** ${system.constraintHierarchy.invariant}\n\n`
       : "") +
     `## Execution Protocol\n\n` +
-    toList(g.executionBinding) +
+    toList([...g.executionBinding, ...(options.debug ? (g.executionBindingDebug || []) : (g.executionBindingProduction || []))]) +
     `\n\n## Router Contract\n\n` +
     toList(r.contracts) +
     `\n\n## Routing Preference\n\n` +
@@ -40,15 +40,56 @@ export function renderAgents(system, options = {}) {
       ? `\n\n## ${options.scaffolded ? "Scaffolded Voice" : "Voice Calibration"}\n\n` +
         toList(options.scaffolded ? SCAFFOLDED_VOICE : VOICE_CALIBRATION)
       : "") +
+    (system.modifiers?.length
+      ? `\n\n## Modifiers\n\n` +
+        `Modifiers are voice and style overlays activated by user request. They change HOW you write within sections, never WHAT sections you produce.\n\n` +
+        system.modifiers.map((mod) =>
+          `### ${mod.name}\n\n` +
+          `Trigger: ${mod.trigger} | Default intensity: ${mod.defaultIntensity}\n` +
+          `Activation: ${mod.activationSignals.map((s) => `"${s}"`).join(", ")}\n` +
+          `Deactivation: ${mod.deactivationSignals.map((s) => `"${s}"`).join(", ")}\n\n` +
+          mod.intensityLevels.map((level) =>
+            `**${level.level}:** ${level.description}\n` +
+            level.rules.map((r) => `- ${r}`).join("\n")
+          ).join("\n\n") +
+          `\n\nBoundaries:\n` +
+          mod.boundaries.map((b) => `- ${b}`).join("\n") +
+          `\n\nSafety Valves:\n` +
+          mod.safetyValves.map((sv) => `- ${sv.condition}: ${sv.action}`).join("\n")
+        ).join("\n\n")
+      : "") +
     `\n\n## Routing Order\n\n` +
     toList(
       system.router.routingHeuristics.map(
-        (h) =>
-          `${h.domain} -> ${h.experts
+        (h) => {
+          let line = `${h.domain} -> ${h.experts
             .map((id) => `.codex/skills/${skillPathForExpert(system, id)}`)
-            .join(" -> ")}`
+            .join(" -> ")}`;
+          if (h.antiTriggers?.length) {
+            line += ` | Anti-triggers: ${h.antiTriggers.map((s) => `"${s}"`).join(", ")}`;
+          }
+          if (h.boostSignals?.length) {
+            line += ` | Boost: ${h.boostSignals.map((s) => `"${s}"`).join(", ")}`;
+          }
+          return line;
+        }
       )
     ) +
+    (r.negativeExamples
+      ? `\n\n## Routing Anti-Patterns\n\n` +
+        `Before finalizing expert selection, check these anti-patterns:\n\n` +
+        Object.entries(r.negativeExamples)
+          .map(([key, rules]) => {
+            const heading = key.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase()).trim();
+            return `**${heading}:**\n` + rules.map((s) => `- ${s}`).join("\n");
+          })
+          .join("\n\n")
+      : "") +
+    (r.refinementHeuristics
+      ? `\n\n## Two-Pass Routing Refinement\n\n` +
+        `${r.refinementHeuristics.description}\n\n` +
+        toList(r.refinementHeuristics.refinements.map((ref) => `**${ref.broadDomain}** -> ${ref.subDomains.join(", ")}`))
+      : "") +
     `\n\n## Global Rules\n\n` +
     (abl !== "uncertainty-rules" ? toList(g.uncertaintyRules) + `\n\n` : "") +
     (abl !== "foundational-constraints" ? toList(g.foundationalConstraints) : "") +

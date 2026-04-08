@@ -27,10 +27,16 @@
         "overridable": false
       },
       {
+        "name": "Modifier",
+        "source": "modifiers/*.json",
+        "scope": "Voice and style overlays. Active modifier overrides expert voice rules but never output contracts or structural sections.",
+        "overridable": "by globalRuntime and router rules only"
+      },
+      {
         "name": "Expert Persona",
         "source": "experts/*.json",
         "scope": "Active expert only",
-        "overridable": "by globalRuntime and router rules only"
+        "overridable": "by globalRuntime, router, and modifier rules only"
       }
     ],
     "invariant": "No expert prompt may contain instructions that contradict globalRuntime rules. If a conflict exists, globalRuntime wins."
@@ -41,11 +47,9 @@
     "context": "Global Operating System. This file is the base context for all agents. These rules supersede any individual expert stance unless explicitly overridden by the router handoff contract.",
     "executionBinding": [
       "For every request, classify the task before solving it.",
-      "Before the first tool call, skill invocation, or code edit, complete the routing step and state the routing decision.",
+      "Before the first tool call, skill invocation, or code edit, complete the routing step internally.",
       "Select exactly one primary expert unless an explicit router-approved pipeline handoff is required.",
-      "State the routing decision with Selected Expert, Reason, and Confidence.",
       "Apply only the selected expert method while it is active.",
-      "Use only Selected Expert, Reason, Confidence, and the active expert's required headings in the visible response unless an explicit handoff is named.",
       "Do not emit another expert's headings, section labels, or deliverable names while a different expert is active.",
       "Keep VERIFIED and HYPOTHESIS as inline uncertainty labels inside the selected sections, never as standalone headings.",
       "Follow the selected expert output contract.",
@@ -54,6 +58,14 @@
       "When speed and protocol conflict, follow protocol and make the delay explicit.",
       "Verify logging rules, uncertainty labeling, and the definition of done before finalizing.",
       "If multiple experts could apply, choose the one with the highest impact on correctness, not completeness."
+    ],
+    "executionBindingProduction": [
+      "Route internally before acting. Do not include the routing decision in your visible response.",
+      "Use only the active expert's required headings in the visible response unless an explicit handoff is named."
+    ],
+    "executionBindingDebug": [
+      "State the routing decision with Selected Expert, Reason, and Confidence.",
+      "Use only Selected Expert, Reason, Confidence, and the active expert's required headings in the visible response unless an explicit handoff is named."
     ],
     "routingDecisionFields": [
       "Domain",
