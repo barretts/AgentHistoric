@@ -181,11 +181,11 @@ After implementation, a separate adversarial verification step by Popper prevent
 npm run test:unit
 ```
 
-78 tests across 3 test files:
+109 unit tests across 3 test files:
 
 | File | Tests | Scope |
 |------|:-----:|-------|
-| `prompt-smoke.test.mjs` | 41 | Frontmatter validity, required sections, expert cross-references, guardrail completeness, token budgets, routing evolution rendering, pipeline structure, disambiguation expansion |
+| `prompt-smoke.test.mjs` | 72 | Frontmatter validity, required sections, expert cross-references, guardrail completeness, token budgets, routing evolution rendering, pipeline structure, disambiguation expansion, cross-target semantic equivalence (`PROTOCOL:` tests), model-parity suite structure |
 | `prompt-system.test.mjs` | 4 | Section resolution, generated artifact sync |
 | `regression.test.mjs` | 33 | Routing, evaluator, behavioral assertions, negative routing guards, diversity routing |
 
@@ -214,6 +214,7 @@ node scripts/run-regressions.mjs --suite diversity     # RB1-RB9: expert variety
 node scripts/run-regressions.mjs --suite twopass       # TP1-TP3: progressive routing
 node scripts/run-regressions.mjs --suite council       # CC1-CC4: deliberation council
 node scripts/run-regressions.mjs --suite verification  # AV1-AV3: adversarial verification
+node scripts/run-regressions.mjs --suite model-parity   # 13 cases: cross-model routing agreement
 ```
 
 Target filtering and model overrides:
@@ -242,6 +243,8 @@ node scripts/run-regressions.mjs --suite diversity --trials 3  # Multi-trial for
 ## Adding a Regression Case
 
 Add an object to `regression/fixtures/cases.json` with `id`, `category`, `name`, `targets`, `prompt`, `expectedPrimaryExpert`, `expectedSections`, `allowedHandoffs`, and `forbiddenBehaviors`. Optionally add `behavioralAssertions` (e.g., `["noGoldPlating", "concision"]`). Include the case id in `suites.smoke` or `suites.full`.
+
+For model-parity tracking, add `expectedParity: true` (models should agree) or `expectedParity: false` with a `parityNote` explaining the divergence. Include the case id in `suites.model-parity`.
 
 ## Verification Workflow
 
