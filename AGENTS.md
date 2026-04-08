@@ -11,9 +11,10 @@ This is a Mixture-of-Experts prompt generation system. The canonical source is `
 ### Key Conventions
 
 - Every expert JSON in `prompt-system/experts/` must have a `behavioralGuardrails` array with at least one Failure Mode → Rule → Anti-Over-Correction triple.
-- Renderers (`render-rich.mjs`, `render-sparse.mjs`, `render-codex.mjs`) emit a "Behavioral Guardrails" section for every expert.
+- Renderers (`render-rich.mjs`, `render-codex.mjs`) emit a "Behavioral Guardrails" section for every expert.
+- A **Renderer Protocol** (documented in `build-prompt-system.mjs`) defines the semantic invariants every render target must satisfy. Cross-target equivalence tests (`PROTOCOL:` prefix in `prompt-smoke.test.mjs`) enforce parity between the rich and codex render paths.
 - After any change to `prompt-system/` or `scripts/lib/render-*.mjs`, run `npm run build:prompts && npm run test:unit` to rebuild and verify.
-- 78 unit tests across 3 test files validate frontmatter, structural sections, expert cross-references, guardrail completeness, token budgets, behavioral assertions, routing evolution features, and artifact sync.
+- 109 unit tests across 3 test files validate frontmatter, structural sections, expert cross-references, guardrail completeness, token budgets, behavioral assertions, routing evolution features, cross-target semantic equivalence, model-parity suite structure, and artifact sync.
 
 ### Routing Evolution Features
 
@@ -62,3 +63,11 @@ After implementation, a separate adversarial verification step by Popper prevent
 - **Data:** Popper's expert JSON (`expert-qa-popper.json`) has a `verificationContract` section with 7 rules. The contract requires running code (not just reading), testing boundary conditions, and issuing exactly one of `VERDICT: PASS` or `VERDICT: FAIL`.
 - **Design rationale:** Inspired by Claude Code's verification agent pattern. Explicitly names rationalization patterns to reject.
 - **Tests:** Cases AV1-AV3 in `cases.json` (`verification` suite). Unit tests verify the pipeline has a VERDICT step and the verification contract renders on Popper.
+
+#### Model Parity Suite
+
+A dedicated regression suite for tracking cross-model routing agreement. Cases are tagged with `expectedParity: true` (models should agree) or `expectedParity: false` (known divergence, documented with `parityNote`).
+
+- **Data:** `cases.json` → `suites.model-parity` (13 cases). Cases with `expectedParity: false` include SP-Kn2 (GPT→Popper vs Claude→Knuth) and MI3 (Claude→Descartes vs GPT→Simon).
+- **Usage:** `node scripts/run-regressions.mjs --suite model-parity`
+- **Tests:** Unit tests verify suite structure, `expectedParity` field presence, and `parityNote` on divergent cases.
