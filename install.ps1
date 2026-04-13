@@ -3,7 +3,7 @@
 # Usage:
 #   iex "& { $(irm https://agenthistoric.com/install.ps1) } --all"
 #   # or download and run:
-#   pwsh -File .\install.ps1 --all
+#   powershell -ExecutionPolicy Bypass -File .\install.ps1 --all
 
 [CmdletBinding()]
 param(
@@ -43,7 +43,7 @@ try {
   }
 
   Write-Host "--> Running local installer..."
-  & pwsh -NoProfile -ExecutionPolicy Bypass -File $targetScript @InstallerArgs
+  & $targetScript @InstallerArgs
 }
 finally {
   if (Test-Path $tmpDir) {
