@@ -188,7 +188,7 @@ function Detect-Targets {
   $detected = @()
   if (Test-Path (Join-Path $homeDir ".claude")) { $detected += "claude" }
   if (Test-Path (Join-Path $homeDir ".cursor")) { $detected += "cursor" }
-  if (Test-Path (Join-Path $homeDir ".windsurf") -or Test-Path (Join-Path $homeDir ".codeium/windsurf")) { $detected += "windsurf" }
+  if ((Test-Path (Join-Path $homeDir ".windsurf")) -or (Test-Path (Join-Path $homeDir ".codeium/windsurf"))) { $detected += "windsurf" }
   if (Test-Path (Join-Path $homeDir ".codex")) { $detected += "codex" }
   if ((Test-Path (Join-Path $appData "opencode")) -or (Test-Path (Join-Path $homeDir ".config/opencode"))) { $detected += "opencode" }
   return $detected

@@ -35,7 +35,8 @@
       <section class="section">
         <h2>Quick Install</h2>
         <p>Install the remote bootstrap script from the official website:</p>
-        <pre><code>bash &lt;(curl -fsSL https://agenthistoric.com/install.sh) --all</code></pre>
+        <pre><code>bash &lt;(curl -fsSL https://agenthistoric.com/install.sh) --all
+powershell -ExecutionPolicy Bypass -Command "&amp; ([ScriptBlock]::Create((New-Object Net.WebClient).DownloadString('https://agenthistoric.com/install.ps1'))) --all"</code></pre>
         <p>For local development from a clone, run <code>bash install-local.sh</code>.</p>
       </section>
 

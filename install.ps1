@@ -1,7 +1,7 @@
 #!/usr/bin/env pwsh
 # install.ps1 -- Remote bootstrap installer for Agent Historic (PowerShell).
 # Usage:
-#   iex "& { $(irm https://agenthistoric.com/install.ps1) } --all"
+#   & ([ScriptBlock]::Create((New-Object Net.WebClient).DownloadString('https://agenthistoric.com/install.ps1'))) --all
 #   # or download and run:
 #   powershell -ExecutionPolicy Bypass -File .\install.ps1 --all
 
