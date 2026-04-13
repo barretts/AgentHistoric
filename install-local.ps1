@@ -1,6 +1,6 @@
 #!/usr/bin/env pwsh
 # install-local.ps1 -- Install Agent Historic persona rules into AI coding editors on Windows/PowerShell.
-# Usage: pwsh -File .\install-local.ps1 [--claude] [--cursor] [--windsurf] [--codex] [--opencode] [--all]
+# Usage: powershell -ExecutionPolicy Bypass -File .\install-local.ps1 [--claude] [--cursor] [--windsurf] [--codex] [--opencode] [--all]
 # No flags = auto-detect installed editors.
 
 param(
@@ -19,7 +19,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 if ($help) {
-  Write-Host "Usage: pwsh -File .\install-local.ps1 [options]"
+  Write-Host "Usage: powershell -ExecutionPolicy Bypass -File .\install-local.ps1 [options]"
   Write-Host ""
   Write-Host "Options:"
   Write-Host "  --claude       Install rules for Claude Code"
