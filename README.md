@@ -38,7 +38,7 @@ bash install-local.sh --cursor --windsurf
 
 # 4. Remote bootstrap install (served from GitHub Pages)
 bash <(curl -fsSL https://agenthistoric.com/install.sh) --all
-
+powershell -ExecutionPolicy Bypass -Command "& ([ScriptBlock]::Create((New-Object Net.WebClient).DownloadString('https://agenthistoric.com/install.ps1'))) --all"
 ```
 
 ## Layout
@@ -75,7 +75,7 @@ bash install-local.sh [options]
 ```
 
 ```powershell
-pwsh -File .\install-local.ps1 [options]
+powershell -ExecutionPolicy Bypass -Command "& ([ScriptBlock]::Create((New-Object Net.WebClient).DownloadString('https://agenthistoric.com/install.ps1'))) [options]"
 ```
 
 | Flag | Effect |
@@ -95,9 +95,9 @@ bash <(curl -fsSL https://agenthistoric.com/install.sh) [options]
 ```
 
 ```powershell
-iex "& { $(irm https://agenthistoric.com/install.ps1) } --all"
+powershell -ExecutionPolicy Bypass -Command "& ([ScriptBlock]::Create((New-Object Net.WebClient).DownloadString('https://agenthistoric.com/install.ps1'))) [options]"
 # or with flags:
-iex "& { $(irm https://agenthistoric.com/install.ps1) } --cursor --codex"
+powershell -ExecutionPolicy Bypass -Command "& ([ScriptBlock]::Create((New-Object Net.WebClient).DownloadString('https://agenthistoric.com/install.ps1'))) --cursor --codex"
 ```
 
 ### Windows Install Paths
