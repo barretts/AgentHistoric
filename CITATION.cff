@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Philosophical Persona Prompting as Semantic Indexing for Latent Representation Steering in Large Language Models"
+type: software
+authors:
+  - family-names: Sonntag
+    given-names: Barrett
+    orcid: "https://orcid.org/0009-0003-3404-3981"
+doi: "10.5281/zenodo.19559517"
+url: "https://github.com/barretts/AgentHistoric"
+repository-code: "https://github.com/barretts/AgentHistoric"
+license: MIT
+keywords:
+  - large language models
+  - persona
+  - prompting
+  - semantic indexing
+  - representation steering
+  - prompt engineering
