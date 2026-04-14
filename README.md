@@ -1,5 +1,7 @@
 # Agent Historic
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19559517.svg)](https://doi.org/10.5281/zenodo.19559517)
+
 > **Translating the world's most documented lives into high-fidelity agentic personas.**
 
 Agent Historic is an open library of persona architectures for Large Language Models. It bridges primary historical records and modern prompt engineering by distilling the reasoning, rhetoric, and decision-making frameworks of well-attested figures into actionable system prompts.
@@ -254,6 +256,35 @@ For model-parity tracking, add `expectedParity: true` (models should agree) or `
 4. Inspect `.logs/regression-summary-*.md`
 5. `npm run test:regressions`
 6. Compare parity deltas and adjust the prompt layer if drift is systematic.
+
+## Ecosystem
+
+Agent Historic shares compilation tooling with the [Agentic Skill Mill](https://github.com/barretts/AgenticSkillMill) ecosystem but maintains its own MoE routing layer and regression suite. Related projects:
+
+| Project | Role | Links |
+|---------|------|-------|
+| **[Agentic Skill Mill](https://github.com/barretts/AgenticSkillMill)** | Parent — defines the skill-system-template architecture, fragment composition, and 7-target compiler | [agenticskillmill.com](https://agenticskillmill.com) |
+| **[AgentThreader](https://github.com/barretts/AgentThreader)** | Sibling — manifest-driven agentic CLI orchestration with contracts and self-healing | [agentthreader.com](https://agentthreader.com) |
+| **[TechDemoDirector](https://github.com/barretts/TechDemoDirector)** | Sibling — code walk-through presentation scripting | [Site](https://barretts.github.io/TechDemoDirector) |
+
+## Citation
+
+If you use Agent Historic in your research, please cite:
+
+> Sonntag, Barrett. (2025). *Philosophical Persona Prompting as Semantic Indexing for Latent Representation Steering in Large Language Models*. Zenodo. [https://doi.org/10.5281/zenodo.19559517](https://doi.org/10.5281/zenodo.19559517)
+
+BibTeX:
+
+```bibtex
+@techreport{sonntag2025persona,
+  author    = {Sonntag, Barrett},
+  title     = {Philosophical Persona Prompting as Semantic Indexing for Latent Representation Steering in Large Language Models},
+  year      = {2025},
+  doi       = {10.5281/zenodo.19559517},
+  url       = {https://doi.org/10.5281/zenodo.19559517},
+  publisher = {Zenodo}
+}
+```
 
 ## License
 
