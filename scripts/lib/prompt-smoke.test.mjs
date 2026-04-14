@@ -67,15 +67,18 @@ test("PROTOCOL: all targets reference the same set of expert IDs in init artifac
   const cursorInit = artifacts.get("compiled/cursor/rules/00-init.mdc");
   const codexAgents = artifacts.get("compiled/codex/AGENTS.md");
   const crushInit = artifacts.get("compiled/crush/rules/00-init.md");
+  const geminiInit = artifacts.get("compiled/gemini/rules/00-init.md");
 
   const claudeExperts = extractExpertReferences(claudeInit);
   const cursorExperts = extractExpertReferences(cursorInit);
   const codexExperts = extractExpertReferences(codexAgents);
   const crushExperts = extractExpertReferences(crushInit);
+  const geminiExperts = extractExpertReferences(geminiInit);
 
   assert.deepEqual(claudeExperts, cursorExperts, "Claude and Cursor init must reference same experts");
   assert.deepEqual(claudeExperts, codexExperts, "Claude and Codex must reference same experts in init/AGENTS.md");
   assert.deepEqual(claudeExperts, crushExperts, "Claude and Crush init must reference same experts");
+  assert.deepEqual(claudeExperts, geminiExperts, "Claude and Gemini init must reference same experts");
 });
 
 test("PROTOCOL: all targets render the same routing domains", () => {
@@ -149,6 +152,26 @@ test("every cursor .mdc artifact has valid frontmatter", () => {
     assert.ok(
       closingIndex > 0,
       `${filePath}: frontmatter never closed`
+    );
+  }
+});
+
+test("every gemini .md artifact has HTML comment marker and no YAML frontmatter", () => {
+  const geminiArtifacts = [...artifacts].filter(
+    ([p]) => p.startsWith("compiled/gemini/rules/") && p.endsWith(".md")
+  );
+
+  assert.ok(geminiArtifacts.length >= 13, `Expected >= 13 gemini artifacts, got ${geminiArtifacts.length}`);
+
+  for (const [filePath, content] of geminiArtifacts) {
+    assert.match(
+      content,
+      /<!-- managed_by: agent-historic -->/,
+      `${filePath}: missing HTML comment managed_by marker`
+    );
+    assert.ok(
+      !content.startsWith("---\n"),
+      `${filePath}: gemini artifact must not have YAML frontmatter`
     );
   }
 });
@@ -294,7 +317,7 @@ test("init prompts contain required sections", () => {
   const initFiles = [...artifacts].filter(
     ([p]) => p.includes("00-init")
   );
-  assert.ok(initFiles.length >= 4, "Expected init files for cursor, windsurf, claude, crush");
+  assert.ok(initFiles.length >= 5, "Expected init files for cursor, windsurf, claude, crush, gemini");
 
   const requiredPatterns = [
     /logging/i,
@@ -316,7 +339,7 @@ test("init prompts contain required sections", () => {
 
 test("rich init prompts render routing-first and protocol-over-velocity rules", () => {
   const richInitFiles = [...artifacts].filter(([p]) =>
-    ["compiled/claude/rules/00-init.md", "compiled/windsurf/rules/00-init.md", "compiled/cursor/rules/00-init.mdc", "compiled/crush/rules/00-init.md"].includes(p)
+    ["compiled/claude/rules/00-init.md", "compiled/windsurf/rules/00-init.md", "compiled/cursor/rules/00-init.mdc", "compiled/crush/rules/00-init.md", "compiled/gemini/rules/00-init.md"].includes(p)
   );
 
   for (const [filePath, content] of richInitFiles) {
@@ -344,7 +367,7 @@ test("router prompts contain required sections", () => {
   const routerFiles = [...artifacts].filter(
     ([p]) => p.includes("01-router")
   );
-  assert.ok(routerFiles.length >= 4, "Expected router files for cursor, windsurf, claude, crush");
+  assert.ok(routerFiles.length >= 5, "Expected router files for cursor, windsurf, claude, crush, gemini");
 
   const requiredPatterns = [/routing heuristics/i, /pipeline/i];
 
@@ -361,7 +384,7 @@ test("router prompts contain required sections", () => {
 
 test("rich router prompts render the router contract rules", () => {
   const richRouterFiles = [...artifacts].filter(([p]) =>
-    ["compiled/claude/rules/01-router.md", "compiled/windsurf/rules/01-router.md", "compiled/cursor/rules/01-router.mdc", "compiled/crush/rules/01-router.md"].includes(p)
+    ["compiled/claude/rules/01-router.md", "compiled/windsurf/rules/01-router.md", "compiled/cursor/rules/01-router.mdc", "compiled/crush/rules/01-router.md", "compiled/gemini/rules/01-router.md"].includes(p)
   );
 
   for (const [filePath, content] of richRouterFiles) {
@@ -467,6 +490,12 @@ test("every expert in swarm registry has generated artifacts across all targets"
         p === path.join("compiled", "crush", "rules", `${expertId}.md`)
     );
     assert.ok(crushFile, `Missing crush artifact for ${expertId}`);
+
+    const geminiFile = [...artifacts].find(
+      ([p]) =>
+        p === path.join("compiled", "gemini", "rules", `${expertId}.md`)
+    );
+    assert.ok(geminiFile, `Missing gemini artifact for ${expertId}`);
   }
 });
 

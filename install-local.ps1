@@ -1,6 +1,6 @@
 #!/usr/bin/env pwsh
 # install-local.ps1 -- Install Agent Historic persona rules into AI coding editors on Windows/PowerShell.
-# Usage: powershell -ExecutionPolicy Bypass -File .\install-local.ps1 [--claude] [--cursor] [--windsurf] [--codex] [--opencode] [--all]
+# Usage: powershell -ExecutionPolicy Bypass -File .\install-local.ps1 [--claude] [--cursor] [--windsurf] [--codex] [--opencode] [--gemini] [--all]
 # No flags = auto-detect installed editors.
 
 param(
@@ -10,6 +10,7 @@ param(
   [switch]$codex,
   [switch]$crush,
   [switch]$opencode,
+  [switch]$gemini,
   [switch]$all,
   [switch]$list,
   [switch]$debug,
@@ -29,6 +30,7 @@ if ($help) {
   Write-Host "  --codex        Install rules for Codex"
   Write-Host "  --crush        Install rules for Crush"
   Write-Host "  --opencode     Install rules for OpenCode"
+  Write-Host "  --gemini       Install rules for Gemini CLI"
   Write-Host "  --all          Install for all editors"
   Write-Host "  --list         List installed files and their status (no changes made)"
   Write-Host "  --scaffolded   Use scaffolded voice during build"
@@ -48,6 +50,7 @@ $srcWindsurf = Join-Path $repoDir "compiled/windsurf/rules"
 $srcCodex = Join-Path $repoDir "compiled/codex"
 $srcCrush = Join-Path $repoDir "compiled/crush/rules"
 $srcOpenCode = $srcClaude
+$srcGemini = Join-Path $repoDir "compiled/gemini/rules"
 
 # Target directories (Windows defaults)
 $homeDir = $HOME
@@ -61,6 +64,8 @@ $crushMd = if ($appData) { Join-Path $appData "crush/CRUSH.md" } else { Join-Pat
 $crushJson = if ($appData) { Join-Path $appData "crush/crush.json" } else { Join-Path $homeDir ".config/crush/crush.json" }
 $destOpenCode = if ($appData) { Join-Path $appData "opencode/rules" } else { Join-Path $homeDir ".config/opencode/rules" }
 $openCodeAgents = if ($appData) { Join-Path $appData "opencode/AGENTS.md" } else { Join-Path $homeDir ".config/opencode/AGENTS.md" }
+$destGemini = Join-Path $homeDir ".gemini/rules"
+$geminiMd = Join-Path $homeDir ".gemini/GEMINI.md"
 
 $managedMarker = "managed_by: agent-historic"
 $markerBegin = "<!-- agent-historic:loader-begin -->"
@@ -185,6 +190,44 @@ function Install-OpenCode {
   Inject-LoaderHeader $openCodeAgents "~/.config/opencode/rules" "Agent Instructions"
 }
 
+function Install-Gemini {
+  Copy-GlobToDest (Join-Path $srcGemini "*.md") $destGemini "Gemini"
+  # Build @import block from installed rule files
+  $files = Get-ChildItem -Path (Join-Path $srcGemini "*.md") -File -ErrorAction SilentlyContinue
+  $imports = @("$markerBegin", "# Agent Historic", "")
+  foreach ($f in $files) {
+    $imports += "@./rules/$($f.Name)"
+  }
+  $imports += $markerEnd
+  $block = $imports -join "`n"
+
+  $content = ""
+  if (Test-Path $geminiMd) {
+    $content = Get-Content -Path $geminiMd -Raw
+  } else {
+    Ensure-Dir (Split-Path -Parent $geminiMd)
+  }
+
+  if ($content.Contains($markerBegin) -and $content.Contains($markerEnd)) {
+    $start = $content.IndexOf($markerBegin)
+    $finish = $content.IndexOf($markerEnd, $start)
+    if ($start -ge 0 -and $finish -ge 0) {
+      $finish = $finish + $markerEnd.Length
+      if ($finish -lt $content.Length -and $content[$finish] -eq "`n") {
+        $finish += 1
+      }
+      $updated = $content.Substring(0, $start) + $block + "`n" + $content.Substring($finish)
+      Set-Content -Path $geminiMd -Value $updated -NoNewline
+    }
+  } elseif ([string]::IsNullOrWhiteSpace($content)) {
+    Set-Content -Path $geminiMd -Value $block -NoNewline
+  } else {
+    Set-Content -Path $geminiMd -Value ($block + "`n`n" + $content) -NoNewline
+  }
+
+  Write-Host "    Loader:   $geminiMd"
+}
+
 function List-GlobStatus([string]$pattern, [string]$dest, [string]$title) {
   Write-Host "    $title"
   $files = Get-ChildItem -Path $pattern -File -ErrorAction SilentlyContinue
@@ -228,6 +271,18 @@ function List-OpenCode {
   Write-Host "      $openCodeAgents  [$astatus]"
 }
 
+function List-Gemini {
+  Write-Host "    Gemini (~/.gemini/rules/):"
+  $files = Get-ChildItem -Path (Join-Path $srcGemini "*.md") -File -ErrorAction SilentlyContinue
+  foreach ($f in $files) {
+    $target = Join-Path $destGemini $f.Name
+    $status = if (Test-Path $target) { "installed" } else { "not found" }
+    Write-Host "      $target  [$status]"
+  }
+  $gmstatus = if (Test-Path $geminiMd) { "installed" } else { "not found" }
+  Write-Host "      $geminiMd  [$gmstatus]"
+}
+
 function Detect-Targets {
   $detected = @()
   if (Test-Path (Join-Path $homeDir ".claude")) { $detected += "claude" }
@@ -236,6 +291,7 @@ function Detect-Targets {
   if (Test-Path (Join-Path $homeDir ".codex")) { $detected += "codex" }
   if ((Test-Path (Join-Path $appData "crush")) -or (Test-Path (Join-Path $homeDir ".config/crush"))) { $detected += "crush" }
   if ((Test-Path (Join-Path $appData "opencode")) -or (Test-Path (Join-Path $homeDir ".config/opencode"))) { $detected += "opencode" }
+  if (Test-Path (Join-Path $homeDir ".gemini")) { $detected += "gemini" }
   return $detected
 }
 
@@ -262,7 +318,7 @@ if (-not (Test-Path $srcClaude)) {
 
 $targets = New-Object System.Collections.Generic.List[string]
 if ($all) {
-  @("claude", "cursor", "windsurf", "codex", "crush", "opencode") | ForEach-Object { [void]$targets.Add($_) }
+  @("claude", "cursor", "windsurf", "codex", "crush", "opencode", "gemini") | ForEach-Object { [void]$targets.Add($_) }
 } else {
   if ($claude) { [void]$targets.Add("claude") }
   if ($cursor) { [void]$targets.Add("cursor") }
@@ -270,6 +326,7 @@ if ($all) {
   if ($codex) { [void]$targets.Add("codex") }
   if ($crush) { [void]$targets.Add("crush") }
   if ($opencode) { [void]$targets.Add("opencode") }
+  if ($gemini) { [void]$targets.Add("gemini") }
 }
 
 if ($targets.Count -eq 0) {
@@ -277,7 +334,7 @@ if ($targets.Count -eq 0) {
 }
 
 if ($targets.Count -eq 0) {
-  throw "ERROR: No supported editors detected. Use --claude, --cursor, --windsurf, --codex, --crush, or --opencode."
+  throw "ERROR: No supported editors detected. Use --claude, --cursor, --windsurf, --codex, --crush, --opencode, or --gemini."
 }
 
 if ($list) {
@@ -292,6 +349,7 @@ if ($list) {
       "codex" { List-Codex }
       "crush" { List-Crush }
       "opencode" { List-OpenCode }
+      "gemini" { List-Gemini }
     }
     Write-Host ""
   }
@@ -314,6 +372,7 @@ foreach ($t in $targets) {
     "codex" { Install-Codex }
     "crush" { Install-Crush }
     "opencode" { Install-OpenCode }
+    "gemini" { Install-Gemini }
   }
 }
 
