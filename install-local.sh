@@ -12,6 +12,7 @@ SRC_CLAUDE="$REPO_DIR/compiled/claude/rules"
 SRC_CURSOR="$REPO_DIR/compiled/cursor/rules"
 SRC_WINDSURF="$REPO_DIR/compiled/windsurf/rules"
 SRC_CODEX="$REPO_DIR/compiled/codex"
+SRC_CRUSH="$REPO_DIR/compiled/crush/rules"
 SRC_OPENCODE="$SRC_CLAUDE"
 
 # --- Target directories (user home) ---
@@ -19,6 +20,7 @@ DEST_CLAUDE="$HOME/.claude/rules"
 DEST_CURSOR="$HOME/.cursor/rules"
 DEST_WINDSURF="$HOME/.windsurf/rules"
 DEST_CODEX="$HOME/.codex"
+DEST_CRUSH="$HOME/.config/crush/rules"
 DEST_OPENCODE="$HOME/.config/opencode/rules"
 
 # --- Managed-file marker (used for stale cleanup) ---
@@ -144,6 +146,64 @@ install_codex() {
   echo "    Codex:    $DEST_CODEX/"
 }
 
+install_crush() {
+  mkdir -p "$DEST_CRUSH"
+  cleanup_managed_files "$DEST_CRUSH"
+  for f in "$SRC_CRUSH"/*.md; do
+    [[ -f "$f" ]] || continue
+    cp "$f" "$DEST_CRUSH/$(basename "$f")"
+    echo "    Crush:    $DEST_CRUSH/$(basename "$f")"
+  done
+  inject_loader_header "$HOME/.config/crush/CRUSH.md" "~/.config/crush/rules" "Crush Instructions"
+  # Ensure crush.json has context_paths pointing to the rules and CRUSH.md
+  local crush_json="$HOME/.config/crush/crush.json"
+  local ctx_crush="~/.config/crush/CRUSH.md"
+  local ctx_rules="~/.config/crush/rules/"
+  if [[ -f "$crush_json" ]]; then
+    # Add context_paths if not already present (idempotent)
+    local needs_update=false
+    if ! python3 -c "
+import json, sys
+with open('$crush_json') as f:
+    cfg = json.load(f)
+paths = cfg.get('options', {}).get('context_paths', [])
+sys.exit(0 if '$ctx_crush' in paths and '$ctx_rules' in paths else 1)
+" 2>/dev/null; then
+      needs_update=true
+    fi
+    if [[ "$needs_update" == true ]]; then
+      python3 <<'PY'
+import json, os
+path = os.path.expanduser("~/.config/crush/crush.json")
+with open(path) as f:
+    cfg = json.load(f)
+opts = cfg.setdefault("options", {})
+ctx = opts.setdefault("context_paths", [])
+for p in ["~/.config/crush/CRUSH.md", "~/.config/crush/rules/"]:
+    if p not in ctx:
+        ctx.append(p)
+with open(path, "w") as f:
+    json.dump(cfg, f, indent=2)
+    f.write("\n")
+PY
+      echo "    Config:   $crush_json (added context_paths)"
+    fi
+  else
+    mkdir -p "$(dirname "$crush_json")"
+    cat > "$crush_json" <<'JSON'
+{
+  "options": {
+    "context_paths": [
+      "~/.config/crush/CRUSH.md",
+      "~/.config/crush/rules/"
+    ]
+  }
+}
+JSON
+    echo "    Config:   $crush_json (created with context_paths)"
+  fi
+}
+
 install_opencode() {
   mkdir -p "$DEST_OPENCODE"
   cleanup_managed_files "$DEST_OPENCODE"
@@ -204,6 +264,23 @@ list_codex() {
   echo "      $dest  [$status]"
 }
 
+list_crush() {
+  echo "    Crush (~/.config/crush/rules/):"
+  for f in "$SRC_CRUSH"/*.md; do
+    [[ -f "$f" ]] || continue
+    local name
+    name="$(basename "$f")"
+    local dest="$DEST_CRUSH/$name"
+    local status="not found"
+    [[ -f "$dest" ]] && status="installed"
+    echo "      $dest  [$status]"
+  done
+  local crush_md="$HOME/.config/crush/CRUSH.md"
+  local cmstatus="not found"
+  [[ -f "$crush_md" ]] && cmstatus="installed"
+  echo "      $crush_md  [$cmstatus]"
+}
+
 list_opencode() {
   echo "    OpenCode (~/.config/opencode/rules/):"
   for f in "$SRC_OPENCODE"/*.md; do
@@ -229,6 +306,7 @@ detect_editors() {
   [[ -d "$HOME/.cursor" ]] && detected+=("cursor")
   [[ -d "$HOME/.windsurf" || -d "$HOME/.codeium/windsurf" ]] && detected+=("windsurf")
   [[ -d "$HOME/.codex" ]] && detected+=("codex")
+  [[ -d "$HOME/.config/crush" ]] && detected+=("crush")
   [[ -d "$HOME/.config/opencode" ]] && detected+=("opencode")
   echo "${detected[@]}"
 }
@@ -282,6 +360,13 @@ print_post_install() {
         echo "    No extra config needed."
         echo ""
         ;;
+      crush)
+        echo "  Crush"
+        echo "    Rules installed to ~/.config/crush/rules/."
+        echo "    CRUSH.md loader header injected into ~/.config/crush/CRUSH.md."
+        echo "    context_paths added to ~/.config/crush/crush.json."
+        echo ""
+        ;;
       opencode)
         echo "  OpenCode"
         echo "    Rules installed to ~/.config/opencode/rules/."
@@ -309,8 +394,9 @@ while [[ $# -gt 0 ]]; do
     --cursor)    TARGETS+=("cursor"); shift ;;
     --windsurf)  TARGETS+=("windsurf"); shift ;;
     --codex)     TARGETS+=("codex"); shift ;;
+    --crush)     TARGETS+=("crush"); shift ;;
     --opencode)  TARGETS+=("opencode"); shift ;;
-    --all)       TARGETS=("claude" "cursor" "windsurf" "codex" "opencode"); shift ;;
+    --all)       TARGETS=("claude" "cursor" "windsurf" "codex" "crush" "opencode"); shift ;;
     --list)      DO_LIST=true; shift ;;
     --debug)     DEBUG_MODE=true; shift ;;
     --scaffolded) SCAFFOLDED_MODE=true; shift ;;
@@ -322,6 +408,7 @@ while [[ $# -gt 0 ]]; do
       echo "  --cursor       Install rules for Cursor"
       echo "  --windsurf     Install rules for Windsurf"
       echo "  --codex        Install rules for Codex"
+      echo "  --crush        Install rules for Crush"
       echo "  --opencode     Install rules for OpenCode"
       echo "  --all          Install for all editors"
       echo "  --list         List installed files and their status (no changes made)"
@@ -370,7 +457,7 @@ if [[ ${#TARGETS[@]} -eq 0 ]]; then
 fi
 
 if [[ ${#TARGETS[@]} -eq 0 ]]; then
-  echo "ERROR: No supported editors detected. Use --claude, --cursor, --windsurf, --codex, or --opencode."
+  echo "ERROR: No supported editors detected. Use --claude, --cursor, --windsurf, --codex, --crush, or --opencode."
   exit 1
 fi
 
