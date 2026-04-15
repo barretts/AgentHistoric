@@ -64,6 +64,9 @@ export function generateArtifacts(system, options = {}) {
     );
   }
 
+  // Rich + md frontmatter → compiled/crush/rules/
+  addSet(artifacts, system, path.join("compiled", "crush", "rules"), ".md", crushFm, renderRichInit, renderRichRouter, renderRichExpert, options);
+
   return artifacts;
 }
 
@@ -108,6 +111,25 @@ function mdFm(kind, _system, expert) {
 }
 
 function windsurfFm(kind, _system, expert) {
+  if (kind === "init") {
+    return renderMdFrontmatter({
+      trigger: "always",
+      description: "Global OS for the MoE Swarm Architecture. Loaded into every agent context. Defines universal mandates that supersede individual expert personas."
+    });
+  }
+  if (kind === "router") {
+    return renderMdFrontmatter({
+      trigger: "always",
+      description: "MoE Orchestrator / Router. Front-line triage agent. Analyzes intent and routes to the correct pipeline or expert. Use when the task type is ambiguous or spans multiple concerns."
+    });
+  }
+  return renderMdFrontmatter({
+    trigger: "model_decision",
+    description: expert.activationDescription
+  });
+}
+
+function crushFm(kind, _system, expert) {
   if (kind === "init") {
     return renderMdFrontmatter({
       trigger: "always",
