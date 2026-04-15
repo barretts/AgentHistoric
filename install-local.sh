@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # install-local.sh -- Install Agent Historic persona rules into AI coding editors
-# Run from the project root: bash install-local.sh [--claude] [--cursor] [--windsurf] [--codex] [--opencode] [--all]
+# Run from the project root: bash install-local.sh [--claude] [--cursor] [--windsurf] [--codex] [--opencode] [--gemini] [--all]
 # No flags = auto-detect installed editors
 
 set -e
@@ -14,6 +14,7 @@ SRC_WINDSURF="$REPO_DIR/compiled/windsurf/rules"
 SRC_CODEX="$REPO_DIR/compiled/codex"
 SRC_CRUSH="$REPO_DIR/compiled/crush/rules"
 SRC_OPENCODE="$SRC_CLAUDE"
+SRC_GEMINI="$REPO_DIR/compiled/gemini/rules"
 
 # --- Target directories (user home) ---
 DEST_CLAUDE="$HOME/.claude/rules"
@@ -22,6 +23,7 @@ DEST_WINDSURF="$HOME/.windsurf/rules"
 DEST_CODEX="$HOME/.codex"
 DEST_CRUSH="$HOME/.config/crush/rules"
 DEST_OPENCODE="$HOME/.config/opencode/rules"
+DEST_GEMINI="$HOME/.gemini/rules"
 
 # --- Managed-file marker (used for stale cleanup) ---
 MANAGED_MARKER="managed_by: agent-historic"
@@ -215,6 +217,69 @@ install_opencode() {
   inject_loader_header "$HOME/.config/opencode/AGENTS.md" "~/.config/opencode/rules" "Agent Instructions"
 }
 
+install_gemini() {
+  mkdir -p "$DEST_GEMINI"
+  cleanup_managed_files "$DEST_GEMINI"
+  for f in "$SRC_GEMINI"/*.md; do
+    [[ -f "$f" ]] || continue
+    cp "$f" "$DEST_GEMINI/$(basename "$f")"
+    echo "    Gemini:   $DEST_GEMINI/$(basename "$f")"
+  done
+  # Build @import block from installed rule files
+  local gemini_md="$HOME/.gemini/GEMINI.md"
+  local imports=""
+  imports="$MARKER_BEGIN
+# Agent Historic
+"
+  for f in "$SRC_GEMINI"/*.md; do
+    [[ -f "$f" ]] || continue
+    imports="$imports
+@./rules/$(basename "$f")"
+  done
+  imports="$imports
+$MARKER_END"
+
+  if [[ -f "$gemini_md" ]]; then
+    if grep -q "$MARKER_BEGIN" "$gemini_md" 2>/dev/null; then
+      local tmp
+      tmp="$(mktemp)"
+      BLOCK="$imports" MARKER_BEGIN="$MARKER_BEGIN" MARKER_END="$MARKER_END" TARGET_FILE="$gemini_md" python3 <<'PY' > "$tmp"
+import os
+from pathlib import Path
+
+path = Path(os.environ["TARGET_FILE"])
+content = path.read_text()
+begin = os.environ["MARKER_BEGIN"]
+end = os.environ["MARKER_END"]
+block = os.environ["BLOCK"]
+
+start = content.find(begin)
+finish = content.find(end, start if start != -1 else 0)
+
+if start != -1 and finish != -1:
+    finish += len(end)
+    if finish < len(content) and content[finish:finish + 1] == "\n":
+        finish += 1
+    updated = content[:start] + block + "\n" + content[finish:]
+else:
+    updated = block + "\n\n" + content
+
+print(updated, end="")
+PY
+      mv "$tmp" "$gemini_md"
+    else
+      local tmp
+      tmp="$(mktemp)"
+      { echo "$imports"; echo ""; cat "$gemini_md"; } > "$tmp"
+      mv "$tmp" "$gemini_md"
+    fi
+  else
+    mkdir -p "$(dirname "$gemini_md")"
+    echo "$imports" > "$gemini_md"
+  fi
+  echo "    Loader:   $gemini_md"
+}
+
 # --- List functions ---
 
 list_claude() {
@@ -298,6 +363,23 @@ list_opencode() {
   echo "      $agents  [$astatus]"
 }
 
+list_gemini() {
+  echo "    Gemini (~/.gemini/rules/):"
+  for f in "$SRC_GEMINI"/*.md; do
+    [[ -f "$f" ]] || continue
+    local name
+    name="$(basename "$f")"
+    local dest="$DEST_GEMINI/$name"
+    local status="not found"
+    [[ -f "$dest" ]] && status="installed"
+    echo "      $dest  [$status]"
+  done
+  local gemini_md="$HOME/.gemini/GEMINI.md"
+  local gmstatus="not found"
+  [[ -f "$gemini_md" ]] && gmstatus="installed"
+  echo "      $gemini_md  [$gmstatus]"
+}
+
 # --- Auto-detection ---
 
 detect_editors() {
@@ -308,6 +390,7 @@ detect_editors() {
   [[ -d "$HOME/.codex" ]] && detected+=("codex")
   [[ -d "$HOME/.config/crush" ]] && detected+=("crush")
   [[ -d "$HOME/.config/opencode" ]] && detected+=("opencode")
+  [[ -d "$HOME/.gemini" ]] && detected+=("gemini")
   echo "${detected[@]}"
 }
 
@@ -374,6 +457,14 @@ print_post_install() {
         echo "    No extra config needed."
         echo ""
         ;;
+      gemini)
+        echo "  Gemini CLI"
+        echo "    Rules installed to ~/.gemini/rules/."
+        echo "    GEMINI.md @import block injected into ~/.gemini/GEMINI.md."
+        echo "    Gemini CLI loads rules via native @file.md import syntax."
+        echo "    No extra config needed."
+        echo ""
+        ;;
     esac
   done
 
@@ -396,7 +487,8 @@ while [[ $# -gt 0 ]]; do
     --codex)     TARGETS+=("codex"); shift ;;
     --crush)     TARGETS+=("crush"); shift ;;
     --opencode)  TARGETS+=("opencode"); shift ;;
-    --all)       TARGETS=("claude" "cursor" "windsurf" "codex" "crush" "opencode"); shift ;;
+    --gemini)    TARGETS+=("gemini"); shift ;;
+    --all)       TARGETS=("claude" "cursor" "windsurf" "codex" "crush" "opencode" "gemini"); shift ;;
     --list)      DO_LIST=true; shift ;;
     --debug)     DEBUG_MODE=true; shift ;;
     --scaffolded) SCAFFOLDED_MODE=true; shift ;;
@@ -410,6 +502,7 @@ while [[ $# -gt 0 ]]; do
       echo "  --codex        Install rules for Codex"
       echo "  --crush        Install rules for Crush"
       echo "  --opencode     Install rules for OpenCode"
+      echo "  --gemini       Install rules for Gemini CLI"
       echo "  --all          Install for all editors"
       echo "  --list         List installed files and their status (no changes made)"
       echo "  --scaffolded   Use scaffolded voice (externalized reasoning with HYPOTHESIS/VERIFIED labels)"
@@ -457,7 +550,7 @@ if [[ ${#TARGETS[@]} -eq 0 ]]; then
 fi
 
 if [[ ${#TARGETS[@]} -eq 0 ]]; then
-  echo "ERROR: No supported editors detected. Use --claude, --cursor, --windsurf, --codex, --crush, or --opencode."
+  echo "ERROR: No supported editors detected. Use --claude, --cursor, --windsurf, --codex, --crush, --opencode, or --gemini."
   exit 1
 fi
 

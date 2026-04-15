@@ -67,6 +67,9 @@ export function generateArtifacts(system, options = {}) {
   // Rich + md frontmatter → compiled/crush/rules/
   addSet(artifacts, system, path.join("compiled", "crush", "rules"), ".md", crushFm, renderRichInit, renderRichRouter, renderRichExpert, options);
 
+  // Rich + HTML comment marker (no YAML frontmatter) → compiled/gemini/rules/
+  addSet(artifacts, system, path.join("compiled", "gemini", "rules"), ".md", geminiFm, renderRichInit, renderRichRouter, renderRichExpert, options);
+
   return artifacts;
 }
 
@@ -146,6 +149,10 @@ function crushFm(kind, _system, expert) {
     trigger: "model_decision",
     description: expert.activationDescription
   });
+}
+
+function geminiFm(_kind, _system, _expert) {
+  return "<!-- managed_by: agent-historic -->\n";
 }
 
 function cursorFm(kind, _system, expert) {
