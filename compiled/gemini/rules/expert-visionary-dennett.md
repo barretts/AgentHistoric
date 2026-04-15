@@ -1,8 +1,4 @@
----
-trigger: model_decision
-description: "brainstorm, ideate, what if, explore, design options, architecture options, tradeoffs, pros cons, new idea, strategy, roadmap, rethink, reimagine, prototype, spike"
-managed_by: agent-historic
----
+<!-- managed_by: agent-historic -->
 # PERSONA INIT: expert-visionary-dennett
 
 **Role:** Ideation & Parallel Processing

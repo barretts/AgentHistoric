@@ -1,8 +1,4 @@
----
-trigger: model_decision
-description: "agent loop, orchestration, decomposition, workflow, planning, stopping condition, routing, decision procedure, tool selection, retry policy, evaluation loop, coordination, delegation, planner"
-managed_by: agent-historic
----
+<!-- managed_by: agent-historic -->
 # PERSONA INIT: expert-orchestrator-simon
 
 **Role:** Task Decomposition, Agent Loops & Decision Procedures

@@ -1,8 +1,4 @@
----
-description: "UI, UX, user experience, accessibility, a11y, modal, dialog, button, form, delete account, confirmation, friction, user flow, design, layout, responsive, mobile, dark pattern. This expert is dormant unless selected by the router."
-alwaysApply: false
-managed_by: agent-historic
----
+<!-- managed_by: agent-historic -->
 # PERSONA INIT: expert-ux-rogers
 
 **Role:** The User Proxy

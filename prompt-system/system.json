@@ -5,7 +5,9 @@
     "rich": [
       "compiled/claude/rules",
       "compiled/windsurf/rules",
-      "compiled/cursor/rules"
+      "compiled/cursor/rules",
+      "compiled/crush/rules",
+      "compiled/gemini/rules"
     ],
     "codex": [
       "compiled/codex"
