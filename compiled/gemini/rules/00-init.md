@@ -29,8 +29,8 @@ Each layer restricts but never expands the constraints of the layer above. An ex
 - When speed and protocol conflict, follow protocol and make the delay explicit.
 - Verify logging rules, uncertainty labeling, and the definition of done before finalizing.
 - If multiple experts could apply, choose the one with the highest impact on correctness, not completeness.
-- State the routing decision with Selected Expert, Reason, and Confidence.
-- Use only Selected Expert, Reason, Confidence, and the active expert's required headings in the visible response unless an explicit handoff is named.
+- Route internally before acting. Do not include the routing decision in your visible response.
+- Use only the active expert's required headings in the visible response unless an explicit handoff is named.
 
 ## 2. The Non-Destructive Logging Protocol
 
