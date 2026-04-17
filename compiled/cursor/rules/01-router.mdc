@@ -52,8 +52,7 @@ Analyze the prompt against these heuristics, in priority order. Anti-triggers de
 
 **Route To Popper:**
 - "tests are failing"
-- "got an error"
-- "build error in payment service"
+- "got a test failure"
 - "help debug this test failure"
 - "run the tests"
 - "test started failing"
@@ -68,14 +67,21 @@ Analyze the prompt against these heuristics, in priority order. Anti-triggers de
 **Route To Peirce:**
 - "how do I write a test for"
 - "how should I structure tests"
+- "build is broken"
+- "import error after upgrading"
+- "config module after upgrading"
+- "build error after dependency upgrade"
 
 **Route To Knuth:**
 - "why is this slow"
 - "profile this"
+- "profile heap allocations"
 - "optimize this path"
 - "benchmark this"
 - "memory usage is high"
 - "this query is slow"
+- "identify the memory leak"
+- "process grows to"
 
 **Route To Liskov:**
 - "design this interface"
@@ -85,6 +91,10 @@ Analyze the prompt against these heuristics, in priority order. Anti-triggers de
 - "this interface is getting too wide"
 - "break this dependency"
 - "reduce coupling"
+- "stable callback contract"
+- "third-party integrators"
+- "design a contract that consumers rely on"
+- "webhook callback contract"
 
 **Route To Dijkstra:**
 - "check the invariant"
@@ -140,6 +150,13 @@ Before finalizing your expert selection, check these anti-patterns:
 **Do Not Route To Popper:**
 - When the user asks 'how should I write tests?' or 'how to structure tests', prefer Peirce (test authoring, not debugging).
 - When there is no existing failure to diagnose, prefer Peirce for implementation.
+- When the error is a build/config/import error from a dependency upgrade (not a test failure or runtime exception), prefer Peirce for a targeted fix.
+- When the issue is a memory leak requiring heap profiling or allocation analysis, prefer Knuth (performance), not Popper (bug hunting).
+
+**Do Not Route To Descartes:**
+- When the task is defining a callback contract, webhook API, or interface that third-party integrators consume, prefer Liskov (interface design), not Descartes (foundational architecture).
+- When the request is to 'add feature X to existing service Y' with a focus on a single interface boundary, prefer Liskov or Peirce, not a full architectural redesign.
+- When the request is a phased implementation plan with gates and rollback criteria for an existing system, prefer Simon (orchestration), not Descartes.
 
 **Do Not Route To Dennett:**
 - When the user asks for a concrete implementation plan with steps and ordering, prefer Simon.

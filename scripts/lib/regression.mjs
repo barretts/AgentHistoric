@@ -325,7 +325,8 @@ function isNegativeMatch(negativeExamples, expertId, text) {
   const negativeKeyMap = {
     "expert-engineer-peirce": "doNotRouteToPeirce",
     "expert-qa-popper": "doNotRouteToPopper",
-    "expert-visionary-dennett": "doNotRouteToDennett"
+    "expert-visionary-dennett": "doNotRouteToDennett",
+    "expert-architect-descartes": "doNotRouteToDescartes"
   };
 
   const key = negativeKeyMap[expertId];
@@ -361,6 +362,19 @@ function isNegativeMatch(negativeExamples, expertId, text) {
     }
     if (ruleLower.includes("only one viable approach") && !text.includes("option") && !text.includes("alternative") && !text.includes("compare")) {
       // This is hard to detect locally; skip for now
+    }
+    // Descartes negative rules
+    if (ruleLower.includes("callback contract") && (text.includes("callback contract") || text.includes("webhook") || text.includes("third-party integrators"))) {
+      return true;
+    }
+    if (ruleLower.includes("build/config/import error") && (text.includes("build is broken") || text.includes("import error") || text.includes("config error") || text.includes("build error"))) {
+      return true;
+    }
+    if (ruleLower.includes("memory leak requiring heap profiling") && (text.includes("memory leak") || text.includes("heap") || text.includes("allocations"))) {
+      return true;
+    }
+    if (ruleLower.includes("phased implementation plan with gates and rollback") && text.includes("phases") && text.includes("rollback")) {
+      return true;
     }
   }
   return false;

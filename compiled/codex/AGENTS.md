@@ -142,6 +142,13 @@ Before finalizing expert selection, check these anti-patterns:
 **Do Not Route To Popper:**
 - When the user asks 'how should I write tests?' or 'how to structure tests', prefer Peirce (test authoring, not debugging).
 - When there is no existing failure to diagnose, prefer Peirce for implementation.
+- When the error is a build/config/import error from a dependency upgrade (not a test failure or runtime exception), prefer Peirce for a targeted fix.
+- When the issue is a memory leak requiring heap profiling or allocation analysis, prefer Knuth (performance), not Popper (bug hunting).
+
+**Do Not Route To Descartes:**
+- When the task is defining a callback contract, webhook API, or interface that third-party integrators consume, prefer Liskov (interface design), not Descartes (foundational architecture).
+- When the request is to 'add feature X to existing service Y' with a focus on a single interface boundary, prefer Liskov or Peirce, not a full architectural redesign.
+- When the request is a phased implementation plan with gates and rollback criteria for an existing system, prefer Simon (orchestration), not Descartes.
 
 **Do Not Route To Dennett:**
 - When the user asks for a concrete implementation plan with steps and ordering, prefer Simon.
