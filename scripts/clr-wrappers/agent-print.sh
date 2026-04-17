@@ -20,4 +20,4 @@ if [ -z "$PROMPT" ]; then
   exit 2
 fi
 
-exec cursor-agent -p --output-format text --model "$MODEL" "$PROMPT"
+exec cursor-agent --trust -p --output-format text --model "$MODEL" "$PROMPT"

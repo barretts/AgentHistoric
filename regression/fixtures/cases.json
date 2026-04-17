@@ -270,7 +270,8 @@
       "forbiddenBehaviors": [
         "Converging too early",
         "Giving only one answer"
-      ]
+      ],
+      "behavioralAssertions": ["dennettDraftLength"]
     },
     {
       "id": "R5",
@@ -447,7 +448,8 @@
       "forbiddenBehaviors": [
         "Premature commitment",
         "Only minor variants"
-      ]
+      ],
+      "behavioralAssertions": ["dennettDraftLength"]
     },
     {
       "id": "C1",
@@ -880,7 +882,8 @@
       "expectedPrimaryExpert": "expert-visionary-dennett",
       "expectedSections": ["Draft A", "Draft B", "Draft C", "Recommendation"],
       "allowedHandoffs": [],
-      "forbiddenBehaviors": ["Converging to one option without exploring"]
+      "forbiddenBehaviors": ["Converging to one option without exploring"],
+      "behavioralAssertions": ["dennettDraftLength"]
     },
     {
       "id": "RB4",
@@ -1373,6 +1376,7 @@
       "expectedSections": ["Draft A", "Draft B", "Draft C", "Recommendation"],
       "allowedHandoffs": [],
       "forbiddenBehaviors": ["Only one approach considered", "No trade-off analysis"],
+      "behavioralAssertions": ["dennettDraftLength"],
       "experimentTag": "persona-vs-neutral",
       "experimentHypothesis": "persona-should-win"
     },

@@ -14,8 +14,8 @@
       "depends_on": []
     },
     {
-      "id": "smoke-claude",
-      "tool_id": "claude-print",
+      "id": "smoke-crush",
+      "tool_id": "crush-print",
       "input": "Reply with exactly: OK",
       "timeout_sec": 90,
       "depends_on": []

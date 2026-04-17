@@ -22,13 +22,27 @@ import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { existsSync } from "node:fs";
 
-const CLR_ROOT = "/Users/ephem/lcode/cli-runner-learner";
+// CLR_ROOT is configurable via env var so the runner is portable across dev
+// environments. Default points to the Linux checkout on this machine; other
+// boxes should set `CLR_ROOT=/path/to/cli-runner-learner` before invoking.
+const CLR_ROOT = process.env.CLR_ROOT || "/home/barrett/code/cli-runner-learner";
 const CLR_CLI = path.join(CLR_ROOT, "dist/cli.js");
 const CLR_TRANSCRIPT_DIR = path.join(CLR_ROOT, "transcripts");
 
+function ensureClrBuilt() {
+  if (!existsSync(CLR_CLI)) {
+    throw new Error(
+      `clr not built at ${CLR_CLI}. Set CLR_ROOT env var or run \`npm install && npm run build\` inside ${CLR_ROOT}.`
+    );
+  }
+}
+
 const TOOL_ID_BY_TARGET = {
   cursor: "agent-print",
-  claude: "claude-print"
+  // claude-print profile exists but claude's --print mode hangs on Linux;
+  // prefer crush as the secondary target for cross-model coverage.
+  claude: "claude-print",
+  crush: "crush-print"
 };
 
 const SENTINEL_START = "<<<TASK_RESULT>>>";
@@ -72,7 +86,11 @@ export function buildManifest({ cases, toolId, buildPrompt, timeoutSec = 180, co
     policy: {
       concurrency,
       heal_schedule: "auto",
-      batch_strategy: "fibonacci"
+      // Use fixed batching: clr's fibonacci growth advances batchIndex by the
+      // full batch size even when some slots contain already-completed tasks,
+      // causing later tasks to be skipped. Fixed keeps batch size at 1 so each
+      // iteration corresponds to exactly one new task.
+      batch_strategy: "fixed"
     },
     tasks: cases.map((c) => ({
       id: c.id,
@@ -122,6 +140,18 @@ export async function extractSentinelJsonFromTranscript(transcriptPath) {
     searchFrom = endIdx + SENTINEL_END.length;
   }
 
+  // Fallback 1: end marker present but start marker was overwritten by TUI
+  // rendering. Walk backwards from the last end marker to find the opening `{`
+  // of a balanced JSON object.
+  if (!block) {
+    const lastEnd = cleaned.lastIndexOf(SENTINEL_END);
+    if (lastEnd !== -1) {
+      const before = cleaned.slice(0, lastEnd);
+      const candidate = findLastBalancedJsonObject(before);
+      if (candidate) block = candidate;
+    }
+  }
+
   if (!block) {
     return { ok: false, error: "no sentinel block", raw: cleaned };
   }
@@ -132,7 +162,47 @@ export async function extractSentinelJsonFromTranscript(transcriptPath) {
   }
 }
 
-function runSpawn(command, args, { env, cwd } = {}) {
+/**
+ * Walk backwards through `text` to find the last balanced `{...}` JSON object.
+ * Handles strings (with escaped quotes) so braces inside strings don't upset
+ * the balance count. Returns the trimmed block contents or null.
+ */
+function findLastBalancedJsonObject(text) {
+  const lastClose = text.lastIndexOf("}");
+  if (lastClose === -1) return null;
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let i = lastClose; i >= 0; i--) {
+    const ch = text[i];
+    // Going backwards, escape handling: if the char before this is a `\` and
+    // not itself escaped, treat the current character as non-syntactic. We
+    // approximate by counting consecutive backslashes to the left.
+    if (inString) {
+      if (ch === '"') {
+        // Count preceding backslashes to determine if this quote is escaped.
+        let bs = 0;
+        for (let j = i - 1; j >= 0 && text[j] === "\\"; j--) bs++;
+        if (bs % 2 === 0) inString = false;
+      }
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+      continue;
+    }
+    if (ch === "}") depth++;
+    else if (ch === "{") {
+      depth--;
+      if (depth === 0) {
+        return text.slice(i, lastClose + 1).trim();
+      }
+    }
+  }
+  return null;
+}
+
+function runSpawn(command, args, { env, cwd, onStdout, onStderr } = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       env: env ?? process.env,
@@ -141,11 +211,37 @@ function runSpawn(command, args, { env, cwd } = {}) {
     });
     let out = "";
     let err = "";
-    child.stdout.on("data", (d) => { out += d.toString(); });
-    child.stderr.on("data", (d) => { err += d.toString(); });
+    child.stdout.on("data", (d) => {
+      const s = d.toString();
+      out += s;
+      if (onStdout) onStdout(s);
+    });
+    child.stderr.on("data", (d) => {
+      const s = d.toString();
+      err += s;
+      if (onStderr) onStderr(s);
+    });
     child.on("error", reject);
     child.on("close", (code) => resolve({ code, stdout: out, stderr: err }));
   });
+}
+
+/**
+ * Line-splitter factory: buffers partial lines across chunks and invokes
+ * `onLine(line)` for each complete line. Used to attach per-line verbose
+ * logging to the streaming clr subprocess output.
+ */
+function lineStreamer(onLine) {
+  let buf = "";
+  return (chunk) => {
+    buf += chunk;
+    let idx;
+    while ((idx = buf.indexOf("\n")) !== -1) {
+      const line = buf.slice(0, idx);
+      buf = buf.slice(idx + 1);
+      onLine(line);
+    }
+  };
 }
 
 /**
@@ -199,13 +295,15 @@ export async function runCasesViaClr(opts) {
     model,
     timeoutSec = 180,
     concurrency = 1,
-    log = () => {}
+    log = () => {},
+    verbose = true
   } = opts;
 
   if (concurrency !== 1) {
     log(`[clr-runner] warning: concurrency=${concurrency} may miscorrelate transcripts; prefer 1`);
   }
 
+  ensureClrBuilt();
   const toolId = getToolIdForTarget(target);
   await mkdir(stateDir, { recursive: true });
 
@@ -213,11 +311,34 @@ export async function runCasesViaClr(opts) {
   const manifestPath = path.join(stateDir, "manifest.json");
   await writeFile(manifestPath, JSON.stringify(manifest, null, 2) + "\n", "utf8");
 
+  if (verbose) {
+    const totalPromptBytes = manifest.tasks.reduce((n, t) => n + (t.input?.length ?? 0), 0);
+    log(`[clr-runner] target=${target} toolId=${toolId} model=${model ?? "(default)"}`);
+    log(`[clr-runner] stateDir=${stateDir}`);
+    log(`[clr-runner] manifest: ${cases.length} tasks, ~${totalPromptBytes} bytes total prompt, per-task timeout=${timeoutSec}s`);
+    log(`[clr-runner] tasks: ${manifest.tasks.map((t) => t.id).join(", ")}`);
+  }
+
   const env = { ...process.env };
   if (model && target === "cursor") env.AGENT_MODEL = model;
 
   const sinceMs = Date.now();
+  const runStart = Date.now();
   log(`[clr-runner] orchestrate: ${cases.length} tasks via ${toolId}`);
+
+  // Stream clr subprocess output line-by-line so the user sees progress live.
+  // We prefix each line with the target so multi-target runs stay legible.
+  const prefix = `[clr:${target}]`;
+  const logStdout = verbose
+    ? lineStreamer((line) => {
+        if (line.trim()) console.log(`${prefix} ${line}`);
+      })
+    : undefined;
+  const logStderr = verbose
+    ? lineStreamer((line) => {
+        if (line.trim()) console.error(`${prefix}!! ${line}`);
+      })
+    : undefined;
 
   const { code, stdout, stderr } = await runSpawn("node", [
     CLR_CLI,
@@ -225,11 +346,12 @@ export async function runCasesViaClr(opts) {
     "--manifest", manifestPath,
     "--state-dir", stateDir,
     "--concurrency", String(concurrency)
-  ], { env });
+  ], { env, onStdout: logStdout, onStderr: logStderr });
 
+  const runElapsedMs = Date.now() - runStart;
   // Persist clr stdout/stderr for debugging.
   await writeFile(path.join(stateDir, "orchestrate.log"), stdout + "\n--- STDERR ---\n" + stderr, "utf8");
-  log(`[clr-runner] orchestrate exit=${code}`);
+  log(`[clr-runner] orchestrate exit=${code} (${(runElapsedMs / 1000).toFixed(1)}s)`);
 
   let stateJson = {};
   const statePath = path.join(stateDir, "state.json");
@@ -243,6 +365,10 @@ export async function runCasesViaClr(opts) {
     sinceMs: sinceMs - 2000 // allow small clock skew
   });
 
+  if (verbose) {
+    log(`[clr-runner] correlated ${Object.keys(transcriptByCase).length}/${cases.length} transcripts`);
+  }
+
   const results = [];
   for (const c of cases) {
     const taskState = stateJson.tasks?.[c.id];
@@ -250,8 +376,13 @@ export async function runCasesViaClr(opts) {
     let response = null;
     let error = null;
     let rawBlock = null;
+    let transcriptBytes = 0;
 
     if (transcriptPath) {
+      try {
+        const st = await stat(transcriptPath);
+        transcriptBytes = st.size;
+      } catch { /* ignore */ }
       const extracted = await extractSentinelJsonFromTranscript(transcriptPath);
       if (extracted.ok) {
         response = extracted.json;
@@ -261,6 +392,15 @@ export async function runCasesViaClr(opts) {
       }
     } else {
       error = "no transcript found";
+    }
+
+    if (verbose) {
+      const expert = response?.routingDecision?.selectedExpert
+        ?? response?.activeExpert
+        ?? "none";
+      const statusTag = taskState?.status ?? "MISSING";
+      const errTag = error ? ` ERROR: ${error}` : "";
+      log(`[clr-runner]   case=${c.id} status=${statusTag} attempts=${taskState?.attempts ?? 0} transcript=${transcriptBytes}B expert=${expert}${errTag}`);
     }
 
     results.push({
