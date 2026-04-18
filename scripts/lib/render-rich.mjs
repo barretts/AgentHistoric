@@ -118,11 +118,17 @@ export function renderRichInit(system, options = {}) {
   }
 
   // Section 6: Registry
-  out += `## 7. Swarm Registry\n`;
-  out += system.experts
-    .map((e) => `* **${e.id}:** ${e.summary}`)
-    .join("\n");
-  out += `\n`;
+  if (options.vsEnabled) {
+    // With VS enabled, use placeholder for build-time substitution
+    out += "{{EXPERT_ROSTER}}";
+  } else {
+    // Default: inline generation for non-VS builds
+    out += `## 7. Swarm Registry\n`;
+    out += system.experts
+      .map((e) => `* **${e.id}:** ${e.summary}`)
+      .join("\n");
+    out += `\n`;
+  }
 
   return out;
 }
