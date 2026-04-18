@@ -84,9 +84,11 @@ export function applyVariableSubstitution(content, system, options = {}) {
 function buildVariableMap(system) {
   const vars = {};
 
-  // EXPERT_ROSTER: pipe-separated list of all expert IDs
+  // EXPERT_ROSTER: full Swarm Registry markdown with summaries
   if (system.experts) {
-    vars.EXPERT_ROSTER = system.experts.map(e => e.id).join(" | ");
+    vars.EXPERT_ROSTER = "## 7. Swarm Registry\n" +
+      system.experts.map(e => `* **${e.id}:** ${e.summary}`).join("\n") +
+      "\n";
   }
 
   // EXPERT_ID_ALLOWLIST: comma-separated for echo-friendly display

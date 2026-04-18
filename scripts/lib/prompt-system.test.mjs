@@ -71,12 +71,14 @@ test("applyVariableSubstitution replaces valid variables", () => {
   const content = "Experts: {{EXPERT_ROSTER}}";
   const system = {
     experts: [
-      { id: "expert-engineer-peirce" },
-      { id: "expert-qa-popper" }
+      { id: "expert-engineer-peirce", summary: "Implementation lead" },
+      { id: "expert-qa-popper", summary: "QA specialist" }
     ]
   };
   const result = applyVariableSubstitution(content, system, { vsEnabled: true });
-  assert.strictEqual(result, "Experts: expert-engineer-peirce | expert-qa-popper");
+  assert.ok(result.includes("## 7. Swarm Registry"));
+  assert.ok(result.includes("expert-engineer-peirce"));
+  assert.ok(result.includes("expert-qa-popper"));
 });
 
 test("applyVariableSubstitution replaces EXPERT_ID_ALLOWLIST", () => {
@@ -135,4 +137,14 @@ test("applyVariableSubstitution handles multiple variables in one content", () =
   const result = applyVariableSubstitution(content, system, { vsEnabled: true });
   assert.ok(result.includes("expert-engineer-peirce"));
   assert.ok(result.includes("build:prompts"));
+});
+
+test("EXPERT_ROSTER variable produces formatted markdown with Swarm Registry heading", () => {
+  const content = "{{EXPERT_ROSTER}}";
+  const system = {
+    experts: [{ id: "expert-engineer-peirce", summary: "Implementation lead" }]
+  };
+  const result = applyVariableSubstitution(content, system, { vsEnabled: true });
+  assert.ok(result.includes("## 7. Swarm Registry"));
+  assert.ok(result.includes("* **expert-engineer-peirce:** Implementation lead"));
 });
