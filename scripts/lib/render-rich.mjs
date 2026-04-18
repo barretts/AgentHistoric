@@ -1,4 +1,11 @@
-import { codeFence, humanizeExpertId, resolveRequiredSections, VOICE_CALIBRATION, SCAFFOLDED_VOICE } from "./prompt-system.mjs";
+import {
+  codeFence,
+  humanizeExpertId,
+  resolveRequiredSections,
+  VERBALIZED_SAMPLING_ROUTER_RULES,
+  VOICE_CALIBRATION,
+  SCAFFOLDED_VOICE
+} from "./prompt-system.mjs";
 
 export function renderRichInit(system, options = {}) {
   const g = system.globalRuntime;
@@ -135,6 +142,21 @@ export function renderRichRouter(system, options = {}) {
   out += `## 1. Router Contract\n\n`;
   out += r.contracts.map((item) => `- ${item}`).join("\n");
   out += `\n\n`;
+
+  if (r.expertIdAllowlist?.length) {
+    out += `### Canonical expert roster\n\n`;
+    out += `Only these canonical expert ids are valid for routing and JSON envelopes: ${r.expertIdAllowlist.map((id) => `\`${id}\``).join(", ")}.\n\n`;
+  }
+
+  const experimentFlags = { ...r.experimentFlags, ...options.experimentFlags };
+  if (experimentFlags.verbalizedSampling) {
+    const vsRules = r.verbalizedSamplingContracts?.length
+      ? r.verbalizedSamplingContracts
+      : VERBALIZED_SAMPLING_ROUTER_RULES;
+    out += `### Verbalized Sampling (Experiment)\n\n`;
+    out += vsRules.map((item) => `- ${item}`).join("\n");
+    out += `\n\n`;
+  }
 
   // Routing heuristics table
   out += `## 2. Routing Heuristics\n\n`;

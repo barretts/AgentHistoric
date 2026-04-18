@@ -42,7 +42,10 @@ export function parseArgs(argv) {
     // --seed N adds deterministic pseudo-noise to synthetic responses when
     // running in --local mode, so multi-trial stats are exercised instead of
     // collapsing to zero variance.
-    seed: 0
+    seed: 0,
+    // A/B verbalized sampling: regression harness asks for confidenceDistribution
+    // in the JSON envelope when enabled (see run-ablation.mjs).
+    verbalizedSampling: false
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -63,7 +66,7 @@ export function parseArgs(argv) {
     } else if (arg === "--codex-model") {
       options.modelByTarget.codex = argv[index + 1];
       index += 1;
-    } else if (arg === "--case") {
+    } else if (arg === "--case" || arg === "--cases") {
       options.caseIds = argv[index + 1]
         .split(",")
         .map((value) => value.trim())
@@ -96,6 +99,8 @@ export function parseArgs(argv) {
         .map((value) => value.trim())
         .filter(Boolean);
       index += 1;
+    } else if (arg === "--verbalized-sampling") {
+      options.verbalizedSampling = true;
     }
   }
 
@@ -112,16 +117,32 @@ export async function ensureLogsDirectory(workspaceRoot) {
   return logDir;
 }
 
-export function buildWrappedPrompt(testCase) {
+export function buildWrappedPrompt(testCase, opts = {}) {
   const requiredHeadings = expectedResponseSections(testCase);
+  const verbalizedSampling = Boolean(opts.verbalizedSampling);
 
-  return [
+  const baseKeys = [
+    "routingDecision",
+    "activeExpert",
+    "handoffs",
+    "outputSections",
+    "confidenceLabeled",
+    "personaBlend",
+    "domainStayedInScope",
+    "summary",
+    "response"
+  ];
+  const keysLine = verbalizedSampling
+    ? `${baseKeys.join(", ")}, confidenceDistribution.`
+    : `${baseKeys.join(", ")}.`;
+
+  const lines = [
     "You are being evaluated by an automated regression harness.",
     "Follow the local project instructions exactly.",
     "Do not inspect files, do not use tools, and do not propose edits.",
     "Answer the user request directly, but return JSON only.",
     "The JSON object must contain exactly these keys:",
-    "routingDecision, activeExpert, handoffs, outputSections, confidenceLabeled, personaBlend, domainStayedInScope, summary, response.",
+    keysLine,
     "Use canonical expert ids like expert-engineer-peirce, not skill paths.",
     "Include routingDecision.domain as a short domain label.",
     "Set routingDecision.selectedExpert to the primary expert you chose.",
@@ -141,9 +162,18 @@ export function buildWrappedPrompt(testCase) {
     "Set personaBlend to true only if you mixed expert styles without an explicit handoff.",
     "Set domainStayedInScope to true only if the answer stayed within the user's requested domain.",
     "Set summary to a one-sentence description of the routing choice.",
-    "Set response to the exact user-facing answer body you would give.",
-    `User prompt: ${testCase.prompt}`
-  ].join("\n");
+    "Set response to the exact user-facing answer body you would give."
+  ];
+
+  if (verbalizedSampling) {
+    lines.push(
+      "When the two strongest routing heuristic scores are within 0.2 on a 0-1 scale, you must include confidenceDistribution: an array of at least two objects { \"expert\": \"<canonical-id>\", \"probability\": <number> } using only ids from the router Canonical expert roster, sorted by descending probability, non-negative probabilities summing to 1.0±0.02, and at least three ranked candidates whenever you emit this field; the first entry's expert must match routingDecision.selectedExpert and activeExpert."
+    );
+  }
+
+  lines.push(`User prompt: ${testCase.prompt}`);
+
+  return lines.join("\n");
 }
 
 export function expectedResponseSections(testCase) {
@@ -180,7 +210,7 @@ export function expectedResponseSections(testCase) {
  * @returns {object} Response envelope compatible with evaluateResponse().
  */
 export function buildLocalResponse(system, testCase, opts = {}) {
-  const { trialIndex = 0, seed = 0, forcedExpert } = opts;
+  const { trialIndex = 0, seed = 0, forcedExpert, verbalizedSampling = false } = opts;
   const selectedExpert = forcedExpert || routePrompt(system, testCase.prompt);
   const sections = expectedResponseSections(testCase);
 
@@ -208,7 +238,7 @@ export function buildLocalResponse(system, testCase, opts = {}) {
     lines.push("");
   }
 
-  return {
+  const envelope = {
     routingDecision: {
       selectedExpert,
       domain: "local-synthetic"
@@ -222,6 +252,20 @@ export function buildLocalResponse(system, testCase, opts = {}) {
     summary: `Local synthetic route to ${selectedExpert}`,
     response: lines.join("\n")
   };
+
+  if (verbalizedSampling) {
+    const alts = system.experts.map((e) => e.id).filter((id) => id !== selectedExpert);
+    const second = alts[(jitter >>> 4) % alts.length] || selectedExpert;
+    const thirdPool = alts.filter((id) => id !== second);
+    const third = thirdPool[(jitter >>> 8) % thirdPool.length] || second;
+    envelope.confidenceDistribution = [
+      { expert: selectedExpert, probability: 0.55 },
+      { expert: second, probability: 0.28 },
+      { expert: third, probability: 0.17 }
+    ];
+  }
+
+  return envelope;
 }
 
 export async function runCommandLogged({
@@ -479,7 +523,7 @@ function isNegativeMatch(negativeExamples, expertId, text) {
   return false;
 }
 
-export function evaluateResponse(system, testCase, response) {
+export function evaluateResponse(system, testCase, response, evalOpts = {}) {
   const responseText = String(response.response || "").trim();
   const explicitSelection = extractSelection(responseText);
   const selectedExpert = normalizeExpertId(
@@ -563,6 +607,13 @@ export function evaluateResponse(system, testCase, response) {
     }
   }
 
+  if (evalOpts.requireVerbalizedSampling) {
+    const vsResult = assertVerbalizedSamplingSchema(system, response);
+    if (!vsResult.pass) {
+      behavioralFindings.push(vsResult.finding);
+    }
+  }
+
   const routingMatch =
     selectedExpert === normalizeExpertId(testCase.expectedPrimaryExpert);
   const ambiguousMatch =
@@ -594,8 +645,8 @@ export function evaluateResponse(system, testCase, response) {
   };
 }
 
-export function scoreCase(system, testCase, response) {
-  return evaluateResponse(system, testCase, response);
+export function scoreCase(system, testCase, response, evalOpts = {}) {
+  return evaluateResponse(system, testCase, response, evalOpts);
 }
 
 // ── Behavioral Assertion Helpers ──────────────────────────────────
@@ -646,6 +697,94 @@ export function assertConcision(response, maxChars = 4000) {
     };
   }
   return { pass: true, finding: "" };
+}
+
+/**
+ * Validate verbalized-sampling regression envelope: normalized distribution,
+ * optional descending sort, roster-valid expert ids, top entry aligned with routing.
+ *
+ * @param {object} system - Loaded prompt system (expert allowlist).
+ * @param {object} response - Parsed JSON envelope from the harness.
+ * @returns {{ pass: boolean, finding: string }}
+ */
+export function assertVerbalizedSamplingSchema(system, response) {
+  const roster = expertRosterAllowlistSet(system);
+  const dist = response?.confidenceDistribution;
+  if (!Array.isArray(dist) || dist.length < 2) {
+    return {
+      pass: false,
+      finding: "Verbalized sampling: confidenceDistribution must be an array of length >= 2."
+    };
+  }
+
+  for (let i = 0; i < dist.length; i += 1) {
+    const row = dist[i];
+    if (!row || typeof row.expert !== "string" || typeof row.probability !== "number") {
+      return {
+        pass: false,
+        finding: `Verbalized sampling: invalid entry at index ${i} (expected { expert: string, probability: number }).`
+      };
+    }
+    const eid = normalizeExpertId(row.expert);
+    if (!roster.has(eid)) {
+      return {
+        pass: false,
+        finding: `Verbalized sampling: unknown expert id in distribution at index ${i}: ${row.expert}`
+      };
+    }
+    if (row.probability < 0 || row.probability > 1) {
+      return {
+        pass: false,
+        finding: `Verbalized sampling: probability out of [0,1] at index ${i}.`
+      };
+    }
+    if (i < dist.length - 1 && row.probability + 1e-9 < dist[i + 1].probability) {
+      return {
+        pass: false,
+        finding: "Verbalized sampling: confidenceDistribution must be sorted by descending probability."
+      };
+    }
+  }
+
+  const sum = dist.reduce((acc, row) => acc + row.probability, 0);
+  if (Math.abs(sum - 1) > 0.02) {
+    return {
+      pass: false,
+      finding: `Verbalized sampling: probabilities sum to ${sum.toFixed(4)} (expected 1.0±0.02).`
+    };
+  }
+
+  const responseText = String(response.response || "").trim();
+  const explicitSelection = extractSelection(responseText);
+  const topExpert = normalizeExpertId(
+    explicitSelection
+      || response.routingDecision?.selectedExpert
+      || response.activeExpert
+      || ""
+  );
+  const distTop = normalizeExpertId(dist[0]?.expert || "");
+  if (!topExpert || distTop !== topExpert) {
+    return {
+      pass: false,
+      finding: "Verbalized sampling: top confidenceDistribution.expert must match routingDecision.selectedExpert / activeExpert."
+    };
+  }
+
+  return { pass: true, finding: "" };
+}
+
+function expertRosterAllowlistSet(system) {
+  if (!system) {
+    return new Set();
+  }
+  const list = system.router?.expertIdAllowlist;
+  if (list?.length) {
+    return new Set(list.map(normalizeExpertId));
+  }
+  if (system.experts?.length) {
+    return new Set(system.experts.map((e) => normalizeExpertId(e.id)));
+  }
+  return new Set();
 }
 
 /**

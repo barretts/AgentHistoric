@@ -147,5 +147,29 @@
       "Verified",
       "No TODOs or placeholders in core logic"
     ]
+  },
+  "vs": {
+    "description": "Variable Substitution: per-project variable expansion at build time to reduce token count without hurting accuracy.",
+    "enabledBy": "--vs build flag",
+    "strictMode": "--strict-vs throws on unresolved variables",
+    "variables": {
+      "EXPERT_ROSTER": {
+        "description": "Canonical list of all 11 expert IDs, pipe-separated",
+        "example": "expert-abstractions-liskov | expert-architect-descartes | ..."
+      },
+      "EXPERT_ID_ALLOWLIST": {
+        "description": "Echo-friendly expert ID list for preventing hallucination",
+        "example": "expert-abstractions-liskov, expert-architect-descartes, ..."
+      },
+      "CONSTRAINT_HIERARCHY_LAYERS": {
+        "description": "Constraint hierarchy layer names and sources",
+        "example": "Global Runtime (system.json → globalRuntime): All experts, all contexts."
+      },
+      "VERIFICATION_WORKFLOW_STEPS": {
+        "description": "Standard verification workflow steps",
+        "example": "1. build:prompts 2. test:unit 3. test:regressions:smoke"
+      }
+    },
+    "tokenSavingsTarget": ">10% required to ship"
   }
 }

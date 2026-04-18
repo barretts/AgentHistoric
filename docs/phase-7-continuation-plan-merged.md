@@ -14,10 +14,10 @@ Synthesized from `minimax27-PHASE-7-CONTINUATION-PLAN.md` and `qwen36-phase-7-co
 | B.2 (Local multi-trial baseline) | ✅ done | All 8 sections, REVIEW by design |
 | B.3 (Dennett <=120 word anchor) | ✅ done | 4 new tests, 115/115 total |
 | B.4 (Real-LLM ablation, 3 sections) | ✅ done | All KEEP (see results below) |
-| **C-VS-a** (Verbalized Sampling A/B) | ⬜ next | |
-| **Cursor fix** (Prefix hallucination allowlist) | ⬜ after | |
-| **C-VS-b** (Variable Substitution) | ⬜ later | |
-| **D.1** (Implementation Report) | ⬜ last | |
+| **C-VS-a** (Verbalized Sampling A/B) | ✅ impl done | Code: router flag + contracts, regression/assert, ablation runner, render parity, output-schema, unit tests; real-LLM A/B remains manual |
+| **Cursor fix** (Prefix hallucination allowlist) | ✅ bundled in C-VS-a | `expertIdAllowlist` + echo contract + Canonical expert roster in rich/codex router renders |
+| **C-VS-b** (Variable Substitution) | ✅ done | vs block, --vs flag, substitution pass, 8 tests |
+| **D.1** (Implementation Report) | ✅ done | `docs/plans/PHASE-7-IMPLEMENTATION-REPORT.md` |
 
 ---
 

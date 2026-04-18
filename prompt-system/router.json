@@ -561,6 +561,7 @@
   ],
   "contracts": [
     "Routing is mandatory before the first tool call, skill invocation, or code edit.",
+    "Echo the selected expert id verbatim from the Canonical expert roster allowlist in this document. Do not modify, combine, or invent ids.",
     "A skill trigger or obvious next step does not waive the routing step; state the routing decision anyway.",
     "Prefer protocol compliance over task velocity when they compete.",
     "Prefer the user's stated assignment over opportunistic quick wins unless the user explicitly asks for a quick-win path.",
@@ -569,6 +570,24 @@
     "If a task is ambiguous, still choose one primary expert and explain why.",
     "Check negative routing examples before finalizing the expert selection. If a negative example matches, re-route to the suggested alternative.",
     "For non-trivial tasks, use two-pass routing: first identify the broad domain, then refine to the specific sub-domain and lead expert within it."
+  ],
+  "expertIdAllowlist": [
+    "expert-abstractions-liskov",
+    "expert-architect-descartes",
+    "expert-engineer-peirce",
+    "expert-formal-dijkstra",
+    "expert-information-shannon",
+    "expert-manager-blackmore",
+    "expert-orchestrator-simon",
+    "expert-performance-knuth",
+    "expert-qa-popper",
+    "expert-ux-rogers",
+    "expert-visionary-dennett"
+  ],
+  "verbalizedSamplingContracts": [
+    "When the two strongest routing heuristic scores are within 0.2 on a 0-1 confidence scale, return a top-level JSON field confidenceDistribution in the regression response envelope (alongside routingDecision, activeExpert, handoffs, outputSections, confidenceLabeled, personaBlend, domainStayedInScope, summary, response).",
+    "confidenceDistribution must be an array of objects { \"expert\": \"<canonical-id>\", \"probability\": <number> } with length at least 2, each probability non-negative, summing to 1.0 within 0.02, sorted by descending probability, and at least three ranked candidates whenever you emit this field.",
+    "The first (highest-probability) entry's expert must equal routingDecision.selectedExpert and activeExpert. Use expert ids verbatim from the Canonical expert roster allowlist."
   ],
   "refinementHeuristics": {
     "description": "Second-pass refinement targets. After the first pass identifies a broad domain, refine using these sub-domain distinctions.",
@@ -591,6 +610,7 @@
     "antiTriggers": true,
     "boostSignals": true,
     "twoPassRouting": true,
+    "verbalizedSampling": false,
     "description": "Feature flags for A/B experiment comparisons. Set to false to disable a feature and compare results."
   },
   "modifierActivation": {

@@ -183,7 +183,7 @@ After implementation, a separate adversarial verification step by Popper prevent
 npm run test:unit
 ```
 
-109 unit tests across 3 test files:
+123 unit tests across 3 test files:
 
 | File | Tests | Scope |
 |------|:-----:|-------|

@@ -10,6 +10,7 @@ import {
   assertNoFalseClaims,
   assertNoGoldPlating,
   assertRoutingFirst,
+  assertVerbalizedSamplingSchema,
   buildWrappedPrompt,
   computeBehavioralMetrics,
   evaluateResponse,
@@ -64,6 +65,30 @@ test("parseArgs supports case filters", () => {
   const options = parseArgs(["--case", "R1,C2"]);
 
   assert.deepEqual(options.caseIds, ["R1", "C2"]);
+});
+
+test("parseArgs accepts --cases as alias for --case", () => {
+  const options = parseArgs(["--cases", "TP5,SP-Li1"]);
+
+  assert.deepEqual(options.caseIds, ["TP5", "SP-Li1"]);
+});
+
+test("parseArgs supports --verbalized-sampling", () => {
+  assert.strictEqual(parseArgs([]).verbalizedSampling, false);
+  assert.strictEqual(parseArgs(["--verbalized-sampling"]).verbalizedSampling, true);
+});
+
+test("buildWrappedPrompt adds confidenceDistribution when verbalizedSampling", () => {
+  const tc = {
+    prompt: "Test",
+    expectedSections: ["Answer"]
+  };
+  const off = buildWrappedPrompt(tc, {});
+  const on = buildWrappedPrompt(tc, { verbalizedSampling: true });
+
+  assert.match(off, /routingDecision, activeExpert, handoffs, outputSections, confidenceLabeled, personaBlend, domainStayedInScope, summary, response\./);
+  assert.match(on, /confidenceDistribution/);
+  assert.match(on, /When the two strongest routing heuristic scores/);
 });
 
 test("routePrompt matches fixture expectations for representative cases", async () => {
@@ -350,6 +375,134 @@ test("assertDennettDraftLength terminates the last draft at Recommendation", () 
   };
   const result = assertDennettDraftLength(response);
   assert.strictEqual(result.pass, true, result.finding);
+});
+
+test("assertVerbalizedSamplingSchema passes for a valid distribution", () => {
+  const response = {
+    routingDecision: { selectedExpert: "expert-engineer-peirce", domain: "x", reason: "r", confidence: "0.9" },
+    activeExpert: "expert-engineer-peirce",
+    response: "Selected Expert: expert-engineer-peirce\n\nReason\n\nConfidence\nHigh\n\nAnswer\nOK.",
+    confidenceDistribution: [
+      { expert: "expert-engineer-peirce", probability: 0.62 },
+      { expert: "expert-qa-popper", probability: 0.38 }
+    ]
+  };
+  const result = assertVerbalizedSamplingSchema(globalSystem, response);
+  assert.strictEqual(result.pass, true, result.finding);
+});
+
+test("assertVerbalizedSamplingSchema fails when confidenceDistribution is missing", () => {
+  const response = {
+    routingDecision: { selectedExpert: "expert-engineer-peirce" },
+    activeExpert: "expert-engineer-peirce",
+    response: "Selected Expert: expert-engineer-peirce\n\nReason\n\nConfidence\n\nAnswer\nOK."
+  };
+  const result = assertVerbalizedSamplingSchema(globalSystem, response);
+  assert.strictEqual(result.pass, false);
+  assert.match(result.finding, /length >= 2/);
+});
+
+test("assertVerbalizedSamplingSchema fails when too few entries", () => {
+  const response = {
+    routingDecision: { selectedExpert: "expert-engineer-peirce" },
+    activeExpert: "expert-engineer-peirce",
+    response: "Selected Expert: expert-engineer-peirce\n\nReason\n\nConfidence\n\nAnswer\nOK.",
+    confidenceDistribution: [{ expert: "expert-engineer-peirce", probability: 1 }]
+  };
+  const result = assertVerbalizedSamplingSchema(globalSystem, response);
+  assert.strictEqual(result.pass, false);
+  assert.match(result.finding, /length >= 2/);
+});
+
+test("assertVerbalizedSamplingSchema fails when probabilities do not sum to ~1", () => {
+  const response = {
+    routingDecision: { selectedExpert: "expert-engineer-peirce" },
+    activeExpert: "expert-engineer-peirce",
+    response: "Selected Expert: expert-engineer-peirce\n\nReason\n\nConfidence\n\nAnswer\nOK.",
+    confidenceDistribution: [
+      { expert: "expert-engineer-peirce", probability: 0.5 },
+      { expert: "expert-qa-popper", probability: 0.3 }
+    ]
+  };
+  const result = assertVerbalizedSamplingSchema(globalSystem, response);
+  assert.strictEqual(result.pass, false);
+  assert.match(result.finding, /sum to/);
+});
+
+test("assertVerbalizedSamplingSchema fails when top expert mismatches selectedExpert", () => {
+  const response = {
+    routingDecision: { selectedExpert: "expert-engineer-peirce" },
+    activeExpert: "expert-engineer-peirce",
+    response: "Selected Expert: expert-engineer-peirce\n\nReason\n\nConfidence\n\nAnswer\nOK.",
+    confidenceDistribution: [
+      { expert: "expert-qa-popper", probability: 0.7 },
+      { expert: "expert-engineer-peirce", probability: 0.3 }
+    ]
+  };
+  const result = assertVerbalizedSamplingSchema(globalSystem, response);
+  assert.strictEqual(result.pass, false);
+  assert.match(result.finding, /top confidenceDistribution/);
+});
+
+test("assertVerbalizedSamplingSchema fails when not sorted descending", () => {
+  const response = {
+    routingDecision: { selectedExpert: "expert-engineer-peirce" },
+    activeExpert: "expert-engineer-peirce",
+    response: "Selected Expert: expert-engineer-peirce\n\nReason\n\nConfidence\n\nAnswer\nOK.",
+    confidenceDistribution: [
+      { expert: "expert-engineer-peirce", probability: 0.2 },
+      { expert: "expert-qa-popper", probability: 0.5 },
+      { expert: "expert-architect-descartes", probability: 0.3 }
+    ]
+  };
+  const result = assertVerbalizedSamplingSchema(globalSystem, response);
+  assert.strictEqual(result.pass, false);
+  assert.match(result.finding, /descending/);
+});
+
+test("evaluateResponse applies verbalized sampling check when required", async () => {
+  const system = await loadPromptSystemSpec(workspaceRoot);
+  const testCase = await loadCase("R1");
+  const response = {
+    routingDecision: {
+      domain: "implementation",
+      selectedExpert: testCase.expectedPrimaryExpert,
+      reason: "Matches implementation signals.",
+      confidence: "0.8"
+    },
+    activeExpert: testCase.expectedPrimaryExpert,
+    handoffs: [],
+    outputSections: ["Selected Expert", "Reason", "Confidence", "Answer"],
+    confidenceLabeled: true,
+    personaBlend: false,
+    domainStayedInScope: true,
+    summary: "Route to primary implementation expert.",
+    response: [
+      "Selected Expert: " + testCase.expectedPrimaryExpert,
+      "Reason: Implementation-heavy request (VERIFIED intent).",
+      "Confidence: High",
+      "Answer: Stub implementation guidance."
+    ].join("\n")
+  };
+
+  const missingDist = evaluateResponse(system, testCase, response, {
+    requireVerbalizedSampling: true
+  });
+  assert.ok(
+    missingDist.behavioralFindings.some((f) => /Verbalized sampling/i.test(f)),
+    "Expected VS schema finding when confidenceDistribution is absent"
+  );
+
+  response.confidenceDistribution = [
+    { expert: testCase.expectedPrimaryExpert, probability: 0.55 },
+    { expert: "expert-qa-popper", probability: 0.28 },
+    { expert: "expert-architect-descartes", probability: 0.17 }
+  ];
+  const ok = evaluateResponse(system, testCase, response, { requireVerbalizedSampling: true });
+  assert.ok(
+    !ok.behavioralFindings.some((f) => /Verbalized sampling/i.test(f)),
+    ok.behavioralFindings.join(" | ")
+  );
 });
 
 test("assertNoFalseClaims flags 'all tests pass' without evidence", () => {
