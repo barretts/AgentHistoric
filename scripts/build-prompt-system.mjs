@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import path from "node:path";
-import { generateArtifacts } from "./lib/build-prompt-system.mjs";
+import { generateArtifacts, applyVariableSubstitution } from "./lib/build-prompt-system.mjs";
 import { loadPromptSystemSpec, writeTextFile } from "./lib/prompt-system.mjs";
 
 const workspaceRoot = process.cwd();
@@ -11,6 +11,8 @@ const debug = process.argv.includes("--debug") && !process.argv.includes("--no-d
 const scaffolded = process.argv.includes("--scaffolded");
 const ablationIdx = process.argv.indexOf("--ablation");
 const ablation = ablationIdx !== -1 ? process.argv[ablationIdx + 1] : null;
+const vsEnabled = process.argv.includes("--vs");
+const vsStrict = process.argv.includes("--strict-vs");
 const spec = await loadPromptSystemSpec(workspaceRoot);
 
 await writeGeneratedArtifacts();
@@ -18,14 +20,16 @@ await writeGeneratedArtifacts();
 const flags = [
   debug && "debug mode",
   scaffolded && "scaffolded voice",
-  ablation && `ablation: ${ablation}`
+  ablation && `ablation: ${ablation}`,
+  vsEnabled && "variable substitution"
 ].filter(Boolean);
 console.log(
   `Generated prompt bundles from ${path.join("prompt-system", "/")}${flags.length ? ` [${flags.join(", ")}]` : ""}`
 );
 
 async function writeGeneratedArtifacts() {
-  for (const [relativePath, content] of generateArtifacts(spec, { debug, scaffolded, ablation })) {
-    await writeTextFile(path.join(workspaceRoot, relativePath), content);
+  for (const [relativePath, content] of generateArtifacts(spec, { debug, scaffolded, ablation, vsEnabled, vsStrict })) {
+    const finalContent = applyVariableSubstitution(content, spec, { vsEnabled, vsStrict });
+    await writeTextFile(path.join(workspaceRoot, relativePath), finalContent);
   }
 }

@@ -38,6 +38,7 @@ Each layer restricts but never expands the constraints of the layer above. An ex
 ## Router Contract
 
 - Routing is mandatory before the first tool call, skill invocation, or code edit.
+- Echo the selected expert id verbatim from the Canonical expert roster allowlist in this document. Do not modify, combine, or invent ids.
 - A skill trigger or obvious next step does not waive the routing step; state the routing decision anyway.
 - Prefer protocol compliance over task velocity when they compete.
 - Prefer the user's stated assignment over opportunistic quick wins unless the user explicitly asks for a quick-win path.
@@ -46,6 +47,10 @@ Each layer restricts but never expands the constraints of the layer above. An ex
 - If a task is ambiguous, still choose one primary expert and explain why.
 - Check negative routing examples before finalizing the expert selection. If a negative example matches, re-route to the suggested alternative.
 - For non-trivial tasks, use two-pass routing: first identify the broad domain, then refine to the specific sub-domain and lead expert within it.
+
+## Canonical expert roster
+
+- Only these canonical expert ids are valid for routing and JSON envelopes: `expert-abstractions-liskov`, `expert-architect-descartes`, `expert-engineer-peirce`, `expert-formal-dijkstra`, `expert-information-shannon`, `expert-manager-blackmore`, `expert-orchestrator-simon`, `expert-performance-knuth`, `expert-qa-popper`, `expert-ux-rogers`, `expert-visionary-dennett`.
 
 ## Routing Preference
 

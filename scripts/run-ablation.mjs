@@ -22,6 +22,13 @@ import {
 } from "./lib/regression.mjs";
 import { decorateWrappedPromptForClr, runCasesViaClr } from "./lib/clr-runner.mjs";
 
+const VS_ABLATION_SECTION = {
+  id: "verbalized-sampling",
+  description: "Verbalized sampling (confidenceDistribution when top heuristics tie within 0.2)",
+  source: "prompt-system/router.json → experimentFlags.verbalizedSampling",
+  expectedImpact: "Descartes attractor / close-heuristic disambiguation"
+};
+
 const workspaceRoot = process.cwd();
 const system = await loadPromptSystemSpec(workspaceRoot);
 const options = parseArgs(process.argv.slice(2));
@@ -50,6 +57,7 @@ const report = {
   trialsPerCondition: trials,
   local: options.local,
   viaClr: Boolean(options.viaClr),
+  verbalizedSampling: Boolean(options.verbalizedSampling),
   sections: []
 };
 
@@ -71,12 +79,23 @@ if (options.viaClr) {
   );
 }
 
-// Apply --sections filter if provided.
-const sectionsToRun = options.sectionFilter && options.sectionFilter.length > 0
-  ? manifest.sections.filter((s) => options.sectionFilter.includes(s.id))
-  : manifest.sections;
+if (options.verbalizedSampling) {
+  console.log(
+    "[run-ablation] --verbalized-sampling: control = VS-off artifacts; ablated = VS-on (experimentFlags.verbalizedSampling true)."
+  );
+}
 
-if (options.sectionFilter && options.sectionFilter.length > 0) {
+// Apply --sections filter if provided. VS-only uses a synthetic section row;
+// VS + --sections runs each selected manifest section with VS flag toggling only.
+const sectionsToRun = options.verbalizedSampling && options.sectionFilter?.length > 0
+  ? manifest.sections.filter((s) => options.sectionFilter.includes(s.id))
+  : options.verbalizedSampling
+    ? [VS_ABLATION_SECTION]
+    : options.sectionFilter && options.sectionFilter.length > 0
+      ? manifest.sections.filter((s) => options.sectionFilter.includes(s.id))
+      : manifest.sections;
+
+if (options.sectionFilter && options.sectionFilter.length > 0 && !options.verbalizedSampling) {
   console.log(
     `[run-ablation] Running ${sectionsToRun.length}/${manifest.sections.length} sections: ${sectionsToRun.map((s) => s.id).join(", ")}`
   );
@@ -133,8 +152,30 @@ process.on("SIGTERM", async () => { await restoreHandler(); process.exit(143); }
 for (const section of sectionsToRun) {
   console.log(`\nAblating: ${section.id} — ${section.description}`);
 
-  const controlArtifacts = generateArtifacts(system, {});
-  const ablatedArtifacts = generateArtifacts(system, { ablation: section.id });
+  const omitSectionAblation = Boolean(
+    options.verbalizedSampling && !options.sectionFilter?.length
+  );
+  const controlArtifacts = generateArtifacts(system, {
+    ...(options.verbalizedSampling
+      ? {
+          experimentFlags: {
+            ...system.router.experimentFlags,
+            verbalizedSampling: false
+          }
+        }
+      : {})
+  });
+  const ablatedArtifacts = generateArtifacts(system, {
+    ...(!omitSectionAblation ? { ablation: section.id } : {}),
+    ...(options.verbalizedSampling
+      ? {
+          experimentFlags: {
+            ...system.router.experimentFlags,
+            verbalizedSampling: true
+          }
+        }
+      : {})
+  });
 
   let controlTokens = 0;
   let ablatedTokens = 0;
@@ -183,7 +224,12 @@ for (const section of sectionsToRun) {
         const clrResult = await runCasesViaClr({
           cases: expandedCases,
           target,
-          buildPrompt: (c) => decorateWrappedPromptForClr(buildWrappedPrompt(c)),
+          buildPrompt: (c) =>
+            decorateWrappedPromptForClr(
+              buildWrappedPrompt(c, {
+                verbalizedSampling: options.verbalizedSampling && condition === "ablated"
+              })
+            ),
           stateDir,
           model: options.modelByTarget[target],
           timeoutSec: 300,
@@ -205,7 +251,9 @@ for (const section of sectionsToRun) {
             });
             continue;
           }
-          const score = scoreCase(system, orig, r.response);
+          const score = scoreCase(system, orig, r.response, {
+            requireVerbalizedSampling: options.verbalizedSampling && condition === "ablated"
+          });
           trialRecords.push({
             score: score.score,
             selectedExpert: score.selectedExpert,
@@ -238,9 +286,10 @@ for (const section of sectionsToRun) {
       for (const target of options.targets.filter((t) =>
         testCase.targets.includes(t)
       )) {
-        const wrappedPrompt = buildWrappedPrompt(testCase);
-
         const runOneTrial = async (condition, trialIndex) => {
+          const wrappedPrompt = buildWrappedPrompt(testCase, {
+            verbalizedSampling: options.verbalizedSampling && condition === "ablated"
+          });
           const rawLogPath = path.join(
             logDir,
             `ablation-${timestamp}-${section.id}-${condition}-${testCase.id}-${target}-t${trialIndex}.log`
@@ -248,7 +297,8 @@ for (const section of sectionsToRun) {
           const response = options.local
             ? buildLocalResponse(system, testCase, {
                 trialIndex,
-                seed: options.seed + (condition === "ablated" ? 1 : 0)
+                seed: options.seed + (condition === "ablated" ? 1 : 0),
+                verbalizedSampling: options.verbalizedSampling && condition === "ablated"
               })
             : await runTarget({
                 target,
@@ -256,7 +306,9 @@ for (const section of sectionsToRun) {
                 rawLogPath,
                 options
               });
-          const score = scoreCase(system, testCase, response);
+          const score = scoreCase(system, testCase, response, {
+            requireVerbalizedSampling: options.verbalizedSampling && condition === "ablated"
+          });
           return {
             score: score.score,
             selectedExpert: score.selectedExpert,

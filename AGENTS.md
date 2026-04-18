@@ -14,7 +14,7 @@ This is a Mixture-of-Experts prompt generation system. The canonical source is `
 - Renderers (`render-rich.mjs`, `render-codex.mjs`) emit a "Behavioral Guardrails" section for every expert.
 - A **Renderer Protocol** (documented in `build-prompt-system.mjs`) defines the semantic invariants every render target must satisfy. Cross-target equivalence tests (`PROTOCOL:` prefix in `prompt-smoke.test.mjs`) enforce parity between the rich and codex render paths.
 - After any change to `prompt-system/` or `scripts/lib/render-*.mjs`, run `npm run build:prompts && npm run test:unit` to rebuild and verify.
-- 109 unit tests across 3 test files validate frontmatter, structural sections, expert cross-references, guardrail completeness, token budgets, behavioral assertions, routing evolution features, cross-target semantic equivalence, model-parity suite structure, and artifact sync.
+- 123 unit tests across 3 test files validate frontmatter, structural sections, expert cross-references, guardrail completeness, token budgets, behavioral assertions, routing evolution features, cross-target semantic equivalence, model-parity suite structure, and artifact sync.
 
 ### Routing Evolution Features
 

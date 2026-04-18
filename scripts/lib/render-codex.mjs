@@ -4,6 +4,7 @@ import {
   humanizeExpertId,
   renderSkillFrontmatter,
   resolveRequiredSections,
+  VERBALIZED_SAMPLING_ROUTER_RULES,
   VOICE_CALIBRATION,
   SCAFFOLDED_VOICE
 } from "./prompt-system.mjs";
@@ -12,6 +13,7 @@ export function renderAgents(system, options = {}) {
   const g = system.globalRuntime;
   const r = system.router;
   const abl = options.ablation;
+  const experimentFlags = { ...r.experimentFlags, ...options.experimentFlags };
   return (
     fileHeader("Generated from prompt-system/") +
     `---\nmanaged_by: agent-historic\n---\n` +
@@ -30,6 +32,18 @@ export function renderAgents(system, options = {}) {
     toList([...g.executionBinding, ...(options.debug ? (g.executionBindingDebug || []) : (g.executionBindingProduction || []))]) +
     `\n\n## Router Contract\n\n` +
     toList(r.contracts) +
+    (r.expertIdAllowlist?.length
+      ? `\n\n## Canonical expert roster\n\n` +
+        `- Only these canonical expert ids are valid for routing and JSON envelopes: ${r.expertIdAllowlist.map((id) => `\`${id}\``).join(", ")}.`
+      : "") +
+    (experimentFlags.verbalizedSampling
+      ? `\n\n## Verbalized Sampling (Experiment)\n\n` +
+        toList(
+          r.verbalizedSamplingContracts?.length
+            ? r.verbalizedSamplingContracts
+            : VERBALIZED_SAMPLING_ROUTER_RULES
+        )
+      : "") +
     `\n\n## Routing Preference\n\n` +
     toList([
       "When a request mixes exploration with architecture, debugging, or UX, prefer the expert with the highest impact on correctness and foundations.",
