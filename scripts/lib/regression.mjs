@@ -33,7 +33,16 @@ export function parseArgs(argv) {
     },
     caseIds: [],
     trials: 1,
-    parallel: 1
+    parallel: 1,
+    // --local routes each case through the synthetic routePrompt() heuristic
+    // instead of a real LLM, producing a deterministic response envelope. Use
+    // during development to exercise the ablation scaffolding (trial loop,
+    // aggregation, report formatting) without spending real-LLM budget.
+    local: false,
+    // --seed N adds deterministic pseudo-noise to synthetic responses when
+    // running in --local mode, so multi-trial stats are exercised instead of
+    // collapsing to zero variance.
+    seed: 0
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -65,6 +74,27 @@ export function parseArgs(argv) {
       index += 1;
     } else if (arg === "--parallel") {
       options.parallel = Math.max(1, parseInt(argv[index + 1], 10) || 1);
+      index += 1;
+    } else if (arg === "--local") {
+      options.local = true;
+    } else if (arg === "--seed") {
+      options.seed = parseInt(argv[index + 1], 10) || 0;
+      index += 1;
+    } else if (arg === "--via-clr") {
+      // Route real-LLM trials through the cli-runner-learner orchestrator
+      // instead of spawning the agent CLI directly. Required for real-LLM
+      // ablation runs because cli-runner-learner handles idle timeouts and
+      // transcript extraction robustly, and because real ablation needs the
+      // rendered artifacts installed to disk between conditions (handled by
+      // the caller).
+      options.viaClr = true;
+    } else if (arg === "--sections") {
+      // Comma-separated ablation-section ids. When set, run-ablation.mjs runs
+      // only these sections instead of every entry in the ablation manifest.
+      options.sectionFilter = argv[index + 1]
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean);
       index += 1;
     }
   }
@@ -123,6 +153,75 @@ export function expectedResponseSections(testCase) {
     "Confidence",
     ...testCase.expectedSections
   ];
+}
+
+/**
+ * Build a synthetic response envelope that mirrors the shape a real LLM would
+ * produce, using the local routePrompt() heuristic instead of an LLM call.
+ *
+ * Used by --local mode in run-ablation.mjs and run-via-clr.mjs to exercise the
+ * evaluation pipeline (scoreCase, trial aggregation, ablation report) without
+ * spending real-LLM budget. The output is deterministic for a given (system,
+ * testCase, trialIndex, seed) tuple.
+ *
+ * Because the local heuristic does not depend on rendered artifacts, ablation
+ * deltas in --local mode will be near-zero. That is intentional: --local is a
+ * development tool for verifying scaffolding, not for producing meaningful
+ * ablation findings.
+ *
+ * @param {object} system - Loaded prompt system spec.
+ * @param {object} testCase - Regression case.
+ * @param {object} [opts]
+ * @param {number} [opts.trialIndex] - Used for deterministic jitter across trials.
+ * @param {number} [opts.seed] - Optional seed for reproducible variance.
+ * @param {string} [opts.forcedExpert] - Override the routed expert (useful to
+ *   simulate ablation effects by injecting mis-routing under a particular
+ *   condition).
+ * @returns {object} Response envelope compatible with evaluateResponse().
+ */
+export function buildLocalResponse(system, testCase, opts = {}) {
+  const { trialIndex = 0, seed = 0, forcedExpert } = opts;
+  const selectedExpert = forcedExpert || routePrompt(system, testCase.prompt);
+  const sections = expectedResponseSections(testCase);
+
+  // Deterministic pseudo-jitter: across trials, flip confidenceLabeled on/off
+  // in a small, reproducible pattern so aggregation sees non-zero variance.
+  const jitter = ((trialIndex + seed) * 2654435761) >>> 0; // Knuth's integer hash
+  const confidenceLabeled = (jitter & 1) === 0 || trialIndex === 0;
+
+  // Build a minimal response body that contains every expected heading so
+  // missingSections is empty for well-routed cases. Uses the confidence tier
+  // that evaluateResponse recognises.
+  const lines = [
+    `Selected Expert: ${selectedExpert}`,
+    "",
+    "Reason",
+    "Local synthetic router selected this expert based on the router heuristic.",
+    "",
+    "Confidence",
+    confidenceLabeled ? "HIGH (local heuristic)" : "(unstated)",
+    ""
+  ];
+  for (const heading of testCase.expectedSections || []) {
+    lines.push(heading);
+    lines.push(`Local placeholder body for ${heading}.`);
+    lines.push("");
+  }
+
+  return {
+    routingDecision: {
+      selectedExpert,
+      domain: "local-synthetic"
+    },
+    activeExpert: selectedExpert,
+    handoffs: [],
+    outputSections: sections,
+    confidenceLabeled,
+    personaBlend: false,
+    domainStayedInScope: true,
+    summary: `Local synthetic route to ${selectedExpert}`,
+    response: lines.join("\n")
+  };
 }
 
 export async function runCommandLogged({
@@ -450,7 +549,8 @@ export function evaluateResponse(system, testCase, response) {
     concision: () => assertConcision(response),
     noFalseClaims: () => assertNoFalseClaims(response),
     diagnosticDiscipline: () => assertDiagnosticDiscipline(response),
-    routingFirst: () => assertRoutingFirst(response)
+    routingFirst: () => assertRoutingFirst(response),
+    dennettDraftLength: () => assertDennettDraftLength(response)
   };
 
   for (const name of assertions) {
@@ -543,6 +643,67 @@ export function assertConcision(response, maxChars = 4000) {
     return {
       pass: false,
       finding: `Concision: response is ${responseText.length} chars (max ${maxChars})`
+    };
+  }
+  return { pass: true, finding: "" };
+}
+
+/**
+ * Assert that Dennett's per-draft bodies respect the <=120-word numeric
+ * anchor declared in `expert-visionary-dennett.json`. A soft cap of 150
+ * tolerates minor over-runs; anything beyond that is flagged as draft bloat.
+ *
+ * Draft bodies are extracted between consecutive headings of the pattern
+ * `Draft A|B|C|D|...` and up to (but not including) the next heading line
+ * (`^#{1,4} ` or a bare `Draft X` / `Recommendation` line). Each draft's word
+ * count is compared to maxWords; the finding lists all offenders.
+ *
+ * @param {object} response - Response envelope.
+ * @param {number} [maxWords] - Soft ceiling per draft. Default 150 (120 target
+ *   per the voice anchor, 30 words of tolerance before a failing finding).
+ */
+export function assertDennettDraftLength(response, maxWords = 150) {
+  const text = String(response.response || "");
+  // Match "Draft X" headings (Markdown `## Draft A`, bare `Draft A`, etc.).
+  const headingRegex = /^(?:#{1,4}\s+)?(Draft\s+[A-Z][A-Za-z0-9]?)\s*:?\s*$/gm;
+  const headings = [];
+  let m;
+  while ((m = headingRegex.exec(text)) !== null) {
+    headings.push({ start: m.index, length: m[0].length, label: m[1] });
+  }
+  if (headings.length === 0) {
+    return { pass: true, finding: "" };
+  }
+
+  // The next section boundary (after the last draft) is the Recommendation
+  // heading or end-of-text. This regex captures either a Draft-style heading
+  // or a Recommendation/Summary heading so we can terminate the last draft.
+  const terminatorRegex = /^(?:#{1,4}\s+)?(?:Recommendation|Summary|Handoff|Next\s+Evaluator)\b/gmi;
+  const terminators = [];
+  while ((m = terminatorRegex.exec(text)) !== null) {
+    terminators.push(m.index);
+  }
+
+  const offenders = [];
+  for (let i = 0; i < headings.length; i += 1) {
+    const current = headings[i];
+    const bodyStart = current.start + current.length;
+    const nextHeadingStart = i + 1 < headings.length ? headings[i + 1].start : Infinity;
+    const nextTerminator = terminators.find((t) => t > bodyStart) ?? Infinity;
+    const bodyEnd = Math.min(nextHeadingStart, nextTerminator, text.length);
+    const body = text.slice(bodyStart, bodyEnd).trim();
+    // Count whitespace-delimited tokens. Strip markdown-ish punctuation so a
+    // dense bullet list doesn't inflate the count artificially.
+    const wordCount = body.split(/\s+/).filter((w) => /[A-Za-z0-9]/.test(w)).length;
+    if (wordCount > maxWords) {
+      offenders.push(`${current.label}: ${wordCount} words`);
+    }
+  }
+
+  if (offenders.length > 0) {
+    return {
+      pass: false,
+      finding: `Draft length: ${offenders.length} draft(s) exceed ${maxWords} words (${offenders.join("; ")})`
     };
   }
   return { pass: true, finding: "" };

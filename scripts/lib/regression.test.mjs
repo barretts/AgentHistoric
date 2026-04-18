@@ -5,6 +5,7 @@ import path from "node:path";
 import {
   aggregateTrialResults,
   assertConcision,
+  assertDennettDraftLength,
   assertDiagnosticDiscipline,
   assertNoFalseClaims,
   assertNoGoldPlating,
@@ -271,6 +272,84 @@ test("assertConcision passes for short responses", () => {
   const response = { response: "Short answer." };
   const result = assertConcision(response, 4000);
   assert.strictEqual(result.pass, true);
+});
+
+test("assertDennettDraftLength passes when every draft is within the word cap", () => {
+  const shortDraft = "Use a simple LRU cache, evict on write, bounded by 128 entries.";
+  const response = {
+    response: [
+      "Selected Expert: expert-visionary-dennett",
+      "",
+      "Draft A",
+      shortDraft,
+      "",
+      "Draft B",
+      shortDraft,
+      "",
+      "Draft C",
+      shortDraft,
+      "",
+      "Recommendation",
+      "Start with Draft A."
+    ].join("\n")
+  };
+  const result = assertDennettDraftLength(response);
+  assert.strictEqual(result.pass, true, result.finding);
+});
+
+test("assertDennettDraftLength flags drafts that exceed the soft cap", () => {
+  const longDraft = "word ".repeat(200).trim(); // 200 words -- well past the 150 soft cap
+  const response = {
+    response: [
+      "Selected Expert: expert-visionary-dennett",
+      "",
+      "Draft A",
+      longDraft,
+      "",
+      "Draft B",
+      "Short draft.",
+      "",
+      "Draft C",
+      "Short draft.",
+      "",
+      "Recommendation",
+      "Prefer Draft B for simplicity."
+    ].join("\n")
+  };
+  const result = assertDennettDraftLength(response);
+  assert.strictEqual(result.pass, false);
+  assert.match(result.finding, /Draft A.*200 words/);
+});
+
+test("assertDennettDraftLength is a no-op when no Draft headings are present", () => {
+  // Non-Dennett responses should not be penalised by this assertion.
+  const response = {
+    response: "Selected Expert: expert-engineer-peirce\n\nAnswer\nOK."
+  };
+  const result = assertDennettDraftLength(response);
+  assert.strictEqual(result.pass, true);
+});
+
+test("assertDennettDraftLength terminates the last draft at Recommendation", () => {
+  // The Recommendation section can be longer than the draft cap; the assertion
+  // must not incorrectly treat it as part of the final draft body.
+  const response = {
+    response: [
+      "Draft A",
+      "Short draft.",
+      "",
+      "Draft B",
+      "Short draft.",
+      "",
+      "Draft C",
+      "Short draft.",
+      "",
+      "Recommendation",
+      "word ".repeat(300).trim() // irrelevant to the per-draft assertion
+    ].join("\n")
+  };
+  const result = assertDennettDraftLength(response);
+  assert.strictEqual(result.pass, true, result.finding);
 });
 
 test("assertNoFalseClaims flags 'all tests pass' without evidence", () => {
