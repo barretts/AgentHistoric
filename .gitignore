@@ -2,3 +2,5 @@
 node_modules/
 .logs/
 compiled/cursor/plans/
+.cursor
+.crush

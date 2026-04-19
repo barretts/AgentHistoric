@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
 import path from "node:path";
-import { readFile, writeFile } from "node:fs/promises";
-import { loadPromptSystemSpec } from "./lib/prompt-system.mjs";
+import { readFile, rm, writeFile } from "node:fs/promises";
+import { loadPromptSystemSpec, writeTextFile } from "./lib/prompt-system.mjs";
 import { generateArtifacts } from "./lib/build-prompt-system.mjs";
 import {
   aggregateTrialResults,
+  buildLocalResponse,
   buildWrappedPrompt,
   createTimestamp,
   ensureLogsDirectory,
@@ -19,6 +20,14 @@ import {
   scoreCase,
   selectCases
 } from "./lib/regression.mjs";
+import { decorateWrappedPromptForClr, runCasesViaClr } from "./lib/clr-runner.mjs";
+
+const VS_ABLATION_SECTION = {
+  id: "verbalized-sampling",
+  description: "Verbalized sampling (confidenceDistribution when top heuristics tie within 0.2)",
+  source: "prompt-system/router.json → experimentFlags.verbalizedSampling",
+  expectedImpact: "Descartes attractor / close-heuristic disambiguation"
+};
 
 const workspaceRoot = process.cwd();
 const system = await loadPromptSystemSpec(workspaceRoot);
@@ -26,7 +35,14 @@ const options = parseArgs(process.argv.slice(2));
 const trials = Math.max(options.trials, 3);
 const timestamp = createTimestamp();
 const fixtures = await loadRegressionFixtures(workspaceRoot);
-const cases = selectCases(fixtures, options);
+// For case selection, treat crush/claude as "cursor-equivalent" targets since
+// the fixtures only advertise cursor/codex. clr wrappers route any case
+// through the selected CLI regardless of its advertised targets, mirroring
+// run-via-clr's behavior.
+const selectionTargets = options.viaClr
+  ? options.targets.map((t) => (t === "crush" || t === "claude" ? "cursor" : t))
+  : options.targets;
+const cases = selectCases(fixtures, { ...options, targets: selectionTargets });
 const logDir = await ensureLogsDirectory(workspaceRoot);
 
 const manifest = JSON.parse(
@@ -39,14 +55,127 @@ const manifest = JSON.parse(
 const report = {
   timestamp,
   trialsPerCondition: trials,
+  local: options.local,
+  viaClr: Boolean(options.viaClr),
+  verbalizedSampling: Boolean(options.verbalizedSampling),
   sections: []
 };
 
-for (const section of manifest.sections) {
+if (options.local) {
+  console.log(
+    `[run-ablation] --local mode: routing via local synthetic heuristic (seed=${options.seed}).`
+  );
+  console.log(
+    `[run-ablation] Ablation deltas will be near-zero; use this mode for scaffolding verification, not findings.`
+  );
+}
+
+if (options.viaClr) {
+  console.log(
+    `[run-ablation] --via-clr mode: routing through cli-runner-learner orchestrator.`
+  );
+  console.log(
+    `[run-ablation] Rendered artifacts will be installed to ${path.join(workspaceRoot, ".cursor/rules")} between conditions. Control state is restored on exit.`
+  );
+}
+
+if (options.verbalizedSampling) {
+  console.log(
+    "[run-ablation] --verbalized-sampling: control = VS-off artifacts; ablated = VS-on (experimentFlags.verbalizedSampling true)."
+  );
+}
+
+// Apply --sections filter if provided. VS-only uses a synthetic section row;
+// VS + --sections runs each selected manifest section with VS flag toggling only.
+const sectionsToRun = options.verbalizedSampling && options.sectionFilter?.length > 0
+  ? manifest.sections.filter((s) => options.sectionFilter.includes(s.id))
+  : options.verbalizedSampling
+    ? [VS_ABLATION_SECTION]
+    : options.sectionFilter && options.sectionFilter.length > 0
+      ? manifest.sections.filter((s) => options.sectionFilter.includes(s.id))
+      : manifest.sections;
+
+if (options.sectionFilter && options.sectionFilter.length > 0 && !options.verbalizedSampling) {
+  console.log(
+    `[run-ablation] Running ${sectionsToRun.length}/${manifest.sections.length} sections: ${sectionsToRun.map((s) => s.id).join(", ")}`
+  );
+  const missing = options.sectionFilter.filter(
+    (id) => !manifest.sections.find((s) => s.id === id)
+  );
+  if (missing.length > 0) {
+    console.warn(
+      `[run-ablation] Warning: --sections filter contained unknown ids (skipped): ${missing.join(", ")}`
+    );
+  }
+}
+
+/**
+ * Install a set of rendered artifacts to disk. Only writes cursor-facing
+ * artifacts (`compiled/cursor/rules/*.mdc`) and mirrors them to
+ * `.cursor/rules/*.mdc` so cursor-agent actually reads them at runtime.
+ *
+ * We clear `.cursor/rules/` first so stale files from the previous condition
+ * (e.g. an expert that was present in control but ablated in this condition)
+ * don't linger.
+ */
+async function installArtifactsToDisk(artifactsMap) {
+  const cursorRulesDir = path.join(workspaceRoot, ".cursor", "rules");
+  await rm(cursorRulesDir, { recursive: true, force: true });
+  for (const [relPath, content] of artifactsMap) {
+    // Write the original compiled/ artifact.
+    await writeTextFile(path.join(workspaceRoot, relPath), content);
+    // Mirror cursor rules into .cursor/rules/ for real-LLM pickup.
+    const cursorPrefix = path.join("compiled", "cursor", "rules");
+    if (relPath.startsWith(cursorPrefix + path.sep) || relPath.startsWith(cursorPrefix + "/")) {
+      const rel = relPath.slice(cursorPrefix.length + 1);
+      await writeTextFile(path.join(cursorRulesDir, rel), content);
+    }
+  }
+}
+
+async function restoreControlArtifacts() {
+  console.log(`[run-ablation] restoring control artifacts...`);
+  await installArtifactsToDisk(generateArtifacts(system, {}));
+}
+
+// Always restore control on process exit so a crashed/interrupted run doesn't
+// leave the workspace with stale ablated artifacts. SIGINT/SIGTERM/uncaught.
+let installedAblated = false;
+const restoreHandler = async () => {
+  if (installedAblated) {
+    try { await restoreControlArtifacts(); } catch {}
+  }
+};
+process.on("SIGINT", async () => { await restoreHandler(); process.exit(130); });
+process.on("SIGTERM", async () => { await restoreHandler(); process.exit(143); });
+
+for (const section of sectionsToRun) {
   console.log(`\nAblating: ${section.id} — ${section.description}`);
 
-  const controlArtifacts = generateArtifacts(system, {});
-  const ablatedArtifacts = generateArtifacts(system, { ablation: section.id });
+  const omitSectionAblation = Boolean(
+    options.verbalizedSampling && !options.sectionFilter?.length
+  );
+  const controlArtifacts = generateArtifacts(system, {
+    ...(options.verbalizedSampling
+      ? {
+          experimentFlags: {
+            ...system.router.experimentFlags,
+            verbalizedSampling: false
+          }
+        }
+      : {})
+  });
+  const ablatedArtifacts = generateArtifacts(system, {
+    ...(!omitSectionAblation ? { ablation: section.id } : {}),
+    ...(options.verbalizedSampling
+      ? {
+          experimentFlags: {
+            ...system.router.experimentFlags,
+            verbalizedSampling: true
+          }
+        }
+      : {})
+  });
 
   let controlTokens = 0;
   let ablatedTokens = 0;
@@ -61,60 +190,146 @@ for (const section of manifest.sections) {
   const controlResults = [];
   const ablatedResults = [];
 
-  for (const testCase of cases) {
-    for (const target of options.targets.filter((t) =>
-      testCase.targets.includes(t)
-    )) {
-      const wrappedPrompt = buildWrappedPrompt(testCase);
+  if (options.viaClr) {
+    // --via-clr mode: per condition, install artifacts once, then route every
+    // (case × trial) combination through a single clr orchestration per target.
+    // This is much faster than per-trial clr invocations (one clr startup vs.
+    // N) and keeps the rendered artifacts stable while the LLM runs.
+    for (const target of options.targets) {
+      // See note on selectionTargets: crush/claude clr targets treat any case
+      // as runnable. For cursor/codex the advertised per-case targets gate
+      // execution as before.
+      const effectiveTarget = (target === "crush" || target === "claude") ? "cursor" : target;
+      const targetCases = cases.filter((c) => c.targets.includes(effectiveTarget));
+      if (targetCases.length === 0) continue;
 
-      const controlTrials = await runTrials(
-        async (trialIndex) => {
+      const runConditionViaClr = async (condition) => {
+        const conditionLabel = `${section.id}-${condition}-${target}`;
+        console.log(`[run-ablation] --via-clr [${conditionLabel}] ${targetCases.length} case(s) x ${trials} trial(s)`);
+
+        // Expand (case × trial) into a flat list of uniquely-id'd clr tasks so
+        // we can correlate per-trial results back to each original case.
+        const expandedCases = [];
+        for (const c of targetCases) {
+          for (let t = 0; t < trials; t += 1) {
+            expandedCases.push({ ...c, id: `${c.id}#t${t}`, _origId: c.id, _trialIndex: t });
+          }
+        }
+
+        const stateDir = path.join(
+          logDir,
+          `ablation-clr-state-${timestamp}`,
+          conditionLabel
+        );
+        const clrResult = await runCasesViaClr({
+          cases: expandedCases,
+          target,
+          buildPrompt: (c) =>
+            decorateWrappedPromptForClr(
+              buildWrappedPrompt(c, {
+                verbalizedSampling: options.verbalizedSampling && condition === "ablated"
+              })
+            ),
+          stateDir,
+          model: options.modelByTarget[target],
+          timeoutSec: 300,
+          concurrency: 1,
+          verbose: true,
+          log: (m) => console.log(m)
+        });
+
+        const trialRecords = [];
+        for (const r of clrResult.results) {
+          const orig = expandedCases.find((c) => c.id === r.caseId);
+          if (!orig) continue;
+          if (!r.response) {
+            trialRecords.push({
+              score: 0,
+              selectedExpert: null,
+              expectedExpert: orig.expectedPrimaryExpert,
+              behavioralMetrics: { overEngineering: 1, concision: 1 }
+            });
+            continue;
+          }
+          const score = scoreCase(system, orig, r.response, {
+            requireVerbalizedSampling: options.verbalizedSampling && condition === "ablated"
+          });
+          trialRecords.push({
+            score: score.score,
+            selectedExpert: score.selectedExpert,
+            expectedExpert: orig.expectedPrimaryExpert,
+            behavioralMetrics: score.behavioralMetrics
+          });
+        }
+        return trialRecords;
+      };
+
+      // Control condition.
+      await installArtifactsToDisk(controlArtifacts);
+      installedAblated = false;
+      const controlBatch = await runConditionViaClr("control");
+      controlResults.push(...controlBatch);
+
+      // Ablated condition.
+      await installArtifactsToDisk(ablatedArtifacts);
+      installedAblated = true;
+      const ablatedBatch = await runConditionViaClr("ablated");
+      ablatedResults.push(...ablatedBatch);
+
+      // Restore control after each target to keep disk state neutral for the
+      // next target iteration.
+      await installArtifactsToDisk(controlArtifacts);
+      installedAblated = false;
+    }
+  } else {
+    for (const testCase of cases) {
+      for (const target of options.targets.filter((t) =>
+        testCase.targets.includes(t)
+      )) {
+        const runOneTrial = async (condition, trialIndex) => {
+          const wrappedPrompt = buildWrappedPrompt(testCase, {
+            verbalizedSampling: options.verbalizedSampling && condition === "ablated"
+          });
           const rawLogPath = path.join(
             logDir,
-            `ablation-${timestamp}-${section.id}-control-${testCase.id}-${target}-t${trialIndex}.log`
+            `ablation-${timestamp}-${section.id}-${condition}-${testCase.id}-${target}-t${trialIndex}.log`
           );
-          const response = await runTarget({
-            target,
-            wrappedPrompt,
-            rawLogPath,
-            options
+          const response = options.local
+            ? buildLocalResponse(system, testCase, {
+                trialIndex,
+                seed: options.seed + (condition === "ablated" ? 1 : 0),
+                verbalizedSampling: options.verbalizedSampling && condition === "ablated"
+              })
+            : await runTarget({
+                target,
+                wrappedPrompt,
+                rawLogPath,
+                options
+              });
+          const score = scoreCase(system, testCase, response, {
+            requireVerbalizedSampling: options.verbalizedSampling && condition === "ablated"
           });
-          const score = scoreCase(system, testCase, response);
           return {
             score: score.score,
             selectedExpert: score.selectedExpert,
             expectedExpert: testCase.expectedPrimaryExpert,
             behavioralMetrics: score.behavioralMetrics
           };
-        },
-        { trials, parallel: options.parallel }
-      );
+        };
 
-      const ablatedTrials = await runTrials(
-        async (trialIndex) => {
-          const rawLogPath = path.join(
-            logDir,
-            `ablation-${timestamp}-${section.id}-ablated-${testCase.id}-${target}-t${trialIndex}.log`
-          );
-          const response = await runTarget({
-            target,
-            wrappedPrompt,
-            rawLogPath,
-            options
-          });
-          const score = scoreCase(system, testCase, response);
-          return {
-            score: score.score,
-            selectedExpert: score.selectedExpert,
-            expectedExpert: testCase.expectedPrimaryExpert,
-            behavioralMetrics: score.behavioralMetrics
-          };
-        },
-        { trials, parallel: options.parallel }
-      );
+        const controlTrials = await runTrials(
+          (trialIndex) => runOneTrial("control", trialIndex),
+          { trials, parallel: options.parallel }
+        );
 
-      controlResults.push(...controlTrials);
-      ablatedResults.push(...ablatedTrials);
+        const ablatedTrials = await runTrials(
+          (trialIndex) => runOneTrial("ablated", trialIndex),
+          { trials, parallel: options.parallel }
+        );
+
+        controlResults.push(...controlTrials);
+        ablatedResults.push(...ablatedTrials);
+      }
     }
   }
 
@@ -139,6 +354,14 @@ for (const section of manifest.sections) {
     concisionDelta: round(ablatedConc - controlConc),
     verdict: deriveVerdict(controlAgg, ablatedAgg, controlOE, ablatedOE, controlConc, ablatedConc)
   });
+}
+
+// Final safety net: if we exited the section loop with ablated artifacts still
+// on disk (shouldn't happen thanks to per-target restore, but just in case),
+// restore the control artifacts before writing the report.
+if (options.viaClr) {
+  await restoreControlArtifacts();
+  installedAblated = false;
 }
 
 const jsonPath = path.join(logDir, `ablation-report-${timestamp}.json`);

@@ -3,12 +3,18 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "dependencies": {
+    "cli-runner-learner": "^0.3.0"
+  },
   "scripts": {
     "test:unit": "node --test scripts/lib/*.test.mjs",
     "build:prompts": "node scripts/build-prompt-system.mjs",
     "build:prompts:release": "node scripts/build-prompt-system.mjs --no-debug",
+    "build:prompts:debug": "node scripts/build-prompt-system.mjs --debug",
     "test:regressions": "node scripts/run-regressions.mjs",
     "test:regressions:smoke": "node scripts/run-regressions.mjs --suite smoke",
+    "test:regressions:clr": "node scripts/run-via-clr.mjs",
+    "test:regressions:clr:smoke": "node scripts/run-via-clr.mjs --suite smoke",
     "test:ablation": "node scripts/run-ablation.mjs",
     "test:experiment": "node scripts/run-experiment.mjs"
   }
