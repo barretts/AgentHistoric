@@ -3,7 +3,11 @@ import assert from "node:assert/strict";
 import path from "node:path";
 
 import { generateArtifacts } from "./build-prompt-system.mjs";
-import { loadPromptSystemSpec, resolveRequiredSections } from "./prompt-system.mjs";
+import {
+  loadPromptSystemSpec,
+  resolveRequiredSections,
+  VERBALIZED_SAMPLING_ROUTER_RULES
+} from "./prompt-system.mjs";
 
 const workspaceRoot = path.resolve(import.meta.dirname, "..", "..");
 const system = await loadPromptSystemSpec(workspaceRoot);
@@ -11,7 +15,8 @@ const artifacts = generateArtifacts(system);
 const debugArtifacts = generateArtifacts(system, { debug: true });
 
 const CURSOR_RICH = "compiled/cursor/rules";
-const MAX_CHARS = 15000;
+// Router artifact includes full heuristic tables, pipelines, allowlist, and contracts.
+const MAX_CHARS = 16000;
 
 function artifactsInDir(dir, ext) {
   return [...artifacts].filter(
@@ -1017,6 +1022,28 @@ test("router has experimentFlags section", () => {
   assert.strictEqual(typeof flags.antiTriggers, "boolean", "antiTriggers flag must be boolean");
   assert.strictEqual(typeof flags.boostSignals, "boolean", "boostSignals flag must be boolean");
   assert.strictEqual(typeof flags.twoPassRouting, "boolean", "twoPassRouting flag must be boolean");
+  assert.strictEqual(typeof flags.verbalizedSampling, "boolean", "verbalizedSampling flag must be boolean");
+});
+
+test("PROTOCOL: verbalized sampling block matches rich router vs Codex AGENTS when flag on", () => {
+  const vsOn = generateArtifacts(system, { experimentFlags: { verbalizedSampling: true } });
+  const claudeRouter = vsOn.get("compiled/claude/rules/01-router.md");
+  const codexAgents = vsOn.get("compiled/codex/AGENTS.md");
+  const rules = system.router.verbalizedSamplingContracts?.length
+    ? system.router.verbalizedSamplingContracts
+    : VERBALIZED_SAMPLING_ROUTER_RULES;
+  assert.match(claudeRouter, /Verbalized Sampling \(Experiment\)/);
+  assert.match(codexAgents, /Verbalized Sampling \(Experiment\)/);
+  for (const rule of rules) {
+    assert.ok(
+      claudeRouter.includes(rule),
+      `Claude router missing VS rule snippet: ${rule.slice(0, 60)}…`
+    );
+    assert.ok(
+      codexAgents.includes(rule),
+      `Codex AGENTS missing VS rule snippet: ${rule.slice(0, 60)}…`
+    );
+  }
 });
 
 test("rich router renders anti-triggers in heuristics table", () => {

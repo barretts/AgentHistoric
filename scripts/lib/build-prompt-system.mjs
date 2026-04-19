@@ -41,6 +41,82 @@ const HEADER = fileHeader("Generated from prompt-system/");
  * Frontmatter is target-specific and NOT part of the semantic protocol.
  */
 
+// ── Variable Substitution ───────────────────────────────────────────
+
+/**
+ * Apply variable substitution to artifact content.
+ * Replaces {{VAR_NAME}} patterns with resolved values.
+ * In strict mode, throws on unresolved variables.
+ */
+export function applyVariableSubstitution(content, system, options = {}) {
+  if (!options.vsEnabled) return content;
+
+  const variables = buildVariableMap(system);
+  const varPattern = /\{\{([A-Z_][A-Z0-9_]*)\}\}/g;
+  let match;
+  let result = content;
+  const unresolved = [];
+
+  while ((match = varPattern.exec(content)) !== null) {
+    const varName = match[1];
+    if (variables[varName] !== undefined) {
+      result = result.split(match[0]).join(variables[varName]);
+    } else {
+      unresolved.push(varName);
+    }
+  }
+
+  if (unresolved.length > 0) {
+    if (options.vsStrict) {
+      throw new Error(`Unresolved VS variables: ${unresolved.join(", ")}`);
+    }
+    // Non-strict: leave variables in place, warn
+    console.warn(`[VS] Unresolved variables (non-strict): ${unresolved.join(", ")}`);
+  }
+
+  return result;
+}
+
+/**
+ * Build variable map from system spec.
+ * Combines defaults with project overrides if present.
+ */
+function buildVariableMap(system) {
+  const vars = {};
+
+  // EXPERT_ROSTER: compact ID-only list (summaries live in dedicated skill files)
+  if (system.experts) {
+    vars.EXPERT_ROSTER = "## 7. Swarm Registry\n\n" +
+      system.experts.map(e => `- \`${e.id}\``).join("\n") +
+      "\n";
+  }
+
+  // EXPERT_ID_ALLOWLIST: comma-separated for echo-friendly display
+  if (system.experts) {
+    vars.EXPERT_ID_ALLOWLIST = system.experts.map(e => e.id).join(", ");
+  }
+
+  // CONSTRAINT_HIERARCHY_LAYERS: readable layer summary
+  if (system.constraintHierarchy?.layers) {
+    vars.CONSTRAINT_HIERARCHY_LAYERS = system.constraintHierarchy.layers
+      .map(l => `${l.name} (${l.source}): ${l.scope}`)
+      .join(". ");
+  }
+
+  // FOUNDATIONAL_CONSTRAINTS_DETAILED: compact inline version of detailed guidance
+  if (system.globalRuntime?.foundationalConstraintsDetailed) {
+    vars.FOUNDATIONAL_CONSTRAINTS_DETAILED =
+      system.globalRuntime.foundationalConstraintsDetailed
+        .map(c => `**${c.name}:** ${c.description.split(".")[0]}.`)
+        .join(" ");
+  }
+
+  // VERIFICATION_WORKFLOW_STEPS: standard workflow
+  vars.VERIFICATION_WORKFLOW_STEPS = "1. build:prompts 2. test:unit 3. test:regressions:smoke";
+
+  return vars;
+}
+
 // ── Public Entry Point ──────────────────────────────────────────────
 
 export function generateArtifacts(system, options = {}) {

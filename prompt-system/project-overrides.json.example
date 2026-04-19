@@ -1,0 +1,11 @@
+{
+  "$schema": "./schemas/project-overrides.schema.json",
+  "_comment": "Rename to project-overrides.json to use. CI stays deterministic when this file is absent.",
+  "description": "Per-project variable overrides for Variable Substitution. Uncomment and fill values to override defaults from system.json → vs.variables.",
+  "overrides": {
+    "EXPERT_ROSTER": null,
+    "EXPERT_ID_ALLOWLIST": null,
+    "CONSTRAINT_HIERARCHY_LAYERS": null,
+    "VERIFICATION_WORKFLOW_STEPS": null
+  }
+}

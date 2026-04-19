@@ -1,0 +1,24 @@
+{
+  "version": "1.0",
+  "policy": {
+    "concurrency": 1,
+    "heal_schedule": "auto",
+    "batch_strategy": "fibonacci"
+  },
+  "tasks": [
+    {
+      "id": "smoke-agent",
+      "tool_id": "agent-print",
+      "input": "Reply with exactly: OK",
+      "timeout_sec": 90,
+      "depends_on": []
+    },
+    {
+      "id": "smoke-crush",
+      "tool_id": "crush-print",
+      "input": "Reply with exactly: OK",
+      "timeout_sec": 90,
+      "depends_on": []
+    }
+  ]
+}

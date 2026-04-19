@@ -117,6 +117,13 @@ export const SCAFFOLDED_VOICE = [
   "Use explicit scaffolding: numbered assumptions, categorized failure modes, tabular summaries. The structure is the model's reasoning display for the reader's audit."
 ];
 
+/** Fallback when router.json omits verbalizedSamplingContracts (rich + codex must stay aligned). */
+export const VERBALIZED_SAMPLING_ROUTER_RULES = [
+  "When the two strongest routing heuristic scores are within 0.2 on a 0-1 confidence scale, return a top-level JSON field confidenceDistribution in the regression response envelope (alongside routingDecision, activeExpert, handoffs, outputSections, confidenceLabeled, personaBlend, domainStayedInScope, summary, response).",
+  "confidenceDistribution must be an array of at least three objects { \"expert\": \"<canonical-id>\", \"probability\": <number> }, each probability non-negative, summing to 1.0 within 0.02, sorted by descending probability.",
+  "The first (highest-probability) entry's expert must equal routingDecision.selectedExpert and activeExpert. Use expert ids verbatim from the Canonical expert roster allowlist."
+];
+
 export function resolveRequiredSections(requiredSections) {
   const defaultSections =
     requiredSections.default || requiredSections.simple || [];

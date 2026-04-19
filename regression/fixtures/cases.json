@@ -81,7 +81,11 @@
       "PN1",
       "PN2",
       "PN3",
-      "PN4"
+      "PN4",
+      "TP3b",
+      "TP5b",
+      "SP-Kn3",
+      "MI3b"
     ],
     "modifier": [
       "MO1",
@@ -109,8 +113,10 @@
       "TP1",
       "TP2",
       "TP3",
+      "TP3b",
       "TP4",
       "TP5",
+      "TP5b",
       "TP6"
     ],
     "council": [
@@ -135,13 +141,15 @@
       "SP-Dj2",
       "SP-Kn1",
       "SP-Kn2",
+      "SP-Kn3",
       "SP-Bl1",
       "SP-Bl2"
     ],
     "mixed-intent": [
       "MI1",
       "MI2",
-      "MI3"
+      "MI3",
+      "MI3b"
     ],
     "persona-vs-neutral": [
       "PN1",
@@ -162,7 +170,11 @@
       "TP1",
       "TP2",
       "SP-Kn2",
-      "MI3"
+      "SP-Kn3",
+      "MI3",
+      "MI3b",
+      "TP3b",
+      "TP5b"
     ]
   },
   "cases": [
@@ -258,7 +270,8 @@
       "forbiddenBehaviors": [
         "Converging too early",
         "Giving only one answer"
-      ]
+      ],
+      "behavioralAssertions": ["dennettDraftLength"]
     },
     {
       "id": "R5",
@@ -435,7 +448,8 @@
       "forbiddenBehaviors": [
         "Premature commitment",
         "Only minor variants"
-      ]
+      ],
+      "behavioralAssertions": ["dennettDraftLength"]
     },
     {
       "id": "C1",
@@ -868,7 +882,8 @@
       "expectedPrimaryExpert": "expert-visionary-dennett",
       "expectedSections": ["Draft A", "Draft B", "Draft C", "Recommendation"],
       "allowedHandoffs": [],
-      "forbiddenBehaviors": ["Converging to one option without exploring"]
+      "forbiddenBehaviors": ["Converging to one option without exploring"],
+      "behavioralAssertions": ["dennettDraftLength"]
     },
     {
       "id": "RB4",
@@ -1361,8 +1376,59 @@
       "expectedSections": ["Draft A", "Draft B", "Draft C", "Recommendation"],
       "allowedHandoffs": [],
       "forbiddenBehaviors": ["Only one approach considered", "No trade-off analysis"],
+      "behavioralAssertions": ["dennettDraftLength"],
       "experimentTag": "persona-vs-neutral",
       "experimentHypothesis": "persona-should-win"
+    },
+
+    {
+      "id": "TP3b",
+      "category": "two-pass",
+      "name": "Two-pass variant: build/config error after dependency bump",
+      "targets": ["cursor", "codex"],
+      "prompt": "After bumping the auth library, the build is broken with an import error in the config module. Patch the config.",
+      "expectedParity": true,
+      "expectedPrimaryExpert": "expert-engineer-peirce",
+      "expectedSections": ["Answer"],
+      "allowedHandoffs": ["expert-qa-popper"],
+      "forbiddenBehaviors": ["Treating a build/import error as a runtime bug hunt", "Architecture detour for a config patch"]
+    },
+    {
+      "id": "TP5b",
+      "category": "two-pass",
+      "name": "Two-pass variant: callback contract for third-party integrators",
+      "targets": ["cursor", "codex"],
+      "prompt": "We are adding a webhook endpoint. Define the callback contract, retry semantics, and versioning so third-party integrators have a stable interface.",
+      "expectedParity": true,
+      "expectedPrimaryExpert": "expert-abstractions-liskov",
+      "expectedSections": ["Boundary", "Contract", "Coupling Risks", "Recommended Abstraction", "Compatibility"],
+      "allowedHandoffs": ["expert-engineer-peirce", "expert-architect-descartes"],
+      "forbiddenBehaviors": ["Foundational architecture redesign for a single interface", "Implementing without the contract first"]
+    },
+    {
+      "id": "SP-Kn3",
+      "category": "specialist-pressure",
+      "name": "Knuth variant: heap allocation profiling for gradual memory growth",
+      "targets": ["cursor", "codex"],
+      "prompt": "Our Node service grows from 200MB to 2GB over 24 hours. Profile heap allocations, identify the retained objects, and plan the fix.",
+      "expectedParity": true,
+      "expectedPrimaryExpert": "expert-performance-knuth",
+      "expectedSections": ["Metric", "Bottleneck", "Optimization Plan", "Tradeoffs", "Verification"],
+      "allowedHandoffs": ["expert-engineer-peirce", "expert-qa-popper"],
+      "forbiddenBehaviors": ["Treating a memory leak as a generic bug without profiling", "No measurement baseline"]
+    },
+    {
+      "id": "MI3b",
+      "category": "mixed-intent",
+      "name": "Mixed variant: phased migration plan with gates and rollback",
+      "targets": ["cursor", "codex"],
+      "prompt": "Roll out the new payment provider across our 30 storefronts. Produce a phased plan with gates, rollback criteria, and stopping conditions.",
+      "expectedParity": true,
+      "expectedPrimaryExpert": "expert-orchestrator-simon",
+      "ambiguousBetween": ["expert-orchestrator-simon", "expert-architect-descartes"],
+      "expectedSections": ["Objective", "Procedure", "Stopping Conditions", "Procedure Risks", "Evaluation"],
+      "allowedHandoffs": ["expert-architect-descartes"],
+      "forbiddenBehaviors": ["Foundational architecture redesign instead of a rollout plan", "No stopping conditions", "Starting implementation without phases"]
     }
   ]
 }

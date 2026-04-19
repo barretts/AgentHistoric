@@ -1,4 +1,11 @@
-import { codeFence, humanizeExpertId, resolveRequiredSections, VOICE_CALIBRATION, SCAFFOLDED_VOICE } from "./prompt-system.mjs";
+import {
+  codeFence,
+  humanizeExpertId,
+  resolveRequiredSections,
+  VERBALIZED_SAMPLING_ROUTER_RULES,
+  VOICE_CALIBRATION,
+  SCAFFOLDED_VOICE
+} from "./prompt-system.mjs";
 
 export function renderRichInit(system, options = {}) {
   const g = system.globalRuntime;
@@ -103,19 +110,29 @@ export function renderRichInit(system, options = {}) {
     out += g.foundationalConstraints
       .map((constraint) => `- ${constraint}`)
       .join("\n");
-    out += `\n\n### Detailed Guidance\n\n`;
-    out += g.foundationalConstraintsDetailed
-      .map((c) => `* **${c.name}:** ${c.description}`)
-      .join("\n");
-    out += `\n\n`;
+    if (options.vsEnabled) {
+      out += `\n\n{{FOUNDATIONAL_CONSTRAINTS_DETAILED}}\n\n`;
+    } else {
+      out += `\n\n### Detailed Guidance\n\n`;
+      out += g.foundationalConstraintsDetailed
+        .map((c) => `* **${c.name}:** ${c.description}`)
+        .join("\n");
+      out += `\n\n`;
+    }
   }
 
   // Section 6: Registry
-  out += `## 7. Swarm Registry\n`;
-  out += system.experts
-    .map((e) => `* **${e.id}:** ${e.summary}`)
-    .join("\n");
-  out += `\n`;
+  if (options.vsEnabled) {
+    // With VS enabled, use placeholder for build-time substitution
+    out += "{{EXPERT_ROSTER}}";
+  } else {
+    // Default: inline generation for non-VS builds
+    out += `## 7. Swarm Registry\n`;
+    out += system.experts
+      .map((e) => `* **${e.id}:** ${e.summary}`)
+      .join("\n");
+    out += `\n`;
+  }
 
   return out;
 }
@@ -135,6 +152,21 @@ export function renderRichRouter(system, options = {}) {
   out += `## 1. Router Contract\n\n`;
   out += r.contracts.map((item) => `- ${item}`).join("\n");
   out += `\n\n`;
+
+  if (r.expertIdAllowlist?.length) {
+    out += `### Canonical expert roster\n\n`;
+    out += `Only these canonical expert ids are valid for routing and JSON envelopes: ${r.expertIdAllowlist.map((id) => `\`${id}\``).join(", ")}.\n\n`;
+  }
+
+  const experimentFlags = { ...r.experimentFlags, ...options.experimentFlags };
+  if (experimentFlags.verbalizedSampling) {
+    const vsRules = r.verbalizedSamplingContracts?.length
+      ? r.verbalizedSamplingContracts
+      : VERBALIZED_SAMPLING_ROUTER_RULES;
+    out += `### Verbalized Sampling (Experiment)\n\n`;
+    out += vsRules.map((item) => `- ${item}`).join("\n");
+    out += `\n\n`;
+  }
 
   // Routing heuristics table
   out += `## 2. Routing Heuristics\n\n`;
