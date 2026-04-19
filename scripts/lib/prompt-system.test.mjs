@@ -43,9 +43,11 @@ test("resolveRequiredSections uses an empty fallback when nothing is defined", (
 
 test("generated artifacts stay in sync with the repository outputs", async () => {
   const system = await loadPromptSystemSpec(workspaceRoot);
-  const artifacts = generateArtifacts(system);
+  // Default build uses VS-on (variable substitution shipped as default).
+  const artifacts = generateArtifacts(system, { vsEnabled: true });
 
-  for (const [relativePath, expectedContent] of artifacts) {
+  for (const [relativePath, content] of artifacts) {
+    const expectedContent = applyVariableSubstitution(content, system, { vsEnabled: true });
     const actualContent = await readFile(
       path.join(workspaceRoot, relativePath),
       "utf8"
@@ -77,8 +79,10 @@ test("applyVariableSubstitution replaces valid variables", () => {
   };
   const result = applyVariableSubstitution(content, system, { vsEnabled: true });
   assert.ok(result.includes("## 7. Swarm Registry"));
-  assert.ok(result.includes("expert-engineer-peirce"));
-  assert.ok(result.includes("expert-qa-popper"));
+  assert.ok(result.includes("`expert-engineer-peirce`"));
+  assert.ok(result.includes("`expert-qa-popper`"));
+  // VS compact format: ID-only, no summaries
+  assert.ok(!result.includes("Implementation lead"), "VS roster must not include summaries");
 });
 
 test("applyVariableSubstitution replaces EXPERT_ID_ALLOWLIST", () => {
@@ -139,12 +143,30 @@ test("applyVariableSubstitution handles multiple variables in one content", () =
   assert.ok(result.includes("build:prompts"));
 });
 
-test("EXPERT_ROSTER variable produces formatted markdown with Swarm Registry heading", () => {
+test("EXPERT_ROSTER variable produces compact ID-only list with Swarm Registry heading", () => {
   const content = "{{EXPERT_ROSTER}}";
   const system = {
     experts: [{ id: "expert-engineer-peirce", summary: "Implementation lead" }]
   };
   const result = applyVariableSubstitution(content, system, { vsEnabled: true });
   assert.ok(result.includes("## 7. Swarm Registry"));
-  assert.ok(result.includes("* **expert-engineer-peirce:** Implementation lead"));
+  assert.ok(result.includes("- `expert-engineer-peirce`"));
+  assert.ok(!result.includes("Implementation lead"), "Compact roster must omit summaries");
+});
+
+test("FOUNDATIONAL_CONSTRAINTS_DETAILED variable produces compact inline guidance", () => {
+  const content = "{{FOUNDATIONAL_CONSTRAINTS_DETAILED}}";
+  const system = {
+    globalRuntime: {
+      foundationalConstraintsDetailed: [
+        { name: "Minimal edits", description: "Prefer the smallest correct change. Extra refactors are noise." },
+        { name: "Test first", description: "Write tests before implementation. This catches regressions early." }
+      ]
+    }
+  };
+  const result = applyVariableSubstitution(content, system, { vsEnabled: true });
+  assert.ok(result.includes("**Minimal edits:**"));
+  assert.ok(result.includes("**Test first:**"));
+  // Compact: only first sentence of each description
+  assert.ok(!result.includes("Extra refactors are noise"), "Compact guidance must truncate to first sentence");
 });

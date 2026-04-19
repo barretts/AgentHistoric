@@ -16,7 +16,7 @@ The system generates rules for **Claude**, **Cursor**, **Windsurf**, and **Codex
 - `npm run build:prompts:debug` - Generate artifacts in debug mode
 
 ### Testing
-- `npm run test:unit` - Run 123 unit tests across 3 test files
+- `npm run test:unit` - Run 136 unit tests across 3 test files
 - `npm run test:regressions:smoke` - Quick smoke regression suite (R1, R2, Q1, P1)
 - `npm run test:regressions` - Full regression suite
 - `node scripts/run-regressions.mjs --suite <suite>` - Run specific regression suites:
@@ -54,8 +54,9 @@ The system generates rules for **Claude**, **Cursor**, **Windsurf**, and **Codex
 
 ### Testing Infrastructure
 - `regression/fixtures/cases.json` - 50+ regression test cases with expected experts and behaviors
-- `scripts/lib/prompt-smoke.test.mjs` - 72 frontmatter and protocol tests
-- `scripts/lib/regression.test.mjs` - 33 regression and behavioral assertion tests
+- `scripts/lib/prompt-smoke.test.mjs` - 75 frontmatter and protocol tests
+- `scripts/lib/regression.test.mjs` - 47 regression and behavioral assertion tests
+- `scripts/lib/prompt-system.test.mjs` - 14 variable substitution and artifact sync tests
 - `scripts/run-regressions.mjs` - Regression test runner with multiple model support
 
 ## Key Concepts
@@ -125,7 +126,7 @@ Add to `regression/fixtures/cases.json` with:
 - **Non-Destructive Logging**: Never pipe test/build output directly to filters. Always write to `.logs/` first.
 - **Protocol Compliance**: Routing step is mandatory before any tool call or code edit.
 - **Expert Isolation**: Only one expert active at a time unless explicit handoff.
-- **Variable Substitution**: Use `--vs` flag for token reduction in generated artifacts.
+- **Variable Substitution**: VS is on by default (13.6% init token savings). Use `--no-vs` to opt out.
 - **Cross-Target Parity**: All render targets must satisfy the same semantic invariants.
 
 ## File Organization

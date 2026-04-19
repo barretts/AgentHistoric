@@ -110,11 +110,15 @@ export function renderRichInit(system, options = {}) {
     out += g.foundationalConstraints
       .map((constraint) => `- ${constraint}`)
       .join("\n");
-    out += `\n\n### Detailed Guidance\n\n`;
-    out += g.foundationalConstraintsDetailed
-      .map((c) => `* **${c.name}:** ${c.description}`)
-      .join("\n");
-    out += `\n\n`;
+    if (options.vsEnabled) {
+      out += `\n\n{{FOUNDATIONAL_CONSTRAINTS_DETAILED}}\n\n`;
+    } else {
+      out += `\n\n### Detailed Guidance\n\n`;
+      out += g.foundationalConstraintsDetailed
+        .map((c) => `* **${c.name}:** ${c.description}`)
+        .join("\n");
+      out += `\n\n`;
+    }
   }
 
   // Section 6: Registry

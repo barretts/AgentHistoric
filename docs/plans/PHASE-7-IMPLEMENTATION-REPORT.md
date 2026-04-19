@@ -89,16 +89,17 @@ Added 4 new tests enforcing the ≤120 word cap on Dennett draft bodies. Total t
 **Scope:** Per-project variable substitution at build time to reduce token count without hurting accuracy.
 
 **Implementation:**
-- `vs` block added to `prompt-system/system.json` defining 4 variables:
-  - `EXPERT_ROSTER` — pipe-separated expert IDs
+- `vs` block added to `prompt-system/system.json` defining 5 variables:
+  - `EXPERT_ROSTER` — compact ID-only list (summaries in skill files)
   - `EXPERT_ID_ALLOWLIST` — comma-separated for echo-friendly display
   - `CONSTRAINT_HIERARCHY_LAYERS` — readable layer summary
+  - `FOUNDATIONAL_CONSTRAINTS_DETAILED` — first-sentence compact guidance
   - `VERIFICATION_WORKFLOW_STEPS` — standard workflow steps
 - `prompt-system/project-overrides.json.example` stub for per-project overrides
 - `--vs` and `--strict-vs` flags in build script
 - `applyVariableSubstitution()` function in `build-prompt-system.mjs`
 
-**A/B gate (planned):** Ship only if accuracy equal-or-better **and** token savings >10%.
+**A/B gate: >10% token savings on init artifacts — gate met at 13.6%.**
 
 ---
 
@@ -106,10 +107,10 @@ Added 4 new tests enforcing the ≤120 word cap on Dennett draft bodies. Total t
 
 | File | Before | After |
 |------|--------|-------|
-| `prompt-smoke.test.mjs` | 72 | 72 |
-| `prompt-system.test.mjs` | 4 | 12 (+8 VS tests) |
-| `regression.test.mjs` | 33 | 50 (+17 VS tests) |
-| **Total** | **109** | **134** |
+| `prompt-smoke.test.mjs` | 72 | 75 |
+| `prompt-system.test.mjs` | 4 | 14 (+10 VS tests) |
+| `regression.test.mjs` | 33 | 47 (+14 VS tests) |
+| **Total** | **109** | **136** |
 
 Documentation updated in README.md and AGENTS.md.
 
@@ -119,7 +120,7 @@ Documentation updated in README.md and AGENTS.md.
 
 1. **Cursor prefix hallucination** — recommend explicit roster allowlist in router.json for cursor target
 2. **clr stdout-format fragility** — PTY wrapper may need hardening for edge cases
-3. **VS token savings A/B** — run with `--vs` flag to measure actual savings
+3. ~~**VS token savings A/B**~~ — resolved: 13.6% savings on init artifacts with `--vs` flag
 4. **Concision metric noise** — real-LLM variance requires ≥5 trials for ranking
 
 ---

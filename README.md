@@ -183,13 +183,13 @@ After implementation, a separate adversarial verification step by Popper prevent
 npm run test:unit
 ```
 
-123 unit tests across 3 test files:
+136 unit tests across 3 test files:
 
 | File | Tests | Scope |
 |------|:-----:|-------|
-| `prompt-smoke.test.mjs` | 72 | Frontmatter validity, required sections, expert cross-references, guardrail completeness, token budgets, routing evolution rendering, pipeline structure, disambiguation expansion, cross-target semantic equivalence (`PROTOCOL:` tests), model-parity suite structure |
-| `prompt-system.test.mjs` | 4 | Section resolution, generated artifact sync |
-| `regression.test.mjs` | 33 | Routing, evaluator, behavioral assertions, negative routing guards, diversity routing |
+| `prompt-smoke.test.mjs` | 75 | Frontmatter validity, required sections, expert cross-references, guardrail completeness, token budgets, routing evolution rendering, pipeline structure, disambiguation expansion, cross-target semantic equivalence (`PROTOCOL:` tests), model-parity suite structure |
+| `prompt-system.test.mjs` | 14 | Section resolution, generated artifact sync, variable substitution |
+| `regression.test.mjs` | 47 | Routing, evaluator, behavioral assertions, negative routing guards, diversity routing, verbalized sampling |
 
 ### Behavioral Assertions
 
