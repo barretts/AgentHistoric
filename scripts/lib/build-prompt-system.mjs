@@ -84,10 +84,10 @@ export function applyVariableSubstitution(content, system, options = {}) {
 function buildVariableMap(system) {
   const vars = {};
 
-  // EXPERT_ROSTER: full Swarm Registry markdown with summaries
+  // EXPERT_ROSTER: compact ID-only list (summaries live in dedicated skill files)
   if (system.experts) {
-    vars.EXPERT_ROSTER = "## 7. Swarm Registry\n" +
-      system.experts.map(e => `* **${e.id}:** ${e.summary}`).join("\n") +
+    vars.EXPERT_ROSTER = "## 7. Swarm Registry\n\n" +
+      system.experts.map(e => `- \`${e.id}\``).join("\n") +
       "\n";
   }
 
@@ -101,6 +101,14 @@ function buildVariableMap(system) {
     vars.CONSTRAINT_HIERARCHY_LAYERS = system.constraintHierarchy.layers
       .map(l => `${l.name} (${l.source}): ${l.scope}`)
       .join(". ");
+  }
+
+  // FOUNDATIONAL_CONSTRAINTS_DETAILED: compact inline version of detailed guidance
+  if (system.globalRuntime?.foundationalConstraintsDetailed) {
+    vars.FOUNDATIONAL_CONSTRAINTS_DETAILED =
+      system.globalRuntime.foundationalConstraintsDetailed
+        .map(c => `**${c.name}:** ${c.description.split(".")[0]}.`)
+        .join(" ");
   }
 
   // VERIFICATION_WORKFLOW_STEPS: standard workflow

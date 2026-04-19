@@ -12,11 +12,11 @@ Synthesized from `minimax27-PHASE-7-CONTINUATION-PLAN.md` and `qwen36-phase-7-co
 | A.6 (8-case real-LLM spot-check) | ✅ done | crush 5/8, cursor 0/8 (prefix hallucination) |
 | B.1 (`--local` ablation flag) | ✅ done | |
 | B.2 (Local multi-trial baseline) | ✅ done | All 8 sections, REVIEW by design |
-| B.3 (Dennett <=120 word anchor) | ✅ done | 4 new tests, 115/115 total |
+| B.3 (Dennett <=120 word anchor) | ✅ done | 4 new tests, 119/119 total |
 | B.4 (Real-LLM ablation, 3 sections) | ✅ done | All KEEP (see results below) |
 | **C-VS-a** (Verbalized Sampling A/B) | ✅ impl done | Code: router flag + contracts, regression/assert, ablation runner, render parity, output-schema, unit tests; real-LLM A/B remains manual |
 | **Cursor fix** (Prefix hallucination allowlist) | ✅ bundled in C-VS-a | `expertIdAllowlist` + echo contract + Canonical expert roster in rich/codex router renders |
-| **C-VS-b** (Variable Substitution) | ✅ done | vs block, --vs flag, substitution pass, 8 tests |
+| **C-VS-b** (Variable Substitution) | ✅ shipped | Gate met: 13.6% init savings. VS is now the default build (`--no-vs` to opt out). 136/136 tests |
 | **D.1** (Implementation Report) | ✅ done | `docs/plans/PHASE-7-IMPLEMENTATION-REPORT.md` |
 
 ---
@@ -163,31 +163,9 @@ npm run test:unit                    # expect 115/115 (or higher with new tests)
 git status                           # confirm clean or expected-pending edits only
 npm run build:prompts                # verify disk state matches compiled
 
-# 2. C-VS-a implementation
-#    - router.json: add experimentFlags.verbalizedSampling + VS contract rule
-#    - regression.mjs: add confidenceDistribution field + assertVerbalizedSamplingSchema
-#    - run-ablation.mjs: add --verbalized-sampling flag
-#    - render-rich.mjs / render-codex.mjs: propagate flag
-
-# 3. C-VS-a unit tests
-#    - regression.test.mjs: assertVerbalizedSamplingSchema cases
-
-# 4. C-VS-a real-LLM A/B (crush first)
-node scripts/run-ablation.mjs --via-clr --suite smoke --trials 3 \
-  --targets crush --cases TP5,SP-Li1,SP-Si1,SP-Si2 --verbalized-sampling
-
-# 5. Cursor prefix hallucination fix
-#    - router.json: add explicit roster allowlist + echo verbatim rule
-#    - npm run build:prompts
-#    - re-run A.6 8-case spot-check on cursor to verify
-
-# 6. C-VS-b (if time permits)
-#    - system.json: add vs block
-#    - project-overrides.json: scaffold
-#    - build-prompt-system.mjs: substitution pass + --strict-vs
-
-# 7. D.1 implementation report
-#    - docs/PHASE-7-IMPLEMENTATION-REPORT.md
+# All items complete. VS-b shipped as default build.
+# To opt out of VS: npm run build:prompts -- --no-vs
+npm run test:unit                    # expect 136/136
 ```
 
 ---

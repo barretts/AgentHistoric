@@ -11,7 +11,7 @@ const debug = process.argv.includes("--debug") && !process.argv.includes("--no-d
 const scaffolded = process.argv.includes("--scaffolded");
 const ablationIdx = process.argv.indexOf("--ablation");
 const ablation = ablationIdx !== -1 ? process.argv[ablationIdx + 1] : null;
-const vsEnabled = process.argv.includes("--vs");
+const vsEnabled = !process.argv.includes("--no-vs");
 const vsStrict = process.argv.includes("--strict-vs");
 const spec = await loadPromptSystemSpec(workspaceRoot);
 
