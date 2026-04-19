@@ -21,18 +21,43 @@ import { spawn } from "node:child_process";
 import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { existsSync } from "node:fs";
+import { createRequire } from "node:module";
 
-// CLR_ROOT is configurable via env var so the runner is portable across dev
-// environments. Default points to the Linux checkout on this machine; other
-// boxes should set `CLR_ROOT=/path/to/cli-runner-learner` before invoking.
-const CLR_ROOT = process.env.CLR_ROOT || "/home/barrett/code/cli-runner-learner";
+/**
+ * Resolve the cli-runner-learner package root.
+ *
+ * Resolution order:
+ *   1. CLR_ROOT env var (explicit dev-checkout override)
+ *   2. require.resolve("cli-runner-learner/package.json") -> derive dir
+ *
+ * This lets AgentHistoric consume clr as an npm dependency while still
+ * supporting local dev checkouts via `CLR_ROOT=/path/to/cli-runner-learner`.
+ */
+function resolveClrRoot() {
+  if (process.env.CLR_ROOT) return process.env.CLR_ROOT;
+  try {
+    const require_ = createRequire(import.meta.url);
+    const pkgPath = require_.resolve("cli-runner-learner/package.json");
+    return path.dirname(pkgPath);
+  } catch {
+    throw new Error(
+      "cli-runner-learner is not installed. Run `npm install cli-runner-learner` " +
+        "in AgentHistoric, or set CLR_ROOT=/path/to/cli-runner-learner to point at a dev checkout."
+    );
+  }
+}
+
+const CLR_ROOT = resolveClrRoot();
 const CLR_CLI = path.join(CLR_ROOT, "dist/cli.js");
-const CLR_TRANSCRIPT_DIR = path.join(CLR_ROOT, "transcripts");
+// Transcripts live under the data dir (CLR_DATA_DIR) which clr defaults to
+// `$cwd/.clr/transcripts`. We override CLR_DATA_DIR per-run via the spawn env
+// so AgentHistoric can isolate each run's transcripts in its state dir.
+let CLR_TRANSCRIPT_DIR = path.join(CLR_ROOT, "transcripts");
 
 function ensureClrBuilt() {
   if (!existsSync(CLR_CLI)) {
     throw new Error(
-      `clr not built at ${CLR_CLI}. Set CLR_ROOT env var or run \`npm install && npm run build\` inside ${CLR_ROOT}.`
+      `clr not built at ${CLR_CLI}. Run \`npm install cli-runner-learner\` (or \`npm run build\` in ${CLR_ROOT} for a dev checkout).`
     );
   }
 }
@@ -321,6 +346,12 @@ export async function runCasesViaClr(opts) {
 
   const env = { ...process.env };
   if (model && target === "cursor") env.AGENT_MODEL = model;
+  // Isolate clr's data dir per run so transcripts don't collide across
+  // regression suites and so we don't pollute node_modules or the dev checkout.
+  // Falls back to caller-provided CLR_DATA_DIR, else stateDir/.clr.
+  const dataDir = env.CLR_DATA_DIR || path.join(stateDir, ".clr");
+  env.CLR_DATA_DIR = dataDir;
+  CLR_TRANSCRIPT_DIR = path.join(dataDir, "transcripts");
 
   const sinceMs = Date.now();
   const runStart = Date.now();
@@ -340,7 +371,7 @@ export async function runCasesViaClr(opts) {
       })
     : undefined;
 
-  const { code, stdout, stderr } = await runSpawn("node", [
+  const { code, stdout, stderr } = await runSpawn(process.execPath, [
     CLR_CLI,
     "orchestrate",
     "--manifest", manifestPath,

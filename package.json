@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "dependencies": {
+    "cli-runner-learner": "^0.3.0"
+  },
   "scripts": {
     "test:unit": "node --test scripts/lib/*.test.mjs",
     "build:prompts": "node scripts/build-prompt-system.mjs",
