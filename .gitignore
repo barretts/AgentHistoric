@@ -1,6 +1,8 @@
 .DS_Store
 node_modules/
 dist/
+site/index.html
+site/assets/
 .logs/
 compiled/cursor/plans/
 .cursor
