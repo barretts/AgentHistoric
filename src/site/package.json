@@ -4,8 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port=3000 --host=0.0.0.0",
-    "build": "vite build",
+    "dev": "npm run prebuild && vite --port=3000 --host=0.0.0.0",
+    "prebuild": "node scripts/build-experts-data.mjs",
+    "build": "npm run prebuild && vite build && node scripts/generate-expert-shells.mjs",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"
