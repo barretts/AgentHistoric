@@ -67,8 +67,11 @@ jobs:
           if [ -f /tmp/README.md ]; then
             cp /tmp/README.md site/
           fi
+          # Merge preserved experts (.md source essays) into the built
+          # experts/ dir (which holds SPA shells from generate-expert-shells).
           if [ -d /tmp/experts ]; then
-            cp -r /tmp/experts site/
+            mkdir -p site/experts
+            cp -r /tmp/experts/. site/experts/
           fi
 
       - name: Setup Pages

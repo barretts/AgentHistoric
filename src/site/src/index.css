@@ -1,1 +1,70 @@
 @import "tailwindcss";
+
+.expert-prose {
+  font-size: 1.0625rem;
+  line-height: 1.75;
+}
+.expert-prose h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-top: 2.25rem;
+  margin-bottom: 1rem;
+  letter-spacing: -0.01em;
+}
+.expert-prose h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+.expert-prose p {
+  margin-bottom: 1.1em;
+  color: #c9d1d9;
+}
+.expert-prose ul,
+.expert-prose ol {
+  margin-bottom: 1.1em;
+  padding-left: 1.5rem;
+  color: #c9d1d9;
+}
+.expert-prose ul {
+  list-style: disc;
+}
+.expert-prose ol {
+  list-style: decimal;
+}
+.expert-prose li {
+  margin-bottom: 0.5em;
+}
+.expert-prose strong {
+  color: #ffffff;
+  font-weight: 600;
+}
+.expert-prose em {
+  color: #d2a8ff;
+}
+.expert-prose a {
+  color: #58a6ff;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.expert-prose code {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+  font-size: 0.95em;
+  color: #ff7b72;
+}
+.expert-prose .persona-disclaimer {
+  font-size: 0.875rem;
+  color: #6e7681;
+  font-style: italic;
+  border-left: 2px solid #30363d;
+  padding: 0.75rem 1rem;
+  margin-bottom: 2rem;
+  background: #161b22;
+  border-radius: 0 6px 6px 0;
+}
