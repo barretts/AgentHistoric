@@ -172,6 +172,20 @@ export default function App() {
                 <Cpu className="w-4 h-4 text-[#8a2be2]" />
                 Mixture-of-Experts Prompt System
               </span>
+              <a
+                href="https://doi.org/10.5281/zenodo.19559517"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center"
+                aria-label="Zenodo DOI 10.5281/zenodo.19559517"
+              >
+                <img
+                  src="https://zenodo.org/badge/DOI/10.5281/zenodo.19559517.svg"
+                  alt="DOI 10.5281/zenodo.19559517"
+                  className="h-[20px] align-middle"
+                  loading="lazy"
+                />
+              </a>
             </motion.div>
             
             <motion.h1 
@@ -425,7 +439,7 @@ export default function App() {
                   </p>
                   <p className="text-[#c9d1d9] leading-relaxed text-sm flex-grow">{expert.blurb}</p>
                   <a
-                    href={`/experts/${expert.slug}.html`}
+                    href={`/experts/${expert.slug}`}
                     className="inline-flex items-center gap-2 text-[#58a6ff] font-medium hover:underline mt-4 text-sm"
                   >
                     Read autobiography <ArrowRight className="w-4 h-4" />

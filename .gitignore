@@ -3,6 +3,7 @@ node_modules/
 dist/
 src/site/dist/
 src/site/node_modules/
+src/site/src/experts-data.generated.ts
 site/index.html
 site/assets/
 .logs/
