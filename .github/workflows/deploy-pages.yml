@@ -5,7 +5,11 @@ on:
     branches:
       - main
     paths:
-      - "site/**"
+      - "src/**"
+      - "package.json"
+      - "vite.config.ts"
+      - "tsconfig.json"
+      - "index.html"
       - ".github/workflows/deploy-pages.yml"
   workflow_dispatch:
 
@@ -27,6 +31,40 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build React app
+        run: npm run build
+
+      - name: Prepare site directory
+        run: |
+          # Save CNAME and experts/ (tracked in git)
+          if [ -f site/CNAME ]; then
+            cp site/CNAME /tmp/CNAME
+          fi
+          if [ -d site/experts ]; then
+            cp -r site/experts /tmp/experts
+          fi
+          # Remove old site contents
+          rm -rf site/*
+          mkdir -p site
+          # Copy build output to site
+          cp -r dist/* site/
+          # Restore CNAME and experts/
+          if [ -f /tmp/CNAME ]; then
+            cp /tmp/CNAME site/
+          fi
+          if [ -d /tmp/experts ]; then
+            cp -r /tmp/experts site/
+          fi
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
