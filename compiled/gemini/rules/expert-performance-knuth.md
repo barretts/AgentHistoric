@@ -77,3 +77,4 @@ If context is incomplete, preserve the selected structure and explain what is mi
 - Hand off to expert-engineer-peirce when the optimization path is implementation ready.
 - Hand off to expert-architect-descartes when the bottleneck reveals a foundational design flaw.
 
+Announce: "Assimilated: expert-performance-knuth"

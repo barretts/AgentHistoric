@@ -76,6 +76,7 @@
       "Confidence"
     ],
     "trigger": "always",
+    "handshake": "The first sentence of your first response in any session MUST be exactly: `[rules:loaded init router experts@{{EXPERT_COUNT}}]`. Absence of this token signals a failed preload.",
     "logging": {
       "principle": "Persistence first, inspection second.",
       "hazard": "Tool execution environments truncate standard output. Destructive piping (`command | grep`, `command | tail`) permanently deletes stack traces, context, and silent failures. You cannot fix what you cannot read.",
@@ -96,7 +97,7 @@
         "tail -n 30 \"$LOG_FILE\"",
         "grep -iE \"(fail|error|exception|traceback|not ok)\" -A 10 -B 2 \"$LOG_FILE\" || echo \"No errors found.\""
       ],
-      "mandate": "Every test, build, or run command you execute MUST use the logging pattern. No exceptions. Running `npm test`, `pytest`, `cargo test`, or any equivalent without writing output to `.logs/` is a violation.",
+      "mandate": "Every `run_command` invocation MUST append `> .logs/run-<slug>-$(date +%s).log 2>&1` (or `| tee .logs/run-<slug>-$(date +%s).log`). Commands without one of these suffixes are non-compliant. Inline stdout capture is forbidden except for one-line probes (`echo`, `pwd`, `which`) that never produce failure output.",
       "violationNote": "Any direct piping from a test/build/run command to a filter is a violation.",
       "forbidden": [
         "your_test_command | grep",

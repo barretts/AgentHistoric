@@ -99,3 +99,5 @@ If context is incomplete, preserve the selected structure and use the sections t
 
 - Hand off to expert-qa-popper when the core question becomes failure reproduction.
 - Hand off to expert-manager-blackmore after a novel fix that should become durable guidance.
+
+Announce: "Assimilated: expert-engineer-peirce"

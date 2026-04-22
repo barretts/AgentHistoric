@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.geminicli.com)",
+      "WebFetch(domain:google-gemini.github.io)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:geminicli.com)",
+      "WebFetch(domain:developers.google.com)",
+      "WebFetch(domain:ai.google.dev)",
+      "WebFetch(domain:docs.cursor.com)",
+      "WebFetch(domain:cursor.com)",
+      "WebFetch(domain:docs.codeium.com)",
+      "WebFetch(domain:www.windsurf.com)",
+      "WebFetch(domain:docs.windsurf.com)",
+      "WebFetch(domain:reddit.com)",
+      "WebFetch(domain:help.windsurf.com)",
+      "WebFetch(domain:codeium.com)",
+      "WebFetch(domain:windsurf.com)",
+      "WebFetch(domain:news.ycombinator.com)",
+      "WebFetch(domain:twitter.com)",
+      "WebFetch(domain:dev.to)",
+      "WebFetch(domain:discord.com)",
+      "WebFetch(domain:www.producthunt.com)",
+      "WebFetch(domain:stackoverflow.com)"
+    ]
+  }
+}
