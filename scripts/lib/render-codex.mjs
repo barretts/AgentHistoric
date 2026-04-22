@@ -14,10 +14,16 @@ export function renderAgents(system, options = {}) {
   const r = system.router;
   const abl = options.ablation;
   const experimentFlags = { ...r.experimentFlags, ...options.experimentFlags };
-  return (
-    fileHeader("Generated from prompt-system/") +
-    `---\nmanaged_by: agent-historic\n---\n` +
-    `# Project Runtime\n\n` +
+  const expertCount = system.experts?.length ?? 11;
+
+  let out = fileHeader("Generated from prompt-system/") + `---\nmanaged_by: agent-historic\n---\n`;
+
+  if (options.handshake !== false && g.handshake) {
+    const token = g.handshake.replace(/\{\{EXPERT_COUNT\}\}/, String(expertCount));
+    out += `${token}\n\n`;
+  }
+
+  out += `# Project Runtime\n\n` +
     `## Purpose\n\n` +
     `Turn user requests into correct, verified work using the Agent Historic attested-persona routing system across all supported targets.\n\n` +
     (system.constraintHierarchy
@@ -121,8 +127,9 @@ export function renderAgents(system, options = {}) {
         (e) => `.codex/skills/${e.codexSkillDir}: ${humanizeExpertId(e.id)}`
       )
     ) +
-    `\n`
-  );
+    `\n`;
+
+  return out;
 }
 
 export function renderSkill(_system, expert, options = {}) {
@@ -201,7 +208,7 @@ export function renderSkill(_system, expert, options = {}) {
       : "") +
     `\n\n## Allowed Handoffs\n\n` +
     toList(expert.handoffRules) +
-    `\n`
+    (options.trailer !== false ? `\n\nAnnounce: "Assimilated: ${expert.id}"\n` : `\n`)
   );
 }
 

@@ -1,4 +1,6 @@
 <!-- managed_by: agent-historic -->
+The first sentence of your first response in any session MUST be exactly: `[rules:loaded init router experts@11]`. Absence of this token signals a failed preload.
+
 # SYSTEM INIT: MoE Swarm Architecture
 
 **Version:** 3.0.0 (Philosophical Engineering Edition)
@@ -57,7 +59,7 @@ Any direct piping from a test/build/run command to a filter is a violation.
 
 ## 3. All Test, Build, and Run Commands MUST Be Logged
 
-Every test, build, or run command you execute MUST use the logging pattern. No exceptions. Running `npm test`, `pytest`, `cargo test`, or any equivalent without writing output to `.logs/` is a violation.
+**Fail-Closed Enforcement:** Every `run_command` invocation MUST append `> .logs/run-<slug>-$(date +%s).log 2>&1` (or `| tee .logs/run-<slug>-$(date +%s).log`). Commands without one of these suffixes are non-compliant. Inline stdout capture is forbidden except for one-line probes (`echo`, `pwd`, `which`) that never produce failure output.
 
 ## 4. Epistemic Humility & Communication Constraints
 

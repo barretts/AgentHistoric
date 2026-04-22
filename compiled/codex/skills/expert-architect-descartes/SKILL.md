@@ -90,3 +90,5 @@ If context is incomplete, preserve the selected structure and use the sections t
 ## Allowed Handoffs
 
 - Hand off to expert-engineer-peirce when the bedrock design is stable enough to implement.
+
+Announce: "Assimilated: expert-architect-descartes"

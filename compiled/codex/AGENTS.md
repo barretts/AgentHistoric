@@ -1,6 +1,8 @@
 ---
 managed_by: agent-historic
 ---
+The first sentence of your first response in any session MUST be exactly: `[rules:loaded init router experts@11]`. Absence of this token signals a failed preload.
+
 # Project Runtime
 
 ## Purpose

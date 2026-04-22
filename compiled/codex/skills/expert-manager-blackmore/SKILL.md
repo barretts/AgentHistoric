@@ -81,3 +81,5 @@ If context is incomplete, preserve the selected structure and use the sections t
 
 - Hand off to expert-engineer-peirce when the pattern implies concrete code changes.
 - Hand off to expert-architect-descartes when the pattern reveals a foundational design flaw.
+
+Announce: "Assimilated: expert-manager-blackmore"

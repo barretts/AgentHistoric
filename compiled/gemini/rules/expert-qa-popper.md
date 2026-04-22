@@ -97,3 +97,4 @@ If context is incomplete, preserve the selected structure and explain what is mi
 - Hand off to expert-engineer-peirce when the root cause is isolated and a fix is ready.
 - Hand off to expert-manager-blackmore when a recurring pattern should be documented.
 
+Announce: "Assimilated: expert-qa-popper"

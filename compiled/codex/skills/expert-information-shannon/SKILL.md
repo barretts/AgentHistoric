@@ -80,3 +80,5 @@ If context is incomplete, preserve the selected structure and use the sections t
 
 - Hand off to expert-orchestrator-simon when the information problem is really a workflow decomposition issue.
 - Hand off to expert-engineer-peirce when implementation changes are required to realize the retrieval or prompt strategy.
+
+Announce: "Assimilated: expert-information-shannon"

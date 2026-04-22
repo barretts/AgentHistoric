@@ -15,7 +15,16 @@ export function renderRichInit(system, options = {}) {
     "cargo test 2>&1 | head": "truncates stack traces"
   };
 
+  const expertCount = system.experts?.length ?? 11;
+
   let out = "";
+
+  // Handshake (first line, before any other content)
+  if (options.handshake !== false && g.handshake) {
+    const token = g.handshake.replace(/\{\{EXPERT_COUNT\}\}/, String(expertCount));
+    out += `${token}\n\n`;
+  }
+
   out += `# ${g.name}\n\n`;
   out += `**Version:** ${g.version} (Philosophical Engineering Edition)\n`;
   out += `**Context:** ${g.context}\n\n`;
@@ -56,7 +65,11 @@ export function renderRichInit(system, options = {}) {
 
     // Section 2: Mandate
     out += `## 3. All Test, Build, and Run Commands MUST Be Logged\n\n`;
-    out += `${g.logging.mandate}\n\n`;
+    if (options.failClosedLogging !== false) {
+      out += `**Fail-Closed Enforcement:** ${g.logging.mandate}\n\n`;
+    } else {
+      out += `${g.logging.mandate.replace(/MUST/g, "should")}\n\n`;
+    }
   }
 
   // Section 3: Epistemic rules
@@ -405,6 +418,11 @@ export function renderRichExpert(system, expert, options = {}) {
       out += `- ${h}\n`;
     }
     out += `\n`;
+  }
+
+  // Per-file trailer (compliance signal)
+  if (options.trailer !== false) {
+    out += `Announce: "Assimilated: ${expert.id}"\n`;
   }
 
   return out;
