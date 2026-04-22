@@ -46,9 +46,12 @@ jobs:
 
       - name: Prepare site directory
         run: |
-          # Save CNAME and experts/ (tracked in git)
+          # Save tracked-in-git content that must survive the wipe
           if [ -f site/CNAME ]; then
             cp site/CNAME /tmp/CNAME
+          fi
+          if [ -f site/README.md ]; then
+            cp site/README.md /tmp/README.md
           fi
           if [ -d site/experts ]; then
             cp -r site/experts /tmp/experts
@@ -58,9 +61,12 @@ jobs:
           mkdir -p site
           # Copy build output to site
           cp -r dist/* site/
-          # Restore CNAME and experts/
+          # Restore preserved content
           if [ -f /tmp/CNAME ]; then
             cp /tmp/CNAME site/
+          fi
+          if [ -f /tmp/README.md ]; then
+            cp /tmp/README.md site/
           fi
           if [ -d /tmp/experts ]; then
             cp -r /tmp/experts site/
