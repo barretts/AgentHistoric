@@ -5,11 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "src/**"
-      - "package.json"
-      - "vite.config.ts"
-      - "tsconfig.json"
-      - "index.html"
+      - "src/site/**"
       - ".github/workflows/deploy-pages.yml"
   workflow_dispatch:
 
@@ -37,11 +33,14 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
+          cache-dependency-path: src/site/package-lock.json
 
       - name: Install dependencies
+        working-directory: src/site
         run: npm ci
 
       - name: Build React app
+        working-directory: src/site
         run: npm run build
 
       - name: Prepare site directory
@@ -60,7 +59,7 @@ jobs:
           rm -rf site/*
           mkdir -p site
           # Copy build output to site
-          cp -r dist/* site/
+          cp -r src/site/dist/* site/
           # Restore preserved content
           if [ -f /tmp/CNAME ]; then
             cp /tmp/CNAME site/
