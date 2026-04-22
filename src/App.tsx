@@ -1,5 +1,114 @@
 import { motion } from "motion/react";
-import { Github, Terminal, BookOpen, GitBranch, ShieldCheck, Cpu, ArrowRight, CheckCircle2, ChevronRight } from "lucide-react";
+import { Github, Terminal, BookOpen, GitBranch, ShieldCheck, Cpu, ArrowRight, CheckCircle2, ChevronRight, Users } from "lucide-react";
+
+type Expert = {
+  name: string;
+  full: string;
+  role: string;
+  blurb: string;
+  slug: string;
+  img: string;
+};
+
+const experts: Expert[] = [
+  {
+    name: "Descartes",
+    full: "Rene Descartes",
+    role: "Bedrock System Design & Verification",
+    blurb:
+      "Foundational architect who strips assumptions and designs trustworthy contracts before implementation.",
+    slug: "descartes",
+    img: "https://commons.wikimedia.org/wiki/Special:FilePath/Frans%20Hals%20-%20Portret%20van%20Ren%C3%A9%20Descartes.jpg",
+  },
+  {
+    name: "Peirce",
+    full: "Charles Sanders Peirce",
+    role: "Pragmatic Implementation & Execution",
+    blurb:
+      "Senior implementation lead focused on the smallest correct change that can be verified.",
+    slug: "peirce",
+    img: "https://upload.wikimedia.org/wikipedia/commons/5/58/Charles_Sanders_Peirce.jpg",
+  },
+  {
+    name: "Popper",
+    full: "Karl Popper",
+    role: "Hostile Falsification & Edge-Case Hunting",
+    blurb:
+      "Adversarial debugger focused on reproducing failures, falsifying assumptions, and isolating failure coordinates.",
+    slug: "popper",
+    img: "https://commons.wikimedia.org/wiki/Special:FilePath/Karl_Popper.jpg",
+  },
+  {
+    name: "Dennett",
+    full: "Daniel Dennett",
+    role: "Ideation & Parallel Processing",
+    blurb: "Divergent explorer who expands the solution space before convergence.",
+    slug: "dennett",
+    img: "https://commons.wikimedia.org/wiki/Special:FilePath/Daniel_Dennett_2.jpg",
+  },
+  {
+    name: "Rogers",
+    full: "Carl Rogers",
+    role: "The User Proxy",
+    blurb: "Human-centered reviewer with veto power against hostile user experiences.",
+    slug: "rogers",
+    img: "https://commons.wikimedia.org/wiki/Special:FilePath/Carl_Ransom_Rogers.jpg",
+  },
+  {
+    name: "Liskov",
+    full: "Barbara Liskov",
+    role: "Interfaces, Abstractions & API Contracts",
+    blurb:
+      "Design specialist for stable interfaces and modular boundaries that remain safe under change.",
+    slug: "liskov",
+    img: "https://commons.wikimedia.org/wiki/Special:FilePath/Barbara_Liskov_MIT_computer_scientist_2010.jpg",
+  },
+  {
+    name: "Dijkstra",
+    full: "Edsger Dijkstra",
+    role: "State, Invariants & Control-Flow Correctness",
+    blurb:
+      "Correctness specialist for stateful systems, concurrency hazards, invariants, and control-flow complexity.",
+    slug: "dijkstra",
+    img: "https://commons.wikimedia.org/wiki/Special:FilePath/Edsger_Wybe_Dijkstra.jpg",
+  },
+  {
+    name: "Knuth",
+    full: "Donald Knuth",
+    role: "Performance Analysis & Algorithmic Efficiency",
+    blurb:
+      "Performance specialist focused on measurement, algorithmic tradeoffs, and bottleneck removal.",
+    slug: "knuth",
+    img: "https://commons.wikimedia.org/wiki/Special:FilePath/KnuthAtOpenContentAlliance.jpg",
+  },
+  {
+    name: "Shannon",
+    full: "Claude Shannon",
+    role: "Context Compression & Information Flow",
+    blurb:
+      "Information-flow specialist focused on reducing noise while preserving critical context.",
+    slug: "shannon",
+    img: "https://commons.wikimedia.org/wiki/Special:FilePath/ClaudeShannon_MFO3807.jpg",
+  },
+  {
+    name: "Simon",
+    full: "Herbert Simon",
+    role: "Agent Loops & Decision Procedures",
+    blurb:
+      "Workflow designer for decomposition, stopping rules, and reliability under bounded context.",
+    slug: "simon",
+    img: "https://upload.wikimedia.org/wikipedia/commons/4/4d/Herbert_Simon%2C_RIT_NandE_Vol13Num11_1981_Mar19_Complete.jpg",
+  },
+  {
+    name: "Blackmore",
+    full: "Susan Blackmore",
+    role: "Pattern Extraction & System Memory",
+    blurb:
+      "Organizational memory that turns successful fixes into durable patterns, automation, and guidance.",
+    slug: "blackmore",
+    img: "https://upload.wikimedia.org/wikipedia/commons/7/7e/Susan_Blackmore_%282014%29.jpg",
+  },
+];
 
 export default function App() {
   const repoUrl = "https://github.com/barretts/AgentHistoric";
@@ -19,6 +128,7 @@ export default function App() {
           <div className="hidden md:flex items-center gap-6 text-sm text-[#8b949e]">
             <a href="#capabilities" className="hover:text-[#c9d1d9] transition-colors">Capabilities</a>
             <a href="#workflow" className="hover:text-[#c9d1d9] transition-colors">Workflow</a>
+            <a href="#team" className="hover:text-[#c9d1d9] transition-colors">Team</a>
             <a href="#resources" className="hover:text-[#c9d1d9] transition-colors">Resources</a>
           </div>
           <div className="flex items-center gap-4">
@@ -108,6 +218,13 @@ export default function App() {
               >
                 <Terminal className="w-5 h-5 text-[#8b949e]" />
                 Open Repository
+              </a>
+              <a
+                href="#team"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-transparent border border-[#30363d] text-white px-6 py-3 rounded-md font-semibold hover:bg-[#21262d] transition-colors text-lg"
+              >
+                <Users className="w-5 h-5 text-[#d2a8ff]" />
+                Meet the team
               </a>
             </motion.div>
           </div>
@@ -255,6 +372,66 @@ export default function App() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Team Section */}
+      <section id="team" className="py-24 bg-[#0d1117] border-t border-[#30363d]">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 flex relative">
+          <div className="hidden md:flex flex-col items-center w-8 mr-8 relative z-10">
+            <div className="h-16 w-[2px] bg-[#30363d]"></div>
+            <div className="w-6 h-6 rounded-full border-[2px] border-[#d2a8ff] flex items-center justify-center bg-[#0d1117] my-2">
+              <div className="w-2 h-2 rounded-full bg-[#d2a8ff] shadow-[0_0_10px_#d2a8ff]"></div>
+            </div>
+            <div className="flex-grow w-[2px] bg-gradient-to-b from-[#30363d] to-transparent"></div>
+          </div>
+
+          <div className="w-full">
+            <div className="mb-10">
+              <span className="px-3 py-1 rounded-full border border-[#30363d] text-[#8b949e] text-sm font-medium inline-flex items-center gap-2 mb-4">
+                <Users className="w-4 h-4 text-[#d2a8ff]" />
+                {experts.length} Expert Personas
+              </span>
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4 text-white">Meet the Team</h2>
+              <p className="text-[#8b949e] max-w-3xl text-lg leading-relaxed">
+                Agent Historic is not a single voice. It is a coordinated team of specialists, each grounded in a distinct philosophical tradition and accountable for a specific phase of software work.
+              </p>
+              <p className="text-[#6e7681] text-sm italic mt-4 max-w-3xl">
+                General preface: these biographies are LLM-generated interpretations based on public writings and historical records. They are not official statements, endorsements, sponsorships, or approvals by the individuals represented.
+              </p>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {experts.map((expert, i) => (
+                <motion.article
+                  key={expert.slug}
+                  className="p-6 rounded-xl bg-[#161b22] border border-[#30363d] hover:border-[#8b949e] transition-colors flex flex-col"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: (i % 6) * 0.05 }}
+                >
+                  <img
+                    src={expert.img}
+                    alt={`${expert.full} headshot`}
+                    loading="lazy"
+                    className="w-24 h-24 rounded-full object-cover border border-[#30363d] bg-[#0d1117] mb-4"
+                  />
+                  <h3 className="text-xl font-semibold text-white">{expert.name}</h3>
+                  <p className="text-[#8b949e] text-sm mb-3">
+                    {expert.full} • {expert.role}
+                  </p>
+                  <p className="text-[#c9d1d9] leading-relaxed text-sm flex-grow">{expert.blurb}</p>
+                  <a
+                    href={`/experts/${expert.slug}.html`}
+                    className="inline-flex items-center gap-2 text-[#58a6ff] font-medium hover:underline mt-4 text-sm"
+                  >
+                    Read autobiography <ArrowRight className="w-4 h-4" />
+                  </a>
+                </motion.article>
+              ))}
             </div>
           </div>
         </div>
