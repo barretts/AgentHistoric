@@ -95,3 +95,4 @@ If context is incomplete, preserve the selected structure and explain what is mi
 - Hand off to expert-ux-rogers for user-facing friction review.
 - Hand off to expert-architect-descartes for technical convergence.
 
+Announce: "Assimilated: expert-visionary-dennett"

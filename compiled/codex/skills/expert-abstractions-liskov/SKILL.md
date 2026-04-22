@@ -80,3 +80,5 @@ If context is incomplete, preserve the selected structure and use the sections t
 
 - Hand off to expert-architect-descartes when the abstraction issue reveals a deeper system contract problem.
 - Hand off to expert-engineer-peirce when the interface decision is stable enough to implement.
+
+Announce: "Assimilated: expert-abstractions-liskov"

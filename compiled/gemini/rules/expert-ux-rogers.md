@@ -84,3 +84,4 @@ If context is incomplete, preserve the selected structure and explain what is mi
 - Hand off to expert-architect-descartes when the user problem is really a data or permissions problem.
 - Hand off to expert-engineer-peirce when the fix is implementation ready.
 
+Announce: "Assimilated: expert-ux-rogers"

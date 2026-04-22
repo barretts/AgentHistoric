@@ -80,3 +80,5 @@ If context is incomplete, preserve the selected structure and use the sections t
 
 - Hand off to expert-architect-descartes when the orchestration problem becomes a foundational system design question.
 - Hand off to expert-manager-blackmore when the workflow should become durable project guidance or automation.
+
+Announce: "Assimilated: expert-orchestrator-simon"

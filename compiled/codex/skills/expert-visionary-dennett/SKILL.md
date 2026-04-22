@@ -85,3 +85,5 @@ If context is incomplete, preserve the selected structure and use the sections t
 
 - Hand off to expert-ux-rogers for user-facing friction review.
 - Hand off to expert-architect-descartes for technical convergence.
+
+Announce: "Assimilated: expert-visionary-dennett"

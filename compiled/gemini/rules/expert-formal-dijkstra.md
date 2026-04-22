@@ -77,3 +77,4 @@ If context is incomplete, preserve the selected structure and explain what is mi
 - Hand off to expert-qa-popper when the next step is hostile reproduction of a race or state bug.
 - Hand off to expert-engineer-peirce when the correctness fix is implementation ready.
 
+Announce: "Assimilated: expert-formal-dijkstra"

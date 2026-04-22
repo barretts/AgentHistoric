@@ -1163,3 +1163,106 @@ test("ablation manifest has at least 5 sections with required fields", async () 
     assert.ok(s.expectedImpact, "Missing expectedImpact");
   }
 });
+
+// ── Compliance Signal Tests (RED: will fail until implemented) ─────────
+
+test("COMPLIANCE: init artifact contains the [rules:loaded...] handshake directive", () => {
+  const claudeInit = artifacts.get("compiled/claude/rules/00-init.md");
+  assert.ok(
+    claudeInit,
+    "Missing compiled/claude/rules/00-init.md"
+  );
+  assert.match(
+    claudeInit,
+    /\[rules:loaded\s+init\s+router\s+experts@\d+\]/,
+    "Init artifact must contain [rules:loaded init router experts@<count>] handshake token"
+  );
+});
+
+test("COMPLIANCE: every expert artifact contains an Assimilated: <id> trailer", () => {
+  for (const expert of system.experts) {
+    const artifact = artifacts.get(`compiled/claude/rules/${expert.id}.md`);
+    assert.ok(artifact, `Missing artifact for ${expert.id}`);
+    const re = new RegExp(`Announce:\\s*"Assimilated:\\s*${expert.id}"`);
+    assert.match(
+      artifact,
+      re,
+      `${expert.id} artifact must contain Assimilated: <id> trailer`
+    );
+  }
+});
+
+test("COMPLIANCE: system.json globalRuntime.logging.mandate includes fail-closed redirect pattern", () => {
+  const mandate = system.globalRuntime.logging?.mandate;
+  assert.ok(mandate, "globalRuntime.logging.mandate is missing");
+  assert.match(
+    mandate,
+    /\.logs\//,
+    "logging.mandate must mention .logs/ for fail-closed redirect"
+  );
+  assert.match(
+    mandate,
+    /2>&1/,
+    "logging.mandate must require 2>&1 for stderr capture"
+  );
+});
+
+test("COMPLIANCE: system.json has globalRuntime.handshake that is non-empty", () => {
+  const handshake = system.globalRuntime.handshake;
+  assert.ok(handshake, "globalRuntime.handshake is missing");
+  assert.ok(handshake.length > 0, "globalRuntime.handshake must be non-empty");
+});
+
+test("COMPLIANCE: handshake render option controls presence (ablation-style)", () => {
+  const withHandshake = generateArtifacts(system, { handshake: true });
+  const withoutHandshake = generateArtifacts(system, { handshake: false });
+
+  const initWith = withHandshake.get("compiled/claude/rules/00-init.md");
+  const initWithout = withoutHandshake.get("compiled/claude/rules/00-init.md");
+
+  assert.match(
+    initWith,
+    /\[rules:loaded/,
+    "handshake:true must produce handshake token"
+  );
+  assert.ok(
+    !initWithout?.includes("[rules:loaded"),
+    "handshake:false must omit handshake token"
+  );
+});
+
+test("COMPLIANCE: trailer render option controls presence (ablation-style)", () => {
+  const withTrailer = generateArtifacts(system, { trailer: true });
+  const withoutTrailer = generateArtifacts(system, { trailer: false });
+
+  const peirceWith = withTrailer.get("compiled/claude/rules/expert-engineer-peirce.md");
+  const peirceWithout = withoutTrailer.get("compiled/claude/rules/expert-engineer-peirce.md");
+
+  assert.match(
+    peirceWith,
+    /Announce:\s*"Assimilated:/,
+    "trailer:true must produce Assimilated trailer"
+  );
+  assert.ok(
+    !peirceWithout?.includes("Announce:"),
+    "trailer:false must omit Assimilated trailer"
+  );
+});
+
+test("COMPLIANCE: failClosedLogging render option controls mandate phrasing", () => {
+  const withFailClosed = generateArtifacts(system, { failClosedLogging: true });
+  const withoutFailClosed = generateArtifacts(system, { failClosedLogging: false });
+
+  const initWith = withFailClosed.get("compiled/claude/rules/00-init.md");
+  const initWithout = withoutFailClosed.get("compiled/claude/rules/00-init.md");
+
+  assert.match(
+    initWith,
+    /MUST.*\.logs\//,
+    "failClosedLogging:true must have MUST + .logs/ in logging section"
+  );
+  assert.ok(
+    !initWithout?.match(/MUST.*\.logs\//)?.[0]?.includes("MUST"),
+    "failClosedLogging:false must not have MUST + .logs/ mandatory phrasing"
+  );
+});
