@@ -1,9 +1,12 @@
 .DS_Store
 node_modules/
 dist/
+src/site/dist/
+src/site/node_modules/
 site/index.html
 site/assets/
 .logs/
 compiled/cursor/plans/
 .cursor
 .crush
+.claude
