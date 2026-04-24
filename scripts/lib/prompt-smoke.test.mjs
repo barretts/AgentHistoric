@@ -430,7 +430,7 @@ test("codex runtime renders execution binding and router contract rules", () => 
 
 test("expert prompts contain required structural sections", () => {
   const experts = expertArtifacts(CURSOR_RICH, ".mdc");
-  assert.ok(experts.length === 11, `Expected 11 expert files, got ${experts.length}`);
+  assert.ok(experts.length === 12, `Expected 12 expert files, got ${experts.length}`);
 
   for (const [filePath, content] of experts) {
     assert.match(content, /method/i, `${filePath}: missing Method section`);

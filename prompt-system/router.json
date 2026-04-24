@@ -147,6 +147,39 @@
       ]
     },
     {
+      "priority": 6.2,
+      "domain": "Manual Deliberation",
+      "experts": [
+        "expert-craftsman-crawford"
+      ],
+      "signals": [
+        "by hand",
+        "manually",
+        "one by one",
+        "line by line",
+        "item by item",
+        "no automation",
+        "no script",
+        "no regex",
+        "tedious",
+        "tedium",
+        "review each",
+        "curate",
+        "craft playlist",
+        "friction",
+        "patience",
+        "slow"
+      ],
+      "antiTriggers": [
+        "build error",
+        "test fail",
+        "performance",
+        "optimize",
+        "interface",
+        "schema"
+      ]
+    },
+    {
       "priority": 6.5,
       "domain": "General Implementation",
       "experts": [
@@ -469,6 +502,17 @@
       "new service from scratch",
       "design the architecture",
       "cross-cutting concern"
+    ],
+    "routeToCrawford": [
+      "do this by hand",
+      "manually go through",
+      "review each item one by one",
+      "no script",
+      "no automation",
+      "curate this playlist",
+      "process this manually",
+      "don't use regex",
+      "just go through the list"
     ]
   },
   "negativeExamples": {
@@ -476,7 +520,8 @@
       "When the task is primarily about understanding or analyzing existing code structure, prefer Liskov or Descartes.",
       "When 'refactor' means redesigning module boundaries or reducing coupling, prefer Liskov.",
       "When 'implement' means 'design from scratch with no prior architecture', prefer Descartes first.",
-      "When the question is 'should we build this?', prefer Descartes or Dennett."
+      "When the question is 'should we build this?', prefer Descartes or Dennett.",
+      "When the user asks to process items manually, one by one, by hand, or without scripting, prefer Crawford."
     ],
     "doNotRouteToPopper": [
       "When the user asks 'how should I write tests?' or 'how to structure tests', prefer Peirce (test authoring, not debugging).",
@@ -492,6 +537,14 @@
     "doNotRouteToDennett": [
       "When the user asks for a concrete implementation plan with steps and ordering, prefer Simon.",
       "When only one viable approach exists, do not fabricate artificial alternatives."
+    ],
+    "doNotRouteToCrawford": [
+      "When the task involves debugging, testing, or finding failures, prefer Popper.",
+      "When the task is about performance, optimization, or profiling, prefer Knuth.",
+      "When the task involves architecture, schema design, or system contracts, prefer Descartes.",
+      "When the user asks for a script or automation, even reluctantly, prefer Peirce or Dijkstra.",
+      "When there is a build error, compile error, or import error, prefer Peirce.",
+      "When the task involves code that already works and needs to be extended, prefer Peirce or Liskov."
     ]
   },
   "pipelines": [
@@ -582,7 +635,8 @@
     "expert-performance-knuth",
     "expert-qa-popper",
     "expert-ux-rogers",
-    "expert-visionary-dennett"
+    "expert-visionary-dennett",
+    "expert-craftsman-crawford"
   ],
   "verbalizedSamplingContracts": [
     "When the two strongest routing heuristic scores are within 0.2 on a 0-1 confidence scale, return a top-level JSON field confidenceDistribution in the regression response envelope (alongside routingDecision, activeExpert, handoffs, outputSections, confidenceLabeled, personaBlend, domainStayedInScope, summary, response).",
