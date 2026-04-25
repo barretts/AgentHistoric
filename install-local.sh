@@ -53,12 +53,11 @@ inject_loader_header() {
 $MARKER_BEGIN
 # $title
 
-Always load and apply the following rule files from \`$rules_dir\` at the start of every conversation:
+At the start of every conversation, preload these rule files (they define mandatory protocols):
+1. \`$rules_dir/00-init.md\` — Global Operating System. Always active. Defines universal mandates that supersede individual expert personas. Don't skip this.
+2. \`$rules_dir/01-router.md\` — MoE Router. Front-line triage. Analyzes intent and routes to the correct expert or pipeline.
 
-1. \`$rules_dir/00-init.md\` — Global runtime (constraints, logging, voice, definition of done)
-2. \`$rules_dir/01-router.md\` — MoE router (expert selection, pipelines, disambiguation)
-
-These two files are always active. All other expert files in \`$rules_dir\` are activated by model decision based on their description field.
+These files establish the core protocol: routing before acting, logging all command output, labeling uncertainty (VERIFIED/HYPOTHESIS), and following the definition of done.
 $MARKER_END
 HEADER
 )"
@@ -139,6 +138,20 @@ install_windsurf() {
     cp "$f" "$DEST_WINDSURF/$(basename "$f")"
     echo "    Windsurf: $DEST_WINDSURF/$(basename "$f")"
   done
+  # Loader header injection for Windsurf project-level config
+  inject_loader_header "$HOME/.windsurf/WINDSURF.md" "~/.windsurf/rules" "Windsurf Instructions"
+  # Export global_rules.md to Windsurf memories for preload on every chat
+  local ws_memories="$HOME/.codeium/windsurf/memories"
+  mkdir -p "$ws_memories"
+  local ws_global="$ws_memories/global_rules.md"
+  cat > "$ws_global" <<EOF
+# Load These First
+At the start of every conversation, preload these rule files (they define mandatory protocols):
+1. \`$HOME/.windsurf/rules/00-init.md\` — Global Operating System. Always active. Defines universal mandates that supersede individual expert personas. Don't skip this.
+2. \`$HOME/.windsurf/rules/01-router.md\` — MoE Router. Front-line triage. Analyzes intent and routes to the correct expert or pipeline.
+These files establish the core protocol: routing before acting, logging all command output, labeling uncertainty (VERIFIED/HYPOTHESIS), and following the definition of done.
+EOF
+  echo "    Memories: $ws_global"
 }
 
 install_codex() {
@@ -225,59 +238,7 @@ install_gemini() {
     cp "$f" "$DEST_GEMINI/$(basename "$f")"
     echo "    Gemini:   $DEST_GEMINI/$(basename "$f")"
   done
-  # Build @import block from installed rule files
-  local gemini_md="$HOME/.gemini/GEMINI.md"
-  local imports=""
-  imports="$MARKER_BEGIN
-# Agent Historic
-"
-  for f in "$SRC_GEMINI"/*.md; do
-    [[ -f "$f" ]] || continue
-    imports="$imports
-@./rules/$(basename "$f")"
-  done
-  imports="$imports
-$MARKER_END"
-
-  if [[ -f "$gemini_md" ]]; then
-    if grep -q "$MARKER_BEGIN" "$gemini_md" 2>/dev/null; then
-      local tmp
-      tmp="$(mktemp)"
-      BLOCK="$imports" MARKER_BEGIN="$MARKER_BEGIN" MARKER_END="$MARKER_END" TARGET_FILE="$gemini_md" python3 <<'PY' > "$tmp"
-import os
-from pathlib import Path
-
-path = Path(os.environ["TARGET_FILE"])
-content = path.read_text()
-begin = os.environ["MARKER_BEGIN"]
-end = os.environ["MARKER_END"]
-block = os.environ["BLOCK"]
-
-start = content.find(begin)
-finish = content.find(end, start if start != -1 else 0)
-
-if start != -1 and finish != -1:
-    finish += len(end)
-    if finish < len(content) and content[finish:finish + 1] == "\n":
-        finish += 1
-    updated = content[:start] + block + "\n" + content[finish:]
-else:
-    updated = block + "\n\n" + content
-
-print(updated, end="")
-PY
-      mv "$tmp" "$gemini_md"
-    else
-      local tmp
-      tmp="$(mktemp)"
-      { echo "$imports"; echo ""; cat "$gemini_md"; } > "$tmp"
-      mv "$tmp" "$gemini_md"
-    fi
-  else
-    mkdir -p "$(dirname "$gemini_md")"
-    echo "$imports" > "$gemini_md"
-  fi
-  echo "    Loader:   $gemini_md"
+  inject_loader_header "$HOME/.gemini/GEMINI.md" "~/.gemini/rules" "Gemini Instructions"
 }
 
 # --- List functions ---
