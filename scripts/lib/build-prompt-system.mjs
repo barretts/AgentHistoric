@@ -117,34 +117,49 @@ function buildVariableMap(system) {
   return vars;
 }
 
+// ── Intensity Resolution ────────────────────────────────────────────
+
+/**
+ * Resolve a text pattern to its intensity-appropriate variant.
+ * Falls back to imperative (original) phrasing when no profile exists.
+ */
+export function resolveIntensity(system, key, intensity) {
+  const profiles = system.intensityProfiles;
+  if (!profiles?.[key]) return null;
+  return profiles[key][intensity] || profiles[key].imperative;
+}
+
 // ── Public Entry Point ──────────────────────────────────────────────
 
 export function generateArtifacts(system, options = {}) {
   const artifacts = new Map();
 
-  // Rich + md frontmatter → compiled/claude/rules/
-  addSet(artifacts, system, path.join("compiled", "claude", "rules"), ".md", mdFm, renderRichInit, renderRichRouter, renderRichExpert, options);
+  const imperative = { ...options, intensity: "imperative" };
+  const declarative = { ...options, intensity: "declarative" };
 
-  // Rich + windsurf frontmatter → compiled/windsurf/rules/
-  addSet(artifacts, system, path.join("compiled", "windsurf", "rules"), ".md", windsurfFm, renderRichInit, renderRichRouter, renderRichExpert, options);
+  // Rich + md frontmatter → compiled/claude/rules/ (high-trust host)
+  addSet(artifacts, system, path.join("compiled", "claude", "rules"), ".md", mdFm, renderRichInit, renderRichRouter, renderRichExpert, imperative);
 
-  // Rich + cursor frontmatter → compiled/cursor/rules/
-  addSet(artifacts, system, path.join("compiled", "cursor", "rules"), ".mdc", cursorFm, renderRichInit, renderRichRouter, renderRichExpert, options);
+  // Rich + windsurf frontmatter → compiled/windsurf/rules/ (lower-trust host)
+  addSet(artifacts, system, path.join("compiled", "windsurf", "rules"), ".md", windsurfFm, renderRichInit, renderRichRouter, renderRichExpert, declarative);
 
-  // Codex (own format)
-  artifacts.set(path.join("compiled", "codex", "AGENTS.md"), renderAgents(system, options));
+  // Rich + cursor frontmatter → compiled/cursor/rules/ (lower-trust host)
+  addSet(artifacts, system, path.join("compiled", "cursor", "rules"), ".mdc", cursorFm, renderRichInit, renderRichRouter, renderRichExpert, declarative);
+
+  // Codex (own format, high-trust host)
+  artifacts.set(path.join("compiled", "codex", "AGENTS.md"), renderAgents(system, imperative));
   for (const expert of system.experts) {
     artifacts.set(
       path.join("compiled", "codex", "skills", expert.codexSkillDir, "SKILL.md"),
-      renderSkill(system, expert, options)
+      renderSkill(system, expert, imperative)
     );
   }
 
-  // Rich + md frontmatter → compiled/crush/rules/
-  addSet(artifacts, system, path.join("compiled", "crush", "rules"), ".md", crushFm, renderRichInit, renderRichRouter, renderRichExpert, options);
+  // Rich + md frontmatter → compiled/crush/rules/ (lower-trust host)
+  addSet(artifacts, system, path.join("compiled", "crush", "rules"), ".md", crushFm, renderRichInit, renderRichRouter, renderRichExpert, declarative);
 
-  // Rich + HTML comment marker (no YAML frontmatter) → compiled/gemini/rules/
-  addSet(artifacts, system, path.join("compiled", "gemini", "rules"), ".md", geminiFm, renderRichInit, renderRichRouter, renderRichExpert, options);
+  // Rich + HTML comment marker (no YAML frontmatter) → compiled/gemini/rules/ (lower-trust host)
+  addSet(artifacts, system, path.join("compiled", "gemini", "rules"), ".md", geminiFm, renderRichInit, renderRichRouter, renderRichExpert, declarative);
 
   return artifacts;
 }
