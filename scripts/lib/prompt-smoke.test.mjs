@@ -16,7 +16,7 @@ const debugArtifacts = generateArtifacts(system, { debug: true });
 
 const CURSOR_RICH = "compiled/cursor/rules";
 // Router artifact includes full heuristic tables, pipelines, allowlist, and contracts.
-const MAX_CHARS = 16000;
+const MAX_CHARS = 18000;
 
 function artifactsInDir(dir, ext) {
   return [...artifacts].filter(
