@@ -1,4 +1,4 @@
-f#!/usr/bin/env pwsh
+#!/usr/bin/env pwsh
 # install-local.ps1 -- Install Agent Historic persona rules into AI coding editors on Windows/PowerShell.
 # Usage: powershell -ExecutionPolicy Bypass -File .\install-local.ps1 [--claude] [--cursor] [--windsurf] [--codex] [--opencode] [--gemini] [--all]
 # No flags = auto-detect installed editors.
@@ -147,24 +147,23 @@ function Install-Cursor {
   Copy-GlobToDest (Join-Path $srcCursor "*.mdc") $destCursor "Cursor"
 }
 
-  function Install-Windsurf {
-    Copy-GlobToDest (Join-Path $srcWindsurf "*.md") $destWindsurf "Windsurf"
-    Inject-LoaderHeader (Join-Path $homeDir ".windsurf/WINDSURF.md") "~/.windsurf/rules" "Windsurf Instructions"
-    # Export global_rules.md to Windsurf memories for preload on every chat
-    $wsMemories = Join-Path $homeDir ".codeium/windsurf/memories"
-    Ensure-Dir $wsMemories
-    $wsGlobal = Join-Path $wsMemories "global_rules.md"
-    $wsGlobalContent = @"
+function Install-Windsurf {
+  Copy-GlobToDest (Join-Path $srcWindsurf "*.md") $destWindsurf "Windsurf"
+  Inject-LoaderHeader (Join-Path $homeDir ".windsurf/WINDSURF.md") "~/.windsurf/rules" "Windsurf Instructions"
+  # Export global_rules.md to Windsurf memories for preload on every chat
+  $wsMemories = Join-Path $homeDir ".codeium/windsurf/memories"
+  Ensure-Dir $wsMemories
+  $wsGlobal = Join-Path $wsMemories "global_rules.md"
+  $wsGlobalContent = @"
 # Load These First
 At the start of every conversation, preload these rule files (they define mandatory protocols):
 1. \`~/.windsurf/rules/00-init.md\` -- Global Operating System. Always active. Defines universal mandates that supersede individual expert personas. Don't skip this.
 2. \`~/.windsurf/rules/01-router.md\` -- MoE Router. Front-line triage. Analyzes intent and routes to the correct expert or pipeline.
 These files establish the core protocol: routing before acting, logging all command output, labeling uncertainty (VERIFIED/HYPOTHESIS), and following the definition of done.
 "@
-    Set-Content -Path $wsGlobal -Value $wsGlobalContent -NoNewline
-    Write-Host "    Memories: $wsGlobal"
-  }
-
+  Set-Content -Path $wsGlobal -Value $wsGlobalContent -NoNewline
+  Write-Host "    Memories: $wsGlobal"
+}
 
 function Install-Codex {
   Ensure-Dir $destCodex
@@ -201,33 +200,162 @@ function Install-Crush {
 
 function Install-OpenCode {
   Copy-GlobToDest (Join-Path $srcOpenCode "*.md") $destOpenCode "OpenCode"
-  Inject-LoaderHeader $openCodeAgents "~/.config/opencode/rules" "Agent Instructions"
+  # Write custom opencode.json with tool-specific loader protocol (non-destructive: only if file exists)
+  $opencodeJson = Join-Path $homeDir ".config/opencode/opencode.json"
+  if (Test-Path $opencodeJson) {
+    # Backup existing file
+    $backup = "$opencodeJson.bak.$(Get-Date -Format 'yyyyMMddHHmmss')"
+    Copy-Item -Path $opencodeJson -Destination $backup -Force
+    Write-Host "    Backup:   $backup"
+    # Inject prompt into existing JSON (simplified - just note that manual merge may be needed)
+    Write-Host "    Note: opencode.json exists. Manual merge may be needed for the prompt field."
+  } else {
+    Ensure-Dir (Split-Path -Parent $opencodeJson)
+    $opencodeContent = @"
+{
+  "`$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "build": {
+      "prompt": "<!-- agent-historic:loader-begin -->\n# CRITICAL: MANDATORY BOOT PROTOCOL\nBefore generating ANY response or answering ANY user inquiry in the first turn, you MUST execute the following sequence:\n\n1. **Preload & Audit:** In parallel, call `read` for `~/.config/opencode/rules/00-init.md` and `~/.config/opencode/rules/01-router.md`, and `glob` for `~/.config/opencode/rules/*` to verify the expert roster against the filesystem.\n2. **Initialize Logging:** Execute `mkdir -p .logs` via `bash` to ensure the Non-Destructive Logging Protocol is viable immediately.\n3. **Verification:** Confirm the `[rules:loaded...]` token is present and expert files match the expected roster.\n4. **Response Barrier:** Do not provide any conversational output until all tools above have returned and verification is complete.\n\nFailure to perform this sequence is a violation of the System Integrity mandate.\n\n<!-- agent-historic:loader-end -->"
+    }
+  },
+  "permission": {
+    "external_directory": {
+      "**/.config/opencode/**": "allow"
+    }
+  }
+}
+"@
+    Set-Content -Path $opencodeJson -Value $opencodeContent -NoNewline
+  }
+  Write-Host "    Config:   $opencodeJson"
+  # Inject loader header into AGENTS.md if it exists, otherwise create it
+  $agentsFile = Join-Path $homeDir ".config/opencode/AGENTS.md"
+  if (Test-Path $agentsFile) {
+    # Backup existing file
+    $backup = "$agentsFile.bak.$(Get-Date -Format 'yyyyMMddHHmmss')"
+    Copy-Item -Path $agentsFile -Destination $backup -Force
+    Write-Host "    Backup:   $backup"
+    Inject-LoaderHeader $agentsFile "~/.config/opencode/rules" "Agent Instructions"
+  } else {
+    Ensure-Dir (Split-Path -Parent $agentsFile)
+    # Create new AGENTS.md with loader header
+    $block = @"
+$markerBegin
+# Agent Instructions
+
+At the start of every conversation, preload these rule files (they define mandatory protocols):
+1. `~/.config/opencode/rules/00-init.md` -- Global Operating System. Always active. Defines universal mandates that supersede individual expert personas. Don't skip this.
+2. `~/.config/opencode/rules/01-router.md` -- MoE Router. Front-line triage. Analyzes intent and routes to the correct expert or pipeline.
+
+These files establish the core protocol: routing before acting, logging all command output, labeling uncertainty (VERIFIED/HYPOTHESIS), and following the definition of done.
+$markerEnd
+"@
+    Set-Content -Path $agentsFile -Value $block -NoNewline
+    Write-Host "    Loader:   $agentsFile"
+  }
 }
 
 function Install-Gemini {
   Copy-GlobToDest (Join-Path $srcGemini "*.md") $destGemini "Gemini"
-  Inject-LoaderHeader $geminiMd "~/.gemini/rules" "Gemini Instructions"
+  # Write custom GEMINI.md with tool-specific loader protocol (non-destructive: only if file exists)
+  $geminiMd = Join-Path $homeDir ".gemini/GEMINI.md"
+  if (Test-Path $geminiMd) {
+    # Backup existing file
+    $backup = "$geminiMd.bak.$(Get-Date -Format 'yyyyMMddHHmmss')"
+    Copy-Item -Path $geminiMd -Destination $backup -Force
+    Write-Host "    Backup:   $backup"
+    # Replace the loader block in existing file
+    $content = Get-Content -Path $geminiMd -Raw
+    $newBlock = @"
+$markerBegin
+# CRITICAL: MANDATORY BOOT PROTOCOL
+Before generating ANY response or answering ANY user inquiry in the first turn, you MUST execute the following sequence:
+
+1. **Preload & Audit:** In parallel, call `read_file` for `~/.gemini/rules/00-init.md` and `~/.gemini/rules/01-router.md`, and `list_directory` for `~/.gemini/rules/` to verify the expert roster against the filesystem.
+2. **Initialize Logging:** Execute `mkdir -p .logs` via `run_shell_command` to ensure the Non-Destructive Logging Protocol is viable immediately.
+3. **Verification:** Confirm the `[rules:loaded...]` token is present and expert files match the expected roster.
+4. **Response Barrier:** Do not provide any conversational output until all tools above have returned and verification is complete.
+
+Failure to perform this sequence is a violation of the System Integrity mandate.
+
+$markerEnd
+"@
+    if ($content.Contains($markerBegin) -and $content.Contains($markerEnd)) {
+      $start = $content.IndexOf($markerBegin)
+      $finish = $content.IndexOf($markerEnd, $start)
+      if ($start -ge 0 -and $finish -ge 0) {
+        $finish = $finish + $markerEnd.Length
+        if ($finish -lt $content.Length -and $content[$finish] -eq "`n") { $finish += 1 }
+        $updated = $content.Substring(0, $start) + $newBlock + "`n" + $content.Substring($finish)
+        Set-Content -Path $geminiMd -Value $updated -NoNewline
+      }
+    } else {
+      Set-Content -Path $geminiMd -Value ($newBlock + "`n`n" + $content) -NoNewline
+    }
+    Write-Host "    Loader:   $geminiMd (updated)"
+  } else {
+    Ensure-Dir (Split-Path -Parent $geminiMd)
+    $newBlock = @"
+$markerBegin
+# CRITICAL: MANDATORY BOOT PROTOCOL
+Before generating ANY response or answering ANY user inquiry in the first turn, you MUST execute the following sequence:
+
+1. **Preload & Audit:** In parallel, call `read_file` for `~/.gemini/rules/00-init.md` and `~/.gemini/rules/01-router.md`, and `list_directory` for `~/.gemini/rules/` to verify the expert roster against the filesystem.
+2. **Initialize Logging:** Execute `mkdir -p .logs` via `run_shell_command` to ensure the Non-Destructive Logging Protocol is viable immediately.
+3. **Verification:** Confirm the `[rules:loaded...]` token is present and expert files match the expected roster.
+4. **Response Barrier:** Do not provide any conversational output until all tools above have returned and verification is complete.
+
+Failure to perform this sequence is a violation of the System Integrity mandate.
+
+$markerEnd
+"@
+    Set-Content -Path $geminiMd -Value $newBlock -NoNewline
+    Write-Host "    Loader:   $geminiMd (created)"
+  }
 }
 
-function List-GlobStatus([string]$pattern, [string]$dest, [string]$title) {
-  Write-Host "    $title"
-  $files = Get-ChildItem -Path $pattern -File -ErrorAction SilentlyContinue
+function List-Claude {
+  Write-Host "    Claude (~/.claude/rules/):"
+  $files = Get-ChildItem -Path (Join-Path $srcClaude "*.md") -File -ErrorAction SilentlyContinue
   foreach ($f in $files) {
-    $target = Join-Path $dest $f.Name
+    $target = Join-Path $destClaude $f.Name
+    $status = if (Test-Path $target) { "installed" } else { "not found" }
+    Write-Host "      $target  [$status]"
+  }
+  $cstatus = if (Test-Path (Join-Path $homeDir ".claude/CLAUDE.md")) { "installed" } else { "not found" }
+  Write-Host "      CLaude.md  [$cstatus]"
+}
+
+function List-Cursor {
+  Write-Host "    Cursor (~/.cursor/rules/):"
+  $files = Get-ChildItem -Path (Join-Path $srcCursor "*.mdc") -File -ErrorAction SilentlyContinue
+  foreach ($f in $files) {
+    $target = Join-Path $destCursor $f.Name
     $status = if (Test-Path $target) { "installed" } else { "not found" }
     Write-Host "      $target  [$status]"
   }
 }
 
-function List-Claude { List-GlobStatus (Join-Path $srcClaude "*.md")  $destClaude   "Claude (~/.claude/rules/):" }
-function List-Cursor { List-GlobStatus (Join-Path $srcCursor "*.mdc")  $destCursor   "Cursor (~/.cursor/rules/):" }
-function List-Windsurf { List-GlobStatus (Join-Path $srcWindsurf "*.md") $destWindsurf "Windsurf (~/.windsurf/rules/):" }
+function List-Windsurf {
+  Write-Host "    Windsurf (~/.windsurf/rules/):"
+  $files = Get-ChildItem -Path (Join-Path $srcWindsurf "*.md") -File -ErrorAction SilentlyContinue
+  foreach ($f in $files) {
+    $target = Join-Path $destWindsurf $f.Name
+    $status = if (Test-Path $target) { "installed" } else { "not found" }
+    Write-Host "      $target  [$status]"
+  }
+  $wstatus = if (Test-Path (Join-Path $homeDir ".windsurf/WINDSURF.md")) { "installed" } else { "not found" }
+  Write-Host "      WINDSURF.md  [$wstatus]"
+}
+
 function List-Codex {
   Write-Host "    Codex (~/.codex/):"
   $target = Join-Path $destCodex "AGENTS.md"
   $status = if (Test-Path $target) { "installed" } else { "not found" }
   Write-Host "      $target  [$status]"
 }
+
 function List-Crush {
   Write-Host "    Crush (~/.config/crush/rules/):"
   $files = Get-ChildItem -Path (Join-Path $srcCrush "*.md") -File -ErrorAction SilentlyContinue
@@ -241,7 +369,7 @@ function List-Crush {
 }
 
 function List-OpenCode {
-  Write-Host "    OpenCode (%APPDATA%\\opencode\\rules\\):"
+  Write-Host "    OpenCode (~/.config/opencode/rules/):"
   $files = Get-ChildItem -Path (Join-Path $srcOpenCode "*.md") -File -ErrorAction SilentlyContinue
   foreach ($f in $files) {
     $target = Join-Path $destOpenCode $f.Name
