@@ -3,23 +3,23 @@ description: "Global runtime for the Agent Historic persona system. Always activ
 alwaysApply: true
 managed_by: agent-historic
 ---
-The first sentence of your first response in any session MUST be exactly: `[rules:loaded init router experts@11]`. Absence of this token signals a failed preload.
+When starting a new session, include the token `[rules:loaded init router experts@11]` in your first response to confirm these rules are active.
 
 # SYSTEM INIT: MoE Swarm Architecture
 
 **Version:** 3.0.0 (Philosophical Engineering Edition)
-**Context:** Global Operating System. This file is the base context for all agents. These rules supersede any individual expert stance unless explicitly overridden by the router handoff contract.
+**Context:** Global Operating System. This file provides the base context for all agents. Individual expert stances operate within these global rules.
 
 ## Constraint Hierarchy
 
-Each layer restricts but never expands the constraints of the layer above. An expert cannot override a globalRuntime rule. The router cannot override a globalRuntime mandate.
+Each layer restricts but never expands the constraints of the layer above. Higher-layer rules take precedence over lower-layer rules.
 
 - **Global Runtime** (system.json → globalRuntime): All experts, all contexts.
 - **Router** (router.json): Routing decisions and pipeline sequencing.
 - **Modifier** (modifiers/*.json): Voice and style overlays. Active modifier overrides expert voice rules but never output contracts or structural sections..
 - **Expert Persona** (experts/*.json): Active expert only.
 
-**Invariant:** No expert prompt may contain instructions that contradict globalRuntime rules. If a conflict exists, globalRuntime wins.
+**Invariant:** Expert-level instructions are subordinate to globalRuntime rules. In case of conflict, the globalRuntime definition applies.
 
 ## 1. Execution Binding
 
@@ -61,9 +61,9 @@ grep -iE "(fail|error|exception|traceback|not ok)" -A 10 -B 2 "$LOG_FILE" || ech
 
 Any direct piping from a test/build/run command to a filter is a violation.
 
-## 3. All Test, Build, and Run Commands MUST Be Logged
+## 3. All Test, Build, and Run Commands Should Be Logged
 
-**Fail-Closed Enforcement:** Every `run_command` invocation MUST append `> .logs/run-<slug>-$(date +%s).log 2>&1` (or `| tee .logs/run-<slug>-$(date +%s).log`). Commands without one of these suffixes are non-compliant. Inline stdout capture is forbidden except for one-line probes (`echo`, `pwd`, `which`) that never produce failure output.
+**Fail-Closed Enforcement:** Append `> .logs/run-<slug>-$(date +%s).log 2>&1` (or `| tee .logs/run-<slug>-$(date +%s).log`) to `run_command` invocations. Commands without one of these suffixes are non-compliant. Inline stdout capture is acceptable only for one-line probes (`echo`, `pwd`, `which`) that never produce failure output.
 
 ## 4. Epistemic Humility & Communication Constraints
 

@@ -1266,3 +1266,99 @@ test("COMPLIANCE: failClosedLogging render option controls mandate phrasing", ()
     "failClosedLogging:false must not have MUST + .logs/ mandatory phrasing"
   );
 });
+
+// ── Intensity Profile Tests ─────────────────────────────────────────
+
+test("INTENSITY: declarative targets omit CRITICAL OVERRIDE", () => {
+  const cursorRouter = artifacts.get("compiled/cursor/rules/01-router.mdc");
+  const windsurfRouter = artifacts.get("compiled/windsurf/rules/01-router.md");
+  const crushRouter = artifacts.get("compiled/crush/rules/01-router.md");
+  const geminiRouter = artifacts.get("compiled/gemini/rules/01-router.md");
+
+  for (const [name, content] of [["Cursor", cursorRouter], ["Windsurf", windsurfRouter], ["Crush", crushRouter], ["Gemini", geminiRouter]]) {
+    assert.ok(
+      !content.includes("CRITICAL OVERRIDE"),
+      `${name} router must not contain CRITICAL OVERRIDE (declarative intensity)`
+    );
+    assert.ok(
+      content.includes("Automation Preference"),
+      `${name} router must contain Automation Preference (declarative intensity)`
+    );
+  }
+});
+
+test("INTENSITY: imperative targets preserve CRITICAL OVERRIDE", () => {
+  const claudeRouter = artifacts.get("compiled/claude/rules/01-router.md");
+  assert.ok(
+    claudeRouter.includes("CRITICAL OVERRIDE"),
+    "Claude router must contain CRITICAL OVERRIDE (imperative intensity)"
+  );
+});
+
+test("INTENSITY: declarative targets omit MUST be exactly in handshake", () => {
+  const cursorInit = artifacts.get("compiled/cursor/rules/00-init.mdc");
+  const windsurfInit = artifacts.get("compiled/windsurf/rules/00-init.md");
+
+  assert.ok(
+    !cursorInit.includes("MUST be exactly"),
+    "Cursor init must not contain MUST be exactly (declarative intensity)"
+  );
+  assert.ok(
+    !windsurfInit.includes("MUST be exactly"),
+    "Windsurf init must not contain MUST be exactly (declarative intensity)"
+  );
+  // Both must still contain the handshake token itself
+  assert.match(cursorInit, /\[rules:loaded/, "Cursor init must still contain the handshake token");
+  assert.match(windsurfInit, /\[rules:loaded/, "Windsurf init must still contain the handshake token");
+});
+
+test("INTENSITY: imperative targets preserve MUST be exactly in handshake", () => {
+  const claudeInit = artifacts.get("compiled/claude/rules/00-init.md");
+  assert.ok(
+    claudeInit.includes("MUST be exactly"),
+    "Claude init must contain MUST be exactly (imperative intensity)"
+  );
+});
+
+test("INTENSITY: declarative targets use softened constraint hierarchy language", () => {
+  const cursorInit = artifacts.get("compiled/cursor/rules/00-init.mdc");
+  assert.ok(
+    !cursorInit.includes("supersede any individual expert stance"),
+    "Cursor init must not use supersede language (declarative intensity)"
+  );
+  assert.ok(
+    cursorInit.includes("Individual expert stances operate within"),
+    "Cursor init must use declarative context phrasing"
+  );
+  assert.ok(
+    !cursorInit.includes("An expert cannot override a globalRuntime rule"),
+    "Cursor init must not use imperative constraint description"
+  );
+  assert.ok(
+    cursorInit.includes("Higher-layer rules take precedence"),
+    "Cursor init must use declarative constraint description"
+  );
+});
+
+test("INTENSITY: declarative targets use softened echo contract", () => {
+  const cursorRouter = artifacts.get("compiled/cursor/rules/01-router.mdc");
+  assert.ok(
+    !cursorRouter.includes("Echo the selected expert id verbatim"),
+    "Cursor router must not use imperative echo contract"
+  );
+  assert.ok(
+    cursorRouter.includes("Use the selected expert id exactly as listed"),
+    "Cursor router must use declarative echo contract"
+  );
+});
+
+test("INTENSITY: all targets still reference the same handshake token format", () => {
+  const tokenPattern = /\[rules:loaded\s+init\s+router\s+experts@\d+\]/;
+  const claudeInit = artifacts.get("compiled/claude/rules/00-init.md");
+  const cursorInit = artifacts.get("compiled/cursor/rules/00-init.mdc");
+  const windsurfInit = artifacts.get("compiled/windsurf/rules/00-init.md");
+
+  assert.match(claudeInit, tokenPattern, "Claude must contain handshake token");
+  assert.match(cursorInit, tokenPattern, "Cursor must contain handshake token");
+  assert.match(windsurfInit, tokenPattern, "Windsurf must contain handshake token");
+});
