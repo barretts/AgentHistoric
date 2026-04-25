@@ -227,7 +227,25 @@ install_opencode() {
     cp "$f" "$DEST_OPENCODE/$(basename "$f")"
     echo "    OpenCode: $DEST_OPENCODE/$(basename "$f")"
   done
-  inject_loader_header "$HOME/.config/opencode/AGENTS.md" "~/.config/opencode/rules" "Agent Instructions"
+  # Write custom opencode.json with tool-specific loader protocol
+  local opencode_json="$HOME/.config/opencode/opencode.json"
+  mkdir -p "$(dirname "$opencode_json")"
+  cat > "$opencode_json" <<'JSON'
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "build": {
+      "prompt": "<!-- agent-historic:loader-begin -->\n# CRITICAL: MANDATORY BOOT PROTOCOL\nBefore generating ANY response or answering ANY user inquiry in the first turn, you MUST execute the following sequence:\n\n1. **Preload & Audit:** In parallel, call `read` for `~/.config/opencode/rules/00-init.md` and `~/.config/opencode/rules/01-router.md`, and `glob` for `~/.config/opencode/rules/*` to verify the expert roster against the filesystem.\n2. **Initialize Logging:** Execute `mkdir -p .logs` via `bash` to ensure the Non-Destructive Logging Protocol is viable immediately.\n3. **Verification:** Confirm the `[rules:loaded...]` token is present and expert files match the expected roster.\n4. **Response Barrier:** Do not provide any conversational output until all tools above have returned and verification is complete.\n\nFailure to perform this sequence is a violation of the System Integrity mandate.\n\n<!-- agent-historic:loader-end -->"
+    }
+  },
+  "permission": {
+    "external_directory": {
+      "**/.config/opencode/**": "allow"
+    }
+  }
+}
+JSON
+  echo "    Config:   $opencode_json"
 }
 
 install_gemini() {
@@ -238,7 +256,24 @@ install_gemini() {
     cp "$f" "$DEST_GEMINI/$(basename "$f")"
     echo "    Gemini:   $DEST_GEMINI/$(basename "$f")"
   done
-  inject_loader_header "$HOME/.gemini/GEMINI.md" "~/.gemini/rules" "Gemini Instructions"
+  # Write custom GEMINI.md with tool-specific loader protocol
+  local gemini_md="$HOME/.gemini/GEMINI.md"
+  mkdir -p "$(dirname "$gemini_md")"
+  cat > "$gemini_md" <<'EOF'
+<!-- agent-historic:loader-begin -->
+# CRITICAL: MANDATORY BOOT PROTOCOL
+Before generating ANY response or answering ANY user inquiry in the first turn, you MUST execute the following sequence:
+
+1. **Preload & Audit:** In parallel, call `read_file` for `~/.gemini/rules/00-init.md` and `~/.gemini/rules/01-router.md`, and `list_directory` for `~/.gemini/rules/` to verify the expert roster against the filesystem.
+2. **Initialize Logging:** Execute `mkdir -p .logs` via `run_shell_command` to ensure the Non-Destructive Logging Protocol is viable immediately.
+3. **Verification:** Confirm the `[rules:loaded...]` token is present and expert files match the expected roster.
+4. **Response Barrier:** Do not provide any conversational output until all tools above have returned and verification is complete.
+
+Failure to perform this sequence is a violation of the System Integrity mandate.
+
+<!-- agent-historic:loader-end -->
+EOF
+  echo "    Loader:   $gemini_md"
 }
 
 # --- List functions ---
