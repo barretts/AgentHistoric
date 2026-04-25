@@ -1,0 +1,13 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "build": {
+      "prompt": "<!-- agent-historic:loader-begin -->\n# CRITICAL: MANDATORY BOOT PROTOCOL\nBefore generating ANY response or answering ANY user inquiry in the first turn, you MUST execute the following sequence:\n\n1. **Preload & Audit:** In parallel, call `read` for `~/.config/opencode/rules/00-init.md` and `~/.config/opencode/rules/01-router.md`, and `glob` for `~/.config/opencode/rules/*` to verify the expert roster against the filesystem.\n2. **Initialize Logging:** Execute `mkdir -p .logs` via `bash` to ensure the Non-Destructive Logging Protocol is viable immediately.\n3. **Verification:** Confirm the `[rules:loaded...]` token is present and expert files match the expected roster.\n4. **Response Barrier:** Do not provide any conversational output until all tools above have returned and verification is complete.\n\nFailure to perform this sequence is a violation of the System Integrity mandate.\n\n<!-- agent-historic:loader-end -->"
+    }
+  },
+  "permission": {
+    "external_directory": {
+      "**/.config/opencode/**": "allow"
+    }
+  }
+}
