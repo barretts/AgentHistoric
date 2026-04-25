@@ -19,6 +19,8 @@ import {
   scoreCase,
   selectCases
 } from "./lib/regression.mjs";
+import { attachJudgeResults } from "./lib/eval-judge.mjs";
+import { buildAndAppendTrace, analyzeTraceFailures, formatTraceAnalysis } from "./lib/tracer.mjs";
 
 const workspaceRoot = process.cwd();
 const system = await loadPromptSystemSpec(workspaceRoot);
@@ -47,7 +49,7 @@ for (const testCase of cases) {
   )) {
     const trialResults = await runTrials(
       async (trialIndex) => {
-        const wrappedPrompt = buildWrappedPrompt(testCase);
+        const wrappedPrompt = buildWrappedPrompt(testCase, { verbalizedSampling: options.verbalizedSampling });
         const trialSuffix = options.trials > 1 ? `-t${trialIndex}` : "";
         const rawLogPath = path.join(
           logDir,
@@ -60,7 +62,29 @@ for (const testCase of cases) {
           rawLogPath
         });
 
-        const score = scoreCase(system, testCase, response);
+        let score = scoreCase(system, testCase, response);
+
+        // LLM-as-a-Judge evaluation
+        if (options.judge) {
+          score = await attachJudgeResults(system, testCase, response, { scoreResult: score, local: true });
+        }
+
+        // Trace logging
+        if (options.trace) {
+          await buildAndAppendTrace({
+            workspaceRoot,
+            caseId: testCase.id,
+            caseName: testCase.name,
+            prompt: wrappedPrompt,
+            target,
+            trialIndex,
+            response,
+            scoreResult: score,
+            logPath: path.relative(workspaceRoot, rawLogPath),
+            runId: timestamp.slice(0, 10)
+          });
+        }
+
         return {
           caseId: testCase.id,
           caseName: testCase.name,
