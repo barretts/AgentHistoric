@@ -1,4 +1,4 @@
-#!/usr/bin/env pwsh
+f#!/usr/bin/env pwsh
 # install-local.ps1 -- Install Agent Historic persona rules into AI coding editors on Windows/PowerShell.
 # Usage: powershell -ExecutionPolicy Bypass -File .\install-local.ps1 [--claude] [--cursor] [--windsurf] [--codex] [--opencode] [--gemini] [--all]
 # No flags = auto-detect installed editors.
@@ -93,12 +93,11 @@ function Inject-LoaderHeader([string]$file, [string]$rulesDir, [string]$title) {
 $markerBegin
 # $title
 
-Always load and apply the following rule files from `$rulesDir at the start of every conversation:
+At the start of every conversation, preload these rule files (they define mandatory protocols):
+1. `$rulesDir/00-init.md` -- Global Operating System. Always active. Defines universal mandates that supersede individual expert personas. Don't skip this.
+2. `$rulesDir/01-router.md` -- MoE Router. Front-line triage. Analyzes intent and routes to the correct expert or pipeline.
 
-1. `$rulesDir/00-init.md` -- Global runtime (constraints, logging, voice, definition of done)
-2. `$rulesDir/01-router.md` -- MoE router (expert selection, pipelines, disambiguation)
-
-These two files are always active. All other expert files in `$rulesDir are activated by model decision based on their description field.
+These files establish the core protocol: routing before acting, logging all command output, labeling uncertainty (VERIFIED/HYPOTHESIS), and following the definition of done.
 $markerEnd
 "@
 
@@ -148,9 +147,24 @@ function Install-Cursor {
   Copy-GlobToDest (Join-Path $srcCursor "*.mdc") $destCursor "Cursor"
 }
 
-function Install-Windsurf {
-  Copy-GlobToDest (Join-Path $srcWindsurf "*.md") $destWindsurf "Windsurf"
-}
+  function Install-Windsurf {
+    Copy-GlobToDest (Join-Path $srcWindsurf "*.md") $destWindsurf "Windsurf"
+    Inject-LoaderHeader (Join-Path $homeDir ".windsurf/WINDSURF.md") "~/.windsurf/rules" "Windsurf Instructions"
+    # Export global_rules.md to Windsurf memories for preload on every chat
+    $wsMemories = Join-Path $homeDir ".codeium/windsurf/memories"
+    Ensure-Dir $wsMemories
+    $wsGlobal = Join-Path $wsMemories "global_rules.md"
+    $wsGlobalContent = @"
+# Load These First
+At the start of every conversation, preload these rule files (they define mandatory protocols):
+1. \`~/.windsurf/rules/00-init.md\` -- Global Operating System. Always active. Defines universal mandates that supersede individual expert personas. Don't skip this.
+2. \`~/.windsurf/rules/01-router.md\` -- MoE Router. Front-line triage. Analyzes intent and routes to the correct expert or pipeline.
+These files establish the core protocol: routing before acting, logging all command output, labeling uncertainty (VERIFIED/HYPOTHESIS), and following the definition of done.
+"@
+    Set-Content -Path $wsGlobal -Value $wsGlobalContent -NoNewline
+    Write-Host "    Memories: $wsGlobal"
+  }
+
 
 function Install-Codex {
   Ensure-Dir $destCodex
@@ -192,40 +206,7 @@ function Install-OpenCode {
 
 function Install-Gemini {
   Copy-GlobToDest (Join-Path $srcGemini "*.md") $destGemini "Gemini"
-  # Build @import block from installed rule files
-  $files = Get-ChildItem -Path (Join-Path $srcGemini "*.md") -File -ErrorAction SilentlyContinue
-  $imports = @("$markerBegin", "# Agent Historic", "")
-  foreach ($f in $files) {
-    $imports += "@./rules/$($f.Name)"
-  }
-  $imports += $markerEnd
-  $block = $imports -join "`n"
-
-  $content = ""
-  if (Test-Path $geminiMd) {
-    $content = Get-Content -Path $geminiMd -Raw
-  } else {
-    Ensure-Dir (Split-Path -Parent $geminiMd)
-  }
-
-  if ($content.Contains($markerBegin) -and $content.Contains($markerEnd)) {
-    $start = $content.IndexOf($markerBegin)
-    $finish = $content.IndexOf($markerEnd, $start)
-    if ($start -ge 0 -and $finish -ge 0) {
-      $finish = $finish + $markerEnd.Length
-      if ($finish -lt $content.Length -and $content[$finish] -eq "`n") {
-        $finish += 1
-      }
-      $updated = $content.Substring(0, $start) + $block + "`n" + $content.Substring($finish)
-      Set-Content -Path $geminiMd -Value $updated -NoNewline
-    }
-  } elseif ([string]::IsNullOrWhiteSpace($content)) {
-    Set-Content -Path $geminiMd -Value $block -NoNewline
-  } else {
-    Set-Content -Path $geminiMd -Value ($block + "`n`n" + $content) -NoNewline
-  }
-
-  Write-Host "    Loader:   $geminiMd"
+  Inject-LoaderHeader $geminiMd "~/.gemini/rules" "Gemini Instructions"
 }
 
 function List-GlobStatus([string]$pattern, [string]$dest, [string]$title) {

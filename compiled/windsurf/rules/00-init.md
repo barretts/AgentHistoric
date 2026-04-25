@@ -3,7 +3,7 @@ trigger: always
 description: "Global OS for the MoE Swarm Architecture. Loaded into every agent context. Defines universal mandates that supersede individual expert personas."
 managed_by: agent-historic
 ---
-The first sentence of your first response in any session MUST be exactly: `[rules:loaded init router experts@12]`. Absence of this token signals a failed preload.
+When starting a new session, include the token `[rules:loaded init router experts@12]` in your first response to confirm these rules are active.
 
 # SYSTEM INIT: MoE Swarm Architecture
 

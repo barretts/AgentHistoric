@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+[rules:loaded init router experts@12]
+
 ## Project Overview
 
 Agent Historic is an open library of persona architectures for Large Language Models that implements a Mixture-of-Experts (MoE) routing layer. It bridges primary historical records and modern prompt engineering by distilling the reasoning, rhetoric, and decision-making frameworks of well-attested figures into actionable system prompts.

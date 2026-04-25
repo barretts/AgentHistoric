@@ -1362,3 +1362,105 @@ test("INTENSITY: all targets still reference the same handshake token format", (
   assert.match(cursorInit, tokenPattern, "Cursor must contain handshake token");
   assert.match(windsurfInit, tokenPattern, "Windsurf must contain handshake token");
 });
+
+// ── Intensity Injection Safety Tests ──────────────────────────────────
+
+// Phrases that look like prompt injection or override attempts
+const INJECTION_PATTERNS = [
+  /ignore\s+(previous|all\s+|the\s+)instr/i,
+  /disregar\w*\s+(previous|earlier|the\s+above)/i,
+  /this\s+overrides?\s+(the\s+|all\s+|earlier|previous)/i,
+  /you\s+must\s+actually/i,
+  /actually\s+follow\s+this\s+instead/i,
+  /override\s+the\s+above/i,
+  /override\s+any\s+previous/i,
+  /disregard\s+earlier\s+instructions/i
+];
+
+test("INTENSITY: declarative targets contain no injection-like phrases", () => {
+  const declarativePaths = [
+    ["Cursor init", "compiled/cursor/rules/00-init.mdc"],
+    ["Cursor router", "compiled/cursor/rules/01-router.mdc"],
+    ["Windsurf init", "compiled/windsurf/rules/00-init.md"],
+    ["Windsurf router", "compiled/windsurf/rules/01-router.md"],
+    ["Crush init", "compiled/crush/rules/00-init.md"],
+    ["Crush router", "compiled/crush/rules/01-router.md"],
+    ["Gemini init", "compiled/gemini/rules/00-init.md"],
+    ["Gemini router", "compiled/gemini/rules/01-router.md"]
+  ];
+
+  for (const [name, artifactPath] of declarativePaths) {
+    const content = artifacts.get(artifactPath);
+    assert.ok(content, `${name} artifact must exist`);
+    for (const pattern of INJECTION_PATTERNS) {
+      const match = pattern.exec(content);
+      assert.ok(
+        !match,
+        `${name} must not contain injection-like phrase matching ${pattern.source}: "${match?.[0]}"`
+      );
+    }
+  }
+});
+
+test("INTENSITY: declarative targets use 'should' for logging mandate, not 'MUST'", () => {
+  const declarativePaths = [
+    "compiled/cursor/rules/00-init.mdc",
+    "compiled/windsurf/rules/00-init.md",
+    "compiled/crush/rules/00-init.md",
+    "compiled/gemini/rules/00-init.md"
+  ];
+
+  for (const artifactPath of declarativePaths) {
+    const content = artifacts.get(artifactPath);
+    const name = artifactPath.split("/").pop();
+    assert.ok(
+      !content.includes("MUST Be Logged"),
+      `${name} must not contain imperative logging heading`
+    );
+  }
+});
+
+test("INTENSITY: imperative targets do not leak injection-like override language", () => {
+  const claudeInit = artifacts.get("compiled/claude/rules/00-init.md");
+  const claudeRouter = artifacts.get("compiled/claude/rules/01-router.md");
+  const codexAgents = artifacts.get("compiled/codex/AGENTS.md");
+
+  for (const [name, content] of [["Claude init", claudeInit], ["Claude router", claudeRouter], ["Codex AGENTS", codexAgents]]) {
+    assert.ok(content, `${name} artifact must exist`);
+    for (const pattern of INJECTION_PATTERNS) {
+      const match = pattern.exec(content);
+      assert.ok(
+        !match,
+        `${name} must not contain injection-like phrase matching ${pattern.source}: "${match?.[0]}"`
+      );
+    }
+  }
+});
+
+test("INTENSITY: declarative targets use 'take precedence' for constraints, not 'cannot override'", () => {
+  // "take precedence" is the approved declarative phrasing for constraint hierarchy
+  // "cannot override" is the imperative version that must not appear in constraint context
+  const declarativePaths = [
+    "compiled/cursor/rules/00-init.mdc",
+    "compiled/windsurf/rules/00-init.md",
+    "compiled/crush/rules/00-init.md",
+    "compiled/gemini/rules/00-init.md"
+  ];
+
+  for (const artifactPath of declarativePaths) {
+    const content = artifacts.get(artifactPath);
+    const name = artifactPath.split("/").pop();
+    assert.ok(
+      !content.includes("An expert cannot override"),
+      `${name} must not contain imperative 'cannot override' in constraint context`
+    );
+    assert.ok(
+      !content.includes("supersede any individual expert stance"),
+      `${name} must not contain imperative 'supersede' in constraint context`
+    );
+    assert.ok(
+      content.includes("Higher-layer rules take precedence"),
+      `${name} must use declarative 'take precedence' phrasing`
+    );
+  }
+});
