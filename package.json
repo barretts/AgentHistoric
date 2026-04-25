@@ -11,6 +11,7 @@
     "build:prompts": "node scripts/build-prompt-system.mjs",
     "build:prompts:release": "node scripts/build-prompt-system.mjs --no-debug",
     "build:prompts:debug": "node scripts/build-prompt-system.mjs --debug",
+    "install:rules": "node install.js",
     "test:regressions": "node scripts/run-regressions.mjs",
     "test:regressions:smoke": "node scripts/run-regressions.mjs --suite smoke",
     "test:regressions:clr": "node scripts/run-via-clr.mjs",

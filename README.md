@@ -33,10 +33,10 @@ The routing layer includes negative routing guards, diversified sub-domain heuri
 npm run build:prompts
 
 # 2. Install rules into your editors (auto-detects installed editors)
-bash install-local.sh
+node install.js
 
 # 3. Or install for specific editors
-bash install-local.sh --cursor --windsurf
+node install.js --cursor --windsurf
 
 # 4. Remote bootstrap install (served from GitHub Pages)
 bash <(curl -fsSL https://agenthistoric.com/install.sh) --all
@@ -73,8 +73,10 @@ regression/
 ## Install
 
 ```bash
-bash install-local.sh [options]
+node install.js [options]
 ```
+
+The installer is a single cross-platform Node.js script (works on macOS, Linux, and Windows). The remote bootstrap wrappers (`install.sh`, `install.ps1`) download the repo and invoke `node install.js` for you.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -Command "& ([ScriptBlock]::Create((New-Object Net.WebClient).DownloadString('https://agenthistoric.com/install.ps1'))) [options]"
