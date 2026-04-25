@@ -30,9 +30,9 @@ The system generates rules for **Claude**, **Cursor**, **Windsurf**, and **Codex
   - `model-parity` (13 cases): cross-model routing agreement
 
 ### Installation
-- `bash install-local.sh` - Install rules to auto-detected editors
-- `bash install-local.sh --cursor --windsurf` - Install to specific editors
-- `bash install-local.sh --all` - Install to all editors
+- `node install.js` - Install rules to auto-detected editors
+- `node install.js --cursor --windsurf` - Install to specific editors
+- `node install.js --all` - Install to all editors
 
 ## Code Architecture
 
@@ -134,6 +134,6 @@ Add to `regression/fixtures/cases.json` with:
 ## File Organization
 
 - **Never modify** files in `compiled/` - they are generated artifacts
-- **Never modify** `.cursor/rules/` - install via `install-local.sh`
+- **Never modify** `.cursor/rules/` - install via `node install.js`
 - **Focus edits** on `prompt-system/` JSON files and `scripts/lib/` renderers
 - **Check AGENTS.md** for current project conventions and protocols

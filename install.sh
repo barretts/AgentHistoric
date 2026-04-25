@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # install.sh -- Remote bootstrap installer for Agent Historic.
-# Usage: bash <(curl -fsSL <host>/install.sh) [install-local options]
+# Usage: bash <(curl -fsSL <host>/install.sh) [install.js options]
 #
-# Downloads the repo tarball and runs install-local.sh from it.
-# Requirements: curl, tar. No git or node needed.
+# Downloads the repo tarball and runs `node install.js` from it.
+# Requirements: curl, tar, node. (Node is required by the build step.)
 
 set -euo pipefail
 
@@ -21,6 +21,11 @@ if ! command -v curl >/dev/null 2>&1; then
   exit 1
 fi
 
+if ! command -v node >/dev/null 2>&1; then
+  echo "ERROR: node is required for remote install. Install Node.js >= 18 and retry."
+  exit 1
+fi
+
 TARBALL_URL="https://github.com/${REPO_SLUG}/archive/refs/heads/${REPO_REF}.tar.gz"
 
 echo "==> agent-historic remote bootstrap"
@@ -34,5 +39,5 @@ curl -fsSL "$TARBALL_URL" | tar -xz -C "$TMP_DIR"
 REPO_DIR="$(ls -d "$TMP_DIR"/*/ | head -1)"
 
 echo ""
-echo "--> Running local installer..."
-bash "${REPO_DIR}install-local.sh" "$@"
+echo "--> Running install.js..."
+node "${REPO_DIR}install.js" "$@"
