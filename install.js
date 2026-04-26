@@ -52,8 +52,14 @@ const SRC = {
   codex: path.join(repoDir, 'compiled', 'codex'),
   crush: path.join(repoDir, 'compiled', 'crush', 'rules'),
   gemini: path.join(repoDir, 'compiled', 'gemini', 'rules'),
+  hook: path.join(repoDir, 'hooks', 'log-shell-output.sh'),
 };
 SRC.opencode = SRC.claude; // OpenCode shares Claude's rich source
+
+const HOOK_SCRIPT_NAME = 'log-shell-output.sh';
+const HOOK_DEST = path.join(HOME, '.cursor', 'hooks', HOOK_SCRIPT_NAME);
+const CURSOR_HOOKS_JSON = path.join(HOME, '.cursor', 'hooks.json');
+const CLAUDE_SETTINGS_JSON = path.join(HOME, '.claude', 'settings.json');
 
 // --- Destination dirs ------------------------------------------------------
 
@@ -286,15 +292,118 @@ function buildGeminiBootBlock() {
   );
 }
 
+// --- Shell-logging hook ----------------------------------------------------
+
+function backupFile(file) {
+  if (!fileExists(file)) return null;
+  const backup = `${file}.bak.${timestampSuffix()}`;
+  fs.copyFileSync(file, backup);
+  console.log(`    Backup:   ${backup}`);
+  return backup;
+}
+
+function copyHookScript() {
+  if (!fileExists(SRC.hook)) {
+    console.log(`    Warning: hook source missing at ${SRC.hook}; skipping hook install.`);
+    return false;
+  }
+  ensureDir(path.dirname(HOOK_DEST));
+  fs.copyFileSync(SRC.hook, HOOK_DEST);
+  try {
+    fs.chmodSync(HOOK_DEST, 0o755);
+  } catch {
+    // Non-fatal on Windows; hook file is invoked via its shebang on POSIX.
+  }
+  console.log(`    Hook:     ${HOOK_DEST}`);
+  return true;
+}
+
+function installCursorShellHook() {
+  if (!copyHookScript()) return;
+
+  let cfg = { version: 1, hooks: {} };
+  if (fileExists(CURSOR_HOOKS_JSON)) {
+    try {
+      cfg = JSON.parse(readText(CURSOR_HOOKS_JSON));
+    } catch (err) {
+      console.log(`    Warning: ${CURSOR_HOOKS_JSON} is invalid JSON; rewriting. (${err.message})`);
+      cfg = { version: 1, hooks: {} };
+    }
+    backupFile(CURSOR_HOOKS_JSON);
+  }
+  cfg.version = cfg.version || 1;
+  cfg.hooks = cfg.hooks || {};
+  cfg.hooks.beforeShellExecution = Array.isArray(cfg.hooks.beforeShellExecution)
+    ? cfg.hooks.beforeShellExecution
+    : [];
+
+  const entry = {
+    command: `./hooks/${HOOK_SCRIPT_NAME}`,
+    timeout: 5,
+    failClosed: false,
+  };
+  const already = cfg.hooks.beforeShellExecution.some(
+    (h) => h && typeof h.command === 'string' && h.command.includes(HOOK_SCRIPT_NAME)
+  );
+  if (!already) {
+    cfg.hooks.beforeShellExecution.push(entry);
+  }
+  writeText(CURSOR_HOOKS_JSON, JSON.stringify(cfg, null, 2) + '\n');
+  console.log(`    Config:   ${CURSOR_HOOKS_JSON} (${already ? 'unchanged' : 'appended'})`);
+}
+
+function installClaudeShellHook() {
+  // Hook script lives under ~/.cursor/hooks/ and is shared across tools.
+  // If Cursor was not installed first, deploy it now.
+  if (!fileExists(HOOK_DEST)) {
+    if (!copyHookScript()) return;
+  }
+
+  if (!fileExists(CLAUDE_SETTINGS_JSON)) {
+    console.log(`    Warning: ${CLAUDE_SETTINGS_JSON} absent; skipping Claude hook registration.`);
+    return;
+  }
+
+  let cfg;
+  try {
+    cfg = JSON.parse(readText(CLAUDE_SETTINGS_JSON));
+  } catch (err) {
+    console.log(`    Warning: ${CLAUDE_SETTINGS_JSON} is invalid JSON; skipping hook. (${err.message})`);
+    return;
+  }
+  backupFile(CLAUDE_SETTINGS_JSON);
+
+  cfg.hooks = cfg.hooks || {};
+  cfg.hooks.PreToolUse = Array.isArray(cfg.hooks.PreToolUse) ? cfg.hooks.PreToolUse : [];
+
+  const hookCommand = `${HOOK_DEST} --mode=claude`;
+  const already = cfg.hooks.PreToolUse.some((matcher) =>
+    Array.isArray(matcher?.hooks) &&
+    matcher.hooks.some(
+      (h) => h && typeof h.command === 'string' && h.command.includes(HOOK_SCRIPT_NAME)
+    )
+  );
+  if (!already) {
+    cfg.hooks.PreToolUse.push({
+      matcher: 'Bash',
+      hooks: [{ type: 'command', command: hookCommand, timeout: 5 }],
+    });
+  }
+  writeText(CLAUDE_SETTINGS_JSON, JSON.stringify(cfg, null, 2) + '\n');
+  console.log(`    Config:   ${CLAUDE_SETTINGS_JSON} (${already ? 'unchanged' : 'appended'})`);
+}
+
 // --- Install functions per editor -----------------------------------------
 
 function installClaude() {
   copyFilesByExt(SRC.claude, '.md', DEST.claude, 'Claude');
   injectLoaderHeader(DEST.claudeMd, '~/.claude/rules', 'Claude Code Instructions');
+  installClaudeShellHook();
 }
 
 function installCursor() {
   copyFilesByExt(SRC.cursor, '.mdc', DEST.cursor, 'Cursor');
+  installCursorShellHook();
 }
 
 function installWindsurf() {
@@ -564,7 +673,8 @@ function printPostInstall(targets, flags) {
       '  Claude Code',
       '    Rules installed to ~/.claude/rules/.',
       '    CLAUDE.md loader header injected into ~/.claude/CLAUDE.md.',
-      '    No extra config needed.',
+      '    Shell-logging hook appended to ~/.claude/settings.json PreToolUse (matcher: Bash).',
+      '    Restart Claude Code for the hook to take effect.',
     ],
     cursor: [
       '  Cursor (IMPORTANT)',
@@ -574,6 +684,8 @@ function printPostInstall(targets, flags) {
       '    4. Expert rules (expert-*.mdc) are auto-attached by Cursor',
       '       when their description matches the conversation context.',
       '    Files: ~/.cursor/rules/',
+      '    Shell-logging hook installed at ~/.cursor/hooks/log-shell-output.sh',
+      '    and appended to ~/.cursor/hooks.json beforeShellExecution.',
     ],
     windsurf: [
       '  Windsurf (IMPORTANT)',
