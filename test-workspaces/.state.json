@@ -1,0 +1,158 @@
+{
+  "state_version": "2.0",
+  "run_id": "persona-prompting-v5-voice-modes",
+  "run_status": "COMPLETED",
+  "abort_reason": null,
+  "manifest_digest": "days70t",
+  "policy": {
+    "heal_schedule": "off",
+    "batch_strategy": "fixed",
+    "current_batch_size": 1,
+    "failure_threshold": 0.5,
+    "max_worker_attempts_per_task": 2,
+    "max_heal_rounds_per_window": 0,
+    "max_total_heal_rounds": 0,
+    "signature_repeat_limit": 1
+  },
+  "tasks": {
+    "gpt-5.4-medium__rich-new": {
+      "status": "DONE",
+      "worker_attempts": 1,
+      "healer_attempts": 0,
+      "last_failure_class": null,
+      "last_failure_signature": null,
+      "applied_patch_ids": [],
+      "history": [
+        {
+          "task_id": "gpt-5.4-medium__rich-new",
+          "phase": "worker",
+          "attempt_number": 1,
+          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/gpt-5.4-medium/rich-new.jsonl",
+          "verify_log_path": null,
+          "exit_code": 0,
+          "failure_class": null,
+          "failure_signature": null,
+          "applied_patch_ids": [],
+          "duration_sec": 51,
+          "timestamp": "2026-03-27T17:30:29.924Z"
+        }
+      ]
+    },
+    "gpt-5.4-medium__rich-voice": {
+      "status": "DONE",
+      "worker_attempts": 1,
+      "healer_attempts": 0,
+      "last_failure_class": null,
+      "last_failure_signature": null,
+      "applied_patch_ids": [],
+      "history": [
+        {
+          "task_id": "gpt-5.4-medium__rich-voice",
+          "phase": "worker",
+          "attempt_number": 1,
+          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/gpt-5.4-medium/rich-voice.jsonl",
+          "verify_log_path": null,
+          "exit_code": 0,
+          "failure_class": null,
+          "failure_signature": null,
+          "applied_patch_ids": [],
+          "duration_sec": 49.7,
+          "timestamp": "2026-03-27T17:31:19.669Z"
+        }
+      ]
+    },
+    "gpt-5.4-medium__rich-scaffolded": {
+      "status": "DONE",
+      "worker_attempts": 1,
+      "healer_attempts": 0,
+      "last_failure_class": null,
+      "last_failure_signature": null,
+      "applied_patch_ids": [],
+      "history": [
+        {
+          "task_id": "gpt-5.4-medium__rich-scaffolded",
+          "phase": "worker",
+          "attempt_number": 1,
+          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/gpt-5.4-medium/rich-scaffolded.jsonl",
+          "verify_log_path": null,
+          "exit_code": 0,
+          "failure_class": null,
+          "failure_signature": null,
+          "applied_patch_ids": [],
+          "duration_sec": 67,
+          "timestamp": "2026-03-27T17:32:26.624Z"
+        }
+      ]
+    },
+    "claude-4.6-opus-high__rich-new": {
+      "status": "DONE",
+      "worker_attempts": 1,
+      "healer_attempts": 0,
+      "last_failure_class": null,
+      "last_failure_signature": null,
+      "applied_patch_ids": [],
+      "history": [
+        {
+          "task_id": "claude-4.6-opus-high__rich-new",
+          "phase": "worker",
+          "attempt_number": 1,
+          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/claude-4.6-opus-high/rich-new.jsonl",
+          "verify_log_path": null,
+          "exit_code": 0,
+          "failure_class": null,
+          "failure_signature": null,
+          "applied_patch_ids": [],
+          "duration_sec": 68.9,
+          "timestamp": "2026-03-27T17:33:35.569Z"
+        }
+      ]
+    },
+    "claude-4.6-opus-high__rich-voice": {
+      "status": "DONE",
+      "worker_attempts": 1,
+      "healer_attempts": 0,
+      "last_failure_class": null,
+      "last_failure_signature": null,
+      "applied_patch_ids": [],
+      "history": [
+        {
+          "task_id": "claude-4.6-opus-high__rich-voice",
+          "phase": "worker",
+          "attempt_number": 1,
+          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/claude-4.6-opus-high/rich-voice.jsonl",
+          "verify_log_path": null,
+          "exit_code": 0,
+          "failure_class": null,
+          "failure_signature": null,
+          "applied_patch_ids": [],
+          "duration_sec": 64,
+          "timestamp": "2026-03-27T17:34:39.533Z"
+        }
+      ]
+    },
+    "claude-4.6-opus-high__rich-scaffolded": {
+      "status": "DONE",
+      "worker_attempts": 1,
+      "healer_attempts": 0,
+      "last_failure_class": null,
+      "last_failure_signature": null,
+      "applied_patch_ids": [],
+      "history": [
+        {
+          "task_id": "claude-4.6-opus-high__rich-scaffolded",
+          "phase": "worker",
+          "attempt_number": 1,
+          "log_path": "/Users/ephem/lcode/AgentHistoric/test-workspaces/.output/claude-4.6-opus-high/rich-scaffolded.jsonl",
+          "verify_log_path": null,
+          "exit_code": 0,
+          "failure_class": null,
+          "failure_signature": null,
+          "applied_patch_ids": [],
+          "duration_sec": 64.4,
+          "timestamp": "2026-03-27T17:35:43.979Z"
+        }
+      ]
+    }
+  },
+  "healing_rounds": []
+}
