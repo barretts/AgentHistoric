@@ -60,6 +60,15 @@ const HOOK_SCRIPT_NAME = 'log-shell-output.sh';
 const HOOK_DEST = path.join(HOME, '.cursor', 'hooks', HOOK_SCRIPT_NAME);
 const CURSOR_HOOKS_JSON = path.join(HOME, '.cursor', 'hooks.json');
 const CLAUDE_SETTINGS_JSON = path.join(HOME, '.claude', 'settings.json');
+const CODEX_HOOKS_JSON = path.join(HOME, '.codex', 'hooks.json');
+const GEMINI_SETTINGS_JSON = path.join(HOME, '.gemini', 'settings.json');
+
+// OpenCode plugin: separate JS file (different contract from the bash hook).
+const OPENCODE_HOOK_NAME = 'log-shell-output.js';
+const SRC_OPENCODE_HOOK = path.join(repoDir, 'hooks', 'opencode-log-shell-output.js');
+const OPENCODE_HOOK_DEST = APPDATA
+  ? path.join(APPDATA, 'opencode', 'plugins', OPENCODE_HOOK_NAME)
+  : path.join(HOME, '.config', 'opencode', 'plugins', OPENCODE_HOOK_NAME);
 
 // --- Destination dirs ------------------------------------------------------
 
@@ -393,6 +402,79 @@ function installClaudeShellHook() {
   console.log(`    Config:   ${CLAUDE_SETTINGS_JSON} (${already ? 'unchanged' : 'appended'})`);
 }
 
+// Generic PreToolUse-hook writer used for Codex and Gemini, both of which
+// accept the same Claude-compatible JSON contract via the shared bash script.
+// `createIfMissing` controls whether we bootstrap a settings file when none
+// exists yet (Claude refuses to write a fresh settings.json; Codex/Gemini are OK).
+function installPreToolUseHook({ settingsPath, mode, label, createIfMissing }) {
+  if (!fileExists(HOOK_DEST)) {
+    if (!copyHookScript()) return;
+  }
+
+  let cfg = {};
+  const exists = fileExists(settingsPath);
+  if (exists) {
+    try {
+      cfg = JSON.parse(readText(settingsPath));
+    } catch (err) {
+      console.log(`    Warning: ${settingsPath} is invalid JSON; rewriting. (${err.message})`);
+      cfg = {};
+    }
+    backupFile(settingsPath);
+  } else if (!createIfMissing) {
+    console.log(`    Warning: ${settingsPath} absent; skipping ${label} hook registration.`);
+    return;
+  }
+
+  cfg.hooks = cfg.hooks || {};
+  cfg.hooks.PreToolUse = Array.isArray(cfg.hooks.PreToolUse) ? cfg.hooks.PreToolUse : [];
+
+  const hookCommand = `${HOOK_DEST} --mode=${mode}`;
+  const already = cfg.hooks.PreToolUse.some((matcher) =>
+    Array.isArray(matcher?.hooks) &&
+    matcher.hooks.some(
+      (h) => h && typeof h.command === 'string' && h.command.includes(HOOK_SCRIPT_NAME)
+    )
+  );
+  if (!already) {
+    cfg.hooks.PreToolUse.push({
+      matcher: 'Bash',
+      hooks: [{ type: 'command', command: hookCommand, timeout: 5 }],
+    });
+  }
+  writeText(settingsPath, JSON.stringify(cfg, null, 2) + '\n');
+  const verb = exists ? (already ? 'unchanged' : 'appended') : 'created';
+  console.log(`    Config:   ${settingsPath} (${verb})`);
+}
+
+function installCodexShellHook() {
+  installPreToolUseHook({
+    settingsPath: CODEX_HOOKS_JSON,
+    mode: 'codex',
+    label: 'Codex',
+    createIfMissing: true,
+  });
+}
+
+function installGeminiShellHook() {
+  installPreToolUseHook({
+    settingsPath: GEMINI_SETTINGS_JSON,
+    mode: 'gemini',
+    label: 'Gemini',
+    createIfMissing: true,
+  });
+}
+
+function installOpenCodeShellHook() {
+  if (!fileExists(SRC_OPENCODE_HOOK)) {
+    console.log(`    Warning: opencode hook source missing at ${SRC_OPENCODE_HOOK}; skipping.`);
+    return;
+  }
+  ensureDir(path.dirname(OPENCODE_HOOK_DEST));
+  fs.copyFileSync(SRC_OPENCODE_HOOK, OPENCODE_HOOK_DEST);
+  console.log(`    Hook:     ${OPENCODE_HOOK_DEST}`);
+}
+
 // --- Install functions per editor -----------------------------------------
 
 function installClaude() {
@@ -428,6 +510,7 @@ function installCodex() {
   cleanupManagedFiles(DEST.codex);
   copyDirRecursive(SRC.codex, DEST.codex);
   console.log(`    Codex:    ${DEST.codex}/`);
+  installCodexShellHook();
 }
 
 function installCrush() {
@@ -483,6 +566,9 @@ function installOpenCode() {
 
   // AGENTS.md: idempotent loader-header injection.
   injectLoaderHeader(DEST.opencodeAgents, '~/.config/opencode/rules', 'Agent Instructions');
+
+  // Plugin-shape shell-logging hook (different contract than the bash hook).
+  installOpenCodeShellHook();
 }
 
 function installGemini() {
@@ -494,6 +580,7 @@ function installGemini() {
     console.log(`    Backup:   ${backup}`);
   }
   replaceLoaderBlock(DEST.geminiMd, buildGeminiBootBlock(), 'Loader  ');
+  installGeminiShellHook();
 }
 
 // --- List functions per editor --------------------------------------------
@@ -514,17 +601,33 @@ function listSimple(label, srcDir, ext, destDir, extras = []) {
 }
 
 const LISTERS = {
-  claude: () => listSimple('Claude (~/.claude/rules/)', SRC.claude, '.md', DEST.claude, [DEST.claudeMd]),
-  cursor: () => listSimple('Cursor (~/.cursor/rules/)', SRC.cursor, '.mdc', DEST.cursor),
+  claude: () => listSimple('Claude (~/.claude/rules/)', SRC.claude, '.md', DEST.claude, [
+    DEST.claudeMd,
+    HOOK_DEST,
+    CLAUDE_SETTINGS_JSON,
+  ]),
+  cursor: () => listSimple('Cursor (~/.cursor/rules/)', SRC.cursor, '.mdc', DEST.cursor, [
+    HOOK_DEST,
+    CURSOR_HOOKS_JSON,
+  ]),
   windsurf: () => listSimple('Windsurf (~/.windsurf/rules/)', SRC.windsurf, '.md', DEST.windsurf, [DEST.windsurfMd]),
   codex: () => {
     console.log('    Codex (~/.codex/):');
     const target = path.join(DEST.codex, 'AGENTS.md');
     console.log(`      ${target}  [${statusLabel(target)}]`);
+    console.log(`      ${HOOK_DEST}  [${statusLabel(HOOK_DEST)}]`);
+    console.log(`      ${CODEX_HOOKS_JSON}  [${statusLabel(CODEX_HOOKS_JSON)}]`);
   },
   crush: () => listSimple('Crush', SRC.crush, '.md', DEST.crush, [DEST.crushMd]),
-  opencode: () => listSimple('OpenCode', SRC.opencode, '.md', DEST.opencode, [DEST.opencodeAgents]),
-  gemini: () => listSimple('Gemini (~/.gemini/rules/)', SRC.gemini, '.md', DEST.gemini, [DEST.geminiMd]),
+  opencode: () => listSimple('OpenCode', SRC.opencode, '.md', DEST.opencode, [
+    DEST.opencodeAgents,
+    OPENCODE_HOOK_DEST,
+  ]),
+  gemini: () => listSimple('Gemini (~/.gemini/rules/)', SRC.gemini, '.md', DEST.gemini, [
+    DEST.geminiMd,
+    HOOK_DEST,
+    GEMINI_SETTINGS_JSON,
+  ]),
 };
 
 const INSTALLERS = {
@@ -699,7 +802,9 @@ function printPostInstall(targets, flags) {
     codex: [
       '  Codex',
       '    AGENTS.md and skills/ are installed to ~/.codex/.',
-      '    No extra config needed.',
+      '    Shell-logging hook appended to ~/.codex/hooks.json PreToolUse (matcher: Bash).',
+      '    NOTE: Codex parses but currently fails-open on permissionDecision="ask";',
+      '    the nudge still surfaces in the transcript via permissionDecisionReason.',
     ],
     crush: [
       '  Crush',
@@ -712,12 +817,15 @@ function printPostInstall(targets, flags) {
       '    Rules installed to ~/.config/opencode/rules/ (or %APPDATA%\\opencode\\rules\\ on Windows).',
       '    AGENTS.md loader header injected.',
       '    opencode.json: existing config preserved with timestamped backup.',
+      '    Shell-logging plugin installed at ~/.config/opencode/plugins/log-shell-output.js',
+      '    (auto-discovered by OpenCode at startup; restart OpenCode to load).',
     ],
     gemini: [
       '  Gemini CLI',
       '    Rules installed to ~/.gemini/rules/.',
       '    GEMINI.md boot-protocol block injected.',
       '    Gemini CLI loads rules via native @file.md import syntax.',
+      '    Shell-logging hook appended to ~/.gemini/settings.json PreToolUse (matcher: Bash).',
     ],
   };
 

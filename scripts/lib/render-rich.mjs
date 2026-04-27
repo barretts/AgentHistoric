@@ -10,13 +10,8 @@ import { resolveIntensity } from "./build-prompt-system.mjs";
 
 export function renderRichInit(system, options = {}) {
   const g = system.globalRuntime;
-  const reasons = {
-    "your_test_command | grep": "destroys context",
-    "pytest | tail": "hides early failures",
-    "cargo test 2>&1 | head": "truncates stack traces"
-  };
 
-  const expertCount = system.experts?.length ?? 11;
+  const expertCount = system.experts?.length ?? 12;
 
   let out = "";
 
@@ -52,21 +47,13 @@ export function renderRichInit(system, options = {}) {
   out += [...g.executionBinding, ...bindingExtras].map((item) => `- ${item}`).join("\n");
   out += `\n\n`;
 
-  // Section 1: Logging
+  // Section 1: Logging (compact form -- runtime hooks enforce the mandate)
   if (abl !== "logging-protocol") {
     out += `## 2. The Non-Destructive Logging Protocol\n\n`;
-    out += `**The Hazard:** ${g.logging.hazard}\n\n`;
-    out += `**The Principle:** ${g.logging.principle} ${g.logging.required.join(" ")}\n\n`;
-    out += `**The Pattern (adapt the command to your runtime):**\n\n`;
-    out += codeFence(g.logging.extendedPattern.join("\n"), "bash");
-    out += `\n\n**Forbidden:**\n`;
-    out += g.logging.forbidden
-      .map((cmd) => {
-        const r = reasons[cmd];
-        return r ? `- \`${cmd}\` (${r})` : `- \`${cmd}\``;
-      })
-      .join("\n");
-    out += `\n\n${g.logging.violationNote}\n\n`;
+    out += `**Principle:** ${g.logging.principle}\n\n`;
+    out += `**Pattern (adapt the command to your runtime):**\n\n`;
+    out += codeFence(g.logging.pattern.join("\n"), "bash");
+    out += `\n\n`;
 
     // Section 2: Mandate
     const mandateHeading = resolveIntensity(system, "loggingSectionHeading", intensity) || "All Test, Build, and Run Commands MUST Be Logged";
@@ -76,6 +63,9 @@ export function renderRichInit(system, options = {}) {
       out += `**Fail-Closed Enforcement:** ${mandateText}\n\n`;
     } else {
       out += `${mandateText.replace(/MUST/g, "should")}\n\n`;
+    }
+    if (g.logging.hookNote) {
+      out += `${g.logging.hookNote}\n\n`;
     }
   }
 

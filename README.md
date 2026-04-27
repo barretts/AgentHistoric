@@ -25,6 +25,7 @@ The routing layer includes negative routing guards, diversified sub-domain heuri
 | **Knuth** | Performance & Scaling | Algorithmic Analysis, Literate Programming |
 | **Shannon** | Context & Information Quality | Information Theory, Signal-to-Noise |
 | **Simon** | Agent Orchestration | Bounded Rationality, Satisficing |
+| **Crawford** | Manual Deliberation & Essential Friction | Embodied Knowledge, Anti-Automation Craftsmanship (Crawford / Morris / Dreyfus) |
 
 ## Quick Start
 

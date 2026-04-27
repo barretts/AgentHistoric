@@ -196,13 +196,13 @@ Second-pass refinement targets. After the first pass identifies a broad domain, 
 ## Logging
 
 - Never pipe test, build, or run output directly into a filter.
-- Always write full output to a log file under .logs before inspecting it.
+- Always write full output to `.logs/` before inspecting it.
 
 ```bash
 mkdir -p .logs
 LOG_FILE=".logs/run-$(date +%s).log"
 your_command > "$LOG_FILE" 2>&1
-Then inspect the saved log file.
+tail -n 30 "$LOG_FILE"   # or grep -iE 'fail|error|exception' "$LOG_FILE"
 ```
 
 ## Definition Of Done
