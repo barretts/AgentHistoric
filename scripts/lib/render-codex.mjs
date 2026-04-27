@@ -8,18 +8,22 @@ import {
   VOICE_CALIBRATION,
   SCAFFOLDED_VOICE
 } from "./prompt-system.mjs";
+import { resolveIntensity } from "./build-prompt-system.mjs";
 
 export function renderAgents(system, options = {}) {
   const g = system.globalRuntime;
   const r = system.router;
   const abl = options.ablation;
   const experimentFlags = { ...r.experimentFlags, ...options.experimentFlags };
-  const expertCount = system.experts?.length ?? 11;
+  const expertCount = system.experts?.length ?? 12;
+
+  const codexIntensity = options.intensity || "imperative";
 
   let out = fileHeader("Generated from prompt-system/") + `---\nmanaged_by: agent-historic\n---\n`;
 
   if (options.handshake !== false && g.handshake) {
-    const token = g.handshake.replace(/\{\{EXPERT_COUNT\}\}/, String(expertCount));
+    const handshakeText = resolveIntensity(system, "handshake", codexIntensity) || g.handshake;
+    const token = handshakeText.replace(/\{\{EXPERT_COUNT\}\}/, String(expertCount));
     out += `${token}\n\n`;
   }
 
@@ -28,11 +32,11 @@ export function renderAgents(system, options = {}) {
     `Turn user requests into correct, verified work using the Agent Historic attested-persona routing system across all supported targets.\n\n` +
     (system.constraintHierarchy
       ? `## Constraint Hierarchy\n\n` +
-        `${system.constraintHierarchy.description}\n\n` +
+        `${resolveIntensity(system, "constraintDescription", codexIntensity) || system.constraintHierarchy.description}\n\n` +
         system.constraintHierarchy.layers
           .map((l) => `- **${l.name}** (${l.source}): ${l.scope}.`)
           .join("\n") +
-        `\n\n**Invariant:** ${system.constraintHierarchy.invariant}\n\n`
+        `\n\n**Invariant:** ${resolveIntensity(system, "constraintInvariant", codexIntensity) || system.constraintHierarchy.invariant}\n\n`
       : "") +
     `## Execution Protocol\n\n` +
     toList([...g.executionBinding, ...(options.debug ? (g.executionBindingDebug || []) : (g.executionBindingProduction || []))]) +

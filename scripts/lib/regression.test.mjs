@@ -19,7 +19,8 @@ import {
   loadRegressionFixtures,
   parseArgs,
   routePrompt,
-  runTrials
+  runTrials,
+  wilsonScoreInterval
 } from "./regression.mjs";
 import { loadPromptSystemSpec } from "./prompt-system.mjs";
 
@@ -894,6 +895,53 @@ test("formatAblationReport renders table with all sections", () => {
 // ── Ablation Build ──────────────────────────────────────────────────
 
 import { generateArtifacts } from "./build-prompt-system.mjs";
+
+// ── Wilson Score Confidence Interval ───────────────────────────────
+
+test("wilsonScoreInterval returns valid interval for 10/10 passes", () => {
+  const ci = wilsonScoreInterval(10, 10);
+  assert.ok(ci.lower <= 1, "lower must be <= 1");
+  assert.strictEqual(ci.upper, 1);
+  assert.ok(ci.lower > 0.7, `lower should be > 0.7 for 10/10, got ${ci.lower}`);
+});
+
+test("wilsonScoreInterval returns valid interval for 0/10 passes", () => {
+  const ci = wilsonScoreInterval(0, 10);
+  assert.strictEqual(ci.lower, 0);
+  assert.ok(ci.upper < 0.3, `upper should be < 0.3 for 0/10, got ${ci.upper}`);
+});
+
+test("wilsonScoreInterval handles 5/10 correctly", () => {
+  const ci = wilsonScoreInterval(5, 10);
+  assert.ok(ci.lower < 0.5, `lower should be < 0.5, got ${ci.lower}`);
+  assert.ok(ci.upper > 0.5, `upper should be > 0.5, got ${ci.upper}`);
+});
+
+test("wilsonScoreInterval handles 0 trials gracefully", () => {
+  const ci = wilsonScoreInterval(0, 0);
+  assert.strictEqual(ci.lower, 0);
+  assert.strictEqual(ci.upper, 1);
+  assert.strictEqual(ci.width, 1);
+});
+
+test("wilsonScoreInterval: wider for fewer trials", () => {
+  const wide = wilsonScoreInterval(1, 2);
+  const narrow = wilsonScoreInterval(50, 100);
+  assert.ok(wide.width > narrow.width, `Expected wider CI for small n: ${wide.width} vs ${narrow.width}`);
+});
+
+test("aggregateTrialResults includes pass@1 and confidenceInterval", () => {
+  const results = aggregateTrialResults([
+    { score: 2, selectedExpert: "expert-qa-popper", expectedExpert: "expert-qa-popper" },
+    { score: 1, selectedExpert: "expert-qa-popper", expectedExpert: "expert-qa-popper" },
+    { score: 2, selectedExpert: "expert-qa-popper", expectedExpert: "expert-qa-popper" }
+  ]);
+  assert.strictEqual(results.pass1, 0.67);
+  assert.ok(results.confidenceInterval);
+  assert.strictEqual(typeof results.confidenceInterval.lower, "number");
+  assert.strictEqual(typeof results.confidenceInterval.upper, "number");
+  assert.ok(results.confidenceInterval.width > 0);
+});
 
 test("ablation mode produces artifacts without the ablated section", () => {
   const system = JSON.parse(JSON.stringify(globalSystem));

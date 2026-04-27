@@ -15,7 +15,11 @@ $ErrorActionPreference = "Stop"
 
 $repoSlug = if ($env:AGENT_HISTORIC_REPO) { $env:AGENT_HISTORIC_REPO } else { "barretts/AgentHistoric" }
 $repoRef = if ($env:AGENT_HISTORIC_REF) { $env:AGENT_HISTORIC_REF } else { "main" }
-$localInstaller = "install-local.ps1"
+$installerEntry = "install.js"
+
+if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+  throw "ERROR: node is required for remote install. Install Node.js >= 18 and retry."
+}
 
 $tmpDir = Join-Path ([IO.Path]::GetTempPath()) ("agent-historic-" + [Guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Path $tmpDir -Force | Out-Null
@@ -37,13 +41,13 @@ try {
     throw "ERROR: Unable to locate extracted repository directory."
   }
 
-  $targetScript = Join-Path $repoDir.FullName $localInstaller
+  $targetScript = Join-Path $repoDir.FullName $installerEntry
   if (-not (Test-Path $targetScript)) {
-    throw "ERROR: $localInstaller not found in extracted repository."
+    throw "ERROR: $installerEntry not found in extracted repository."
   }
 
-  Write-Host "--> Running local installer..."
-  & $targetScript @InstallerArgs
+  Write-Host "--> Running install.js..."
+  & node $targetScript @InstallerArgs
 }
 finally {
   if (Test-Path $tmpDir) {

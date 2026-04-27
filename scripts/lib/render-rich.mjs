@@ -6,38 +6,38 @@ import {
   VOICE_CALIBRATION,
   SCAFFOLDED_VOICE
 } from "./prompt-system.mjs";
+import { resolveIntensity } from "./build-prompt-system.mjs";
 
 export function renderRichInit(system, options = {}) {
   const g = system.globalRuntime;
-  const reasons = {
-    "your_test_command | grep": "destroys context",
-    "pytest | tail": "hides early failures",
-    "cargo test 2>&1 | head": "truncates stack traces"
-  };
 
-  const expertCount = system.experts?.length ?? 11;
+  const expertCount = system.experts?.length ?? 12;
 
   let out = "";
 
   // Handshake (first line, before any other content)
   if (options.handshake !== false && g.handshake) {
-    const token = g.handshake.replace(/\{\{EXPERT_COUNT\}\}/, String(expertCount));
+    const intensity = options.intensity || "imperative";
+    const handshakeText = resolveIntensity(system, "handshake", intensity) || g.handshake;
+    const token = handshakeText.replace(/\{\{EXPERT_COUNT\}\}/, String(expertCount));
     out += `${token}\n\n`;
   }
 
+  const intensity = options.intensity || "imperative";
+
   out += `# ${g.name}\n\n`;
   out += `**Version:** ${g.version} (Philosophical Engineering Edition)\n`;
-  out += `**Context:** ${g.context}\n\n`;
+  out += `**Context:** ${resolveIntensity(system, "globalContext", intensity) || g.context}\n\n`;
 
   // Constraint Hierarchy
   if (system.constraintHierarchy) {
     const ch = system.constraintHierarchy;
     out += `## Constraint Hierarchy\n\n`;
-    out += `${ch.description}\n\n`;
+    out += `${resolveIntensity(system, "constraintDescription", intensity) || ch.description}\n\n`;
     for (const layer of ch.layers) {
       out += `- **${layer.name}** (${layer.source}): ${layer.scope}.\n`;
     }
-    out += `\n**Invariant:** ${ch.invariant}\n\n`;
+    out += `\n**Invariant:** ${resolveIntensity(system, "constraintInvariant", intensity) || ch.invariant}\n\n`;
   }
 
   const abl = options.ablation;
@@ -47,28 +47,25 @@ export function renderRichInit(system, options = {}) {
   out += [...g.executionBinding, ...bindingExtras].map((item) => `- ${item}`).join("\n");
   out += `\n\n`;
 
-  // Section 1: Logging
+  // Section 1: Logging (compact form -- runtime hooks enforce the mandate)
   if (abl !== "logging-protocol") {
     out += `## 2. The Non-Destructive Logging Protocol\n\n`;
-    out += `**The Hazard:** ${g.logging.hazard}\n\n`;
-    out += `**The Principle:** ${g.logging.principle} ${g.logging.required.join(" ")}\n\n`;
-    out += `**The Pattern (adapt the command to your runtime):**\n\n`;
-    out += codeFence(g.logging.extendedPattern.join("\n"), "bash");
-    out += `\n\n**Forbidden:**\n`;
-    out += g.logging.forbidden
-      .map((cmd) => {
-        const r = reasons[cmd];
-        return r ? `- \`${cmd}\` (${r})` : `- \`${cmd}\``;
-      })
-      .join("\n");
-    out += `\n\n${g.logging.violationNote}\n\n`;
+    out += `**Principle:** ${g.logging.principle}\n\n`;
+    out += `**Pattern (adapt the command to your runtime):**\n\n`;
+    out += codeFence(g.logging.pattern.join("\n"), "bash");
+    out += `\n\n`;
 
     // Section 2: Mandate
-    out += `## 3. All Test, Build, and Run Commands MUST Be Logged\n\n`;
+    const mandateHeading = resolveIntensity(system, "loggingSectionHeading", intensity) || "All Test, Build, and Run Commands MUST Be Logged";
+    const mandateText = resolveIntensity(system, "loggingMandate", intensity) || g.logging.mandate;
+    out += `## 3. ${mandateHeading}\n\n`;
     if (options.failClosedLogging !== false) {
-      out += `**Fail-Closed Enforcement:** ${g.logging.mandate}\n\n`;
+      out += `**Fail-Closed Enforcement:** ${mandateText}\n\n`;
     } else {
-      out += `${g.logging.mandate.replace(/MUST/g, "should")}\n\n`;
+      out += `${mandateText.replace(/MUST/g, "should")}\n\n`;
+    }
+    if (g.logging.hookNote) {
+      out += `${g.logging.hookNote}\n\n`;
     }
   }
 
@@ -157,13 +154,21 @@ export function renderRichRouter(system, options = {}) {
   out += `# ${r.name}\n\n`;
   out += `**Role:** Front-line Triage and Pipeline Controller\n\n`;
   out += `${r.personaIntro}\n\n`;
-  out += `**CRITICAL OVERRIDE:** If the user asks to perform a massive, repetitive task across multiple files ("verify all components," "update all imports," "check all stories"), do NOT route this as a manual task. Route to the \`automation_generation\` sequence to build a tool or script to delegate the work systematically.\n\n`;
+  const routerIntensity = options.intensity || "imperative";
+  out += `${resolveIntensity(system, "massiveTaskOverride", routerIntensity) || '**CRITICAL OVERRIDE:** If the user asks to perform a massive, repetitive task across multiple files ("verify all components," "update all imports," "check all stories"), do NOT route this as a manual task. Route to the \\`automation_generation\\` sequence to build a tool or script to delegate the work systematically.'}\n\n`;
   if (options.debug) {
     out += `**Heading Purity Rule:** Once a primary expert is selected, the visible response may contain only **Selected Expert**, **Reason**, **Confidence**, and that expert's required headings unless an explicit allowed handoff is named. VERIFIED and HYPOTHESIS are inline uncertainty labels, never headings.\n\n`;
   }
 
   out += `## 1. Router Contract\n\n`;
-  out += r.contracts.map((item) => `- ${item}`).join("\n");
+  const echoImperative = system.intensityProfiles?.echoContract?.imperative;
+  const echoDeclarative = resolveIntensity(system, "echoContract", routerIntensity);
+  out += r.contracts.map((item) => {
+    if (echoImperative && echoDeclarative && item === echoImperative) {
+      return `- ${echoDeclarative}`;
+    }
+    return `- ${item}`;
+  }).join("\n");
   out += `\n\n`;
 
   if (r.expertIdAllowlist?.length) {

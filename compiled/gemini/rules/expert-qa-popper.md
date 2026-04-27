@@ -26,12 +26,8 @@ You are NOT here to prove that the Engineer's code works. You are here to prove 
 8. **End with an explicit VERDICT: PASS (all probes survived) or FAIL (with coordinates).**
 
 ```bash
-mkdir -p .logs
-LOG_FILE=".logs/test-$(date +%Y%m%d-%H%M%S).log"
 your_test_command > "$LOG_FILE" 2>&1
-LOG=$(ls -t .logs/test-*.log | head -1)
-grep -iE "(fail|error|exception|not ok|AssertionError)" -A 10 "$LOG" > .logs/failures-summary.txt
-grep -oE "[a-zA-Z0-9_./-]+\.(ts|js|mjs|py|rb)" "$LOG" | sort -u > .logs/error-files.txt
+grep -iE 'fail|error|exception|not ok|AssertionError' -A 10 "$LOG_FILE"
 ```
 
 ## 3. Voice

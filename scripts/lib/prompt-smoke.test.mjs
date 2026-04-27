@@ -16,7 +16,7 @@ const debugArtifacts = generateArtifacts(system, { debug: true });
 
 const CURSOR_RICH = "compiled/cursor/rules";
 // Router artifact includes full heuristic tables, pipelines, allowlist, and contracts.
-const MAX_CHARS = 16000;
+const MAX_CHARS = 18000;
 
 function artifactsInDir(dir, ext) {
   return [...artifacts].filter(
@@ -430,7 +430,7 @@ test("codex runtime renders execution binding and router contract rules", () => 
 
 test("expert prompts contain required structural sections", () => {
   const experts = expertArtifacts(CURSOR_RICH, ".mdc");
-  assert.ok(experts.length === 11, `Expected 11 expert files, got ${experts.length}`);
+  assert.ok(experts.length === 12, `Expected 12 expert files, got ${experts.length}`);
 
   for (const [filePath, content] of experts) {
     assert.match(content, /method/i, `${filePath}: missing Method section`);
@@ -1265,4 +1265,202 @@ test("COMPLIANCE: failClosedLogging render option controls mandate phrasing", ()
     !initWithout?.match(/MUST.*\.logs\//)?.[0]?.includes("MUST"),
     "failClosedLogging:false must not have MUST + .logs/ mandatory phrasing"
   );
+});
+
+// ── Intensity Profile Tests ─────────────────────────────────────────
+
+test("INTENSITY: declarative targets omit CRITICAL OVERRIDE", () => {
+  const cursorRouter = artifacts.get("compiled/cursor/rules/01-router.mdc");
+  const windsurfRouter = artifacts.get("compiled/windsurf/rules/01-router.md");
+  const crushRouter = artifacts.get("compiled/crush/rules/01-router.md");
+  const geminiRouter = artifacts.get("compiled/gemini/rules/01-router.md");
+
+  for (const [name, content] of [["Cursor", cursorRouter], ["Windsurf", windsurfRouter], ["Crush", crushRouter], ["Gemini", geminiRouter]]) {
+    assert.ok(
+      !content.includes("CRITICAL OVERRIDE"),
+      `${name} router must not contain CRITICAL OVERRIDE (declarative intensity)`
+    );
+    assert.ok(
+      content.includes("Automation Preference"),
+      `${name} router must contain Automation Preference (declarative intensity)`
+    );
+  }
+});
+
+test("INTENSITY: imperative targets preserve CRITICAL OVERRIDE", () => {
+  const claudeRouter = artifacts.get("compiled/claude/rules/01-router.md");
+  assert.ok(
+    claudeRouter.includes("CRITICAL OVERRIDE"),
+    "Claude router must contain CRITICAL OVERRIDE (imperative intensity)"
+  );
+});
+
+test("INTENSITY: declarative targets omit MUST be exactly in handshake", () => {
+  const cursorInit = artifacts.get("compiled/cursor/rules/00-init.mdc");
+  const windsurfInit = artifacts.get("compiled/windsurf/rules/00-init.md");
+
+  assert.ok(
+    !cursorInit.includes("MUST be exactly"),
+    "Cursor init must not contain MUST be exactly (declarative intensity)"
+  );
+  assert.ok(
+    !windsurfInit.includes("MUST be exactly"),
+    "Windsurf init must not contain MUST be exactly (declarative intensity)"
+  );
+  // Both must still contain the handshake token itself
+  assert.match(cursorInit, /\[rules:loaded/, "Cursor init must still contain the handshake token");
+  assert.match(windsurfInit, /\[rules:loaded/, "Windsurf init must still contain the handshake token");
+});
+
+test("INTENSITY: imperative targets preserve MUST be exactly in handshake", () => {
+  const claudeInit = artifacts.get("compiled/claude/rules/00-init.md");
+  assert.ok(
+    claudeInit.includes("MUST be exactly"),
+    "Claude init must contain MUST be exactly (imperative intensity)"
+  );
+});
+
+test("INTENSITY: declarative targets use softened constraint hierarchy language", () => {
+  const cursorInit = artifacts.get("compiled/cursor/rules/00-init.mdc");
+  assert.ok(
+    !cursorInit.includes("supersede any individual expert stance"),
+    "Cursor init must not use supersede language (declarative intensity)"
+  );
+  assert.ok(
+    cursorInit.includes("Individual expert stances operate within"),
+    "Cursor init must use declarative context phrasing"
+  );
+  assert.ok(
+    !cursorInit.includes("An expert cannot override a globalRuntime rule"),
+    "Cursor init must not use imperative constraint description"
+  );
+  assert.ok(
+    cursorInit.includes("Higher-layer rules take precedence"),
+    "Cursor init must use declarative constraint description"
+  );
+});
+
+test("INTENSITY: declarative targets use softened echo contract", () => {
+  const cursorRouter = artifacts.get("compiled/cursor/rules/01-router.mdc");
+  assert.ok(
+    !cursorRouter.includes("Echo the selected expert id verbatim"),
+    "Cursor router must not use imperative echo contract"
+  );
+  assert.ok(
+    cursorRouter.includes("Use the selected expert id exactly as listed"),
+    "Cursor router must use declarative echo contract"
+  );
+});
+
+test("INTENSITY: all targets still reference the same handshake token format", () => {
+  const tokenPattern = /\[rules:loaded\s+init\s+router\s+experts@\d+\]/;
+  const claudeInit = artifacts.get("compiled/claude/rules/00-init.md");
+  const cursorInit = artifacts.get("compiled/cursor/rules/00-init.mdc");
+  const windsurfInit = artifacts.get("compiled/windsurf/rules/00-init.md");
+
+  assert.match(claudeInit, tokenPattern, "Claude must contain handshake token");
+  assert.match(cursorInit, tokenPattern, "Cursor must contain handshake token");
+  assert.match(windsurfInit, tokenPattern, "Windsurf must contain handshake token");
+});
+
+// ── Intensity Injection Safety Tests ──────────────────────────────────
+
+// Phrases that look like prompt injection or override attempts
+const INJECTION_PATTERNS = [
+  /ignore\s+(previous|all\s+|the\s+)instr/i,
+  /disregar\w*\s+(previous|earlier|the\s+above)/i,
+  /this\s+overrides?\s+(the\s+|all\s+|earlier|previous)/i,
+  /you\s+must\s+actually/i,
+  /actually\s+follow\s+this\s+instead/i,
+  /override\s+the\s+above/i,
+  /override\s+any\s+previous/i,
+  /disregard\s+earlier\s+instructions/i
+];
+
+test("INTENSITY: declarative targets contain no injection-like phrases", () => {
+  const declarativePaths = [
+    ["Cursor init", "compiled/cursor/rules/00-init.mdc"],
+    ["Cursor router", "compiled/cursor/rules/01-router.mdc"],
+    ["Windsurf init", "compiled/windsurf/rules/00-init.md"],
+    ["Windsurf router", "compiled/windsurf/rules/01-router.md"],
+    ["Crush init", "compiled/crush/rules/00-init.md"],
+    ["Crush router", "compiled/crush/rules/01-router.md"],
+    ["Gemini init", "compiled/gemini/rules/00-init.md"],
+    ["Gemini router", "compiled/gemini/rules/01-router.md"]
+  ];
+
+  for (const [name, artifactPath] of declarativePaths) {
+    const content = artifacts.get(artifactPath);
+    assert.ok(content, `${name} artifact must exist`);
+    for (const pattern of INJECTION_PATTERNS) {
+      const match = pattern.exec(content);
+      assert.ok(
+        !match,
+        `${name} must not contain injection-like phrase matching ${pattern.source}: "${match?.[0]}"`
+      );
+    }
+  }
+});
+
+test("INTENSITY: declarative targets use 'should' for logging mandate, not 'MUST'", () => {
+  const declarativePaths = [
+    "compiled/cursor/rules/00-init.mdc",
+    "compiled/windsurf/rules/00-init.md",
+    "compiled/crush/rules/00-init.md",
+    "compiled/gemini/rules/00-init.md"
+  ];
+
+  for (const artifactPath of declarativePaths) {
+    const content = artifacts.get(artifactPath);
+    const name = artifactPath.split("/").pop();
+    assert.ok(
+      !content.includes("MUST Be Logged"),
+      `${name} must not contain imperative logging heading`
+    );
+  }
+});
+
+test("INTENSITY: imperative targets do not leak injection-like override language", () => {
+  const claudeInit = artifacts.get("compiled/claude/rules/00-init.md");
+  const claudeRouter = artifacts.get("compiled/claude/rules/01-router.md");
+  const codexAgents = artifacts.get("compiled/codex/AGENTS.md");
+
+  for (const [name, content] of [["Claude init", claudeInit], ["Claude router", claudeRouter], ["Codex AGENTS", codexAgents]]) {
+    assert.ok(content, `${name} artifact must exist`);
+    for (const pattern of INJECTION_PATTERNS) {
+      const match = pattern.exec(content);
+      assert.ok(
+        !match,
+        `${name} must not contain injection-like phrase matching ${pattern.source}: "${match?.[0]}"`
+      );
+    }
+  }
+});
+
+test("INTENSITY: declarative targets use 'take precedence' for constraints, not 'cannot override'", () => {
+  // "take precedence" is the approved declarative phrasing for constraint hierarchy
+  // "cannot override" is the imperative version that must not appear in constraint context
+  const declarativePaths = [
+    "compiled/cursor/rules/00-init.mdc",
+    "compiled/windsurf/rules/00-init.md",
+    "compiled/crush/rules/00-init.md",
+    "compiled/gemini/rules/00-init.md"
+  ];
+
+  for (const artifactPath of declarativePaths) {
+    const content = artifacts.get(artifactPath);
+    const name = artifactPath.split("/").pop();
+    assert.ok(
+      !content.includes("An expert cannot override"),
+      `${name} must not contain imperative 'cannot override' in constraint context`
+    );
+    assert.ok(
+      !content.includes("supersede any individual expert stance"),
+      `${name} must not contain imperative 'supersede' in constraint context`
+    );
+    assert.ok(
+      content.includes("Higher-layer rules take precedence"),
+      `${name} must use declarative 'take precedence' phrasing`
+    );
+  }
 });

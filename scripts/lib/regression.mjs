@@ -45,7 +45,11 @@ export function parseArgs(argv) {
     seed: 0,
     // A/B verbalized sampling: regression harness asks for confidenceDistribution
     // in the JSON envelope when enabled (see run-ablation.mjs).
-    verbalizedSampling: false
+    verbalizedSampling: false,
+    // --judge: run LLM-as-judge evaluation on each response.
+    judge: false,
+    // --trace: write structured trace records to .logs/traces/.
+    trace: false
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -101,6 +105,10 @@ export function parseArgs(argv) {
       index += 1;
     } else if (arg === "--verbalized-sampling") {
       options.verbalizedSampling = true;
+    } else if (arg === "--judge") {
+      options.judge = true;
+    } else if (arg === "--trace") {
+      options.trace = true;
     }
   }
 
@@ -961,6 +969,34 @@ export async function runTrials(runSingleTrial, { trials = 1, parallel = 1 }) {
   return results;
 }
 
+/**
+ * Wilson score 95% confidence interval for a binomial proportion.
+ * Given `n` trials and `k` passes, computes the lower and upper bounds
+ * such that the true pass rate lies in this interval with ~95% confidence.
+ *
+ * Uses z = 1.96 for 95% CI. Handles edge cases: 0/n and n/n.
+ *
+ * @param {number} passes - Number of "success" trials (score >= 1).
+ * @param {number} total - Total number of trials.
+ * @param {number} [z] - Z-score for confidence level (default 1.96 for 95%).
+ * @returns {{ lower: number, upper: number, width: number }}
+ */
+export function wilsonScoreInterval(passes, total, z = 1.96) {
+  if (total === 0) {
+    return { lower: 0, upper: 1, width: 1 };
+  }
+  const p = passes / total;
+  const z2 = z * z;
+  const denom = 1 + z2 / total;
+  const centre = (p + z2 / (2 * total)) / denom;
+  const halfWidth = z * Math.sqrt((p - p * p) / total + z2 / (4 * total * total)) / denom;
+  return {
+    lower: Math.round(Math.max(0, centre - halfWidth) * 1000) / 1000,
+    upper: Math.round(Math.min(1, centre + halfWidth) * 1000) / 1000,
+    width: Math.round(halfWidth * 2 * 1000) / 1000
+  };
+}
+
 export function aggregateTrialResults(trialResults) {
   const scores = trialResults.map((r) => r.score);
   const experts = trialResults.map((r) => r.selectedExpert);
@@ -978,6 +1014,10 @@ export function aggregateTrialResults(trialResults) {
     scoreDistribution[s] = (scoreDistribution[s] || 0) + 1;
   }
 
+  // pass@1: fraction of individual trials that score 2, with Wilson CI
+  const strictPasses = scores.filter((s) => s === 2).length;
+  const confidenceInterval = wilsonScoreInterval(strictPasses, scores.length);
+
   return {
     trials: trialResults.length,
     results: trialResults.map((r, i) => ({
@@ -987,6 +1027,8 @@ export function aggregateTrialResults(trialResults) {
     })),
     passAtK,
     passHatK,
+    pass1: Math.round((strictPasses / scores.length) * 100) / 100,
+    confidenceInterval,
     meanScore: Math.round(meanScore * 100) / 100,
     routingConsistency: routingConsistency !== null
       ? Math.round(routingConsistency * 100) / 100

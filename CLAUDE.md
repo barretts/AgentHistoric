@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+[rules:loaded init router experts@12]
+
 ## Project Overview
 
 Agent Historic is an open library of persona architectures for Large Language Models that implements a Mixture-of-Experts (MoE) routing layer. It bridges primary historical records and modern prompt engineering by distilling the reasoning, rhetoric, and decision-making frameworks of well-attested figures into actionable system prompts.
@@ -28,16 +30,16 @@ The system generates rules for **Claude**, **Cursor**, **Windsurf**, and **Codex
   - `model-parity` (13 cases): cross-model routing agreement
 
 ### Installation
-- `bash install-local.sh` - Install rules to auto-detected editors
-- `bash install-local.sh --cursor --windsurf` - Install to specific editors
-- `bash install-local.sh --all` - Install to all editors
+- `node install.js` - Install rules to auto-detected editors
+- `node install.js --cursor --windsurf` - Install to specific editors
+- `node install.js --all` - Install to all editors
 
 ## Code Architecture
 
 ### Canonical Source (`prompt-system/`)
 - `system.json` - Global runtime constraints, logging rules, uncertainty rules, foundational constraints
 - `router.json` - MoE routing heuristics, pipelines, disambiguation, negative examples
-- `experts/*.json` - 11 expert personas with behavioral guardrails and output contracts
+- `experts/*.json` - 12 expert personas with behavioral guardrails and output contracts
 - `modifiers/*.json` - Voice and style overlays
 
 ### Build System (`scripts/lib/`)
@@ -68,7 +70,7 @@ Four layers that restrict but never expand constraints:
 3. **Modifier** (`modifiers/*.json`) - Voice and style overlays
 4. **Expert Persona** (`experts/*.json`) - Active expert only
 
-### Expert Personas (11 total)
+### Expert Personas (12 total)
 - **Peirce** - Implementation & Execution (pragmatism)
 - **Descartes** - Architecture & System Design (methodological skepticism)
 - **Popper** - QA & Falsification (critical rationalism)
@@ -80,6 +82,7 @@ Four layers that restrict but never expand constraints:
 - **Knuth** - Performance & Scaling (algorithmic analysis)
 - **Shannon** - Context & Information Quality (information theory)
 - **Simon** - Agent Orchestration (bounded rationality)
+- **Crawford** - Manual Deliberation & Essential Friction (embodied knowledge, anti-automation craftsmanship)
 
 ### Routing Evolution Features
 1. **Negative Routing** - Anti-pattern guards preventing mis-routes
@@ -132,6 +135,6 @@ Add to `regression/fixtures/cases.json` with:
 ## File Organization
 
 - **Never modify** files in `compiled/` - they are generated artifacts
-- **Never modify** `.cursor/rules/` - install via `install-local.sh`
+- **Never modify** `.cursor/rules/` - install via `node install.js`
 - **Focus edits** on `prompt-system/` JSON files and `scripts/lib/` renderers
 - **Check AGENTS.md** for current project conventions and protocols

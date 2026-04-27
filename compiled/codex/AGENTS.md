@@ -1,7 +1,7 @@
 ---
 managed_by: agent-historic
 ---
-The first sentence of your first response in any session MUST be exactly: `[rules:loaded init router experts@11]`. Absence of this token signals a failed preload.
+The first sentence of your first response in any session MUST be exactly: `[rules:loaded init router experts@12]`. Absence of this token signals a failed preload.
 
 # Project Runtime
 
@@ -52,7 +52,7 @@ Each layer restricts but never expands the constraints of the layer above. An ex
 
 ## Canonical expert roster
 
-- Only these canonical expert ids are valid for routing and JSON envelopes: `expert-abstractions-liskov`, `expert-architect-descartes`, `expert-engineer-peirce`, `expert-formal-dijkstra`, `expert-information-shannon`, `expert-manager-blackmore`, `expert-orchestrator-simon`, `expert-performance-knuth`, `expert-qa-popper`, `expert-ux-rogers`, `expert-visionary-dennett`.
+- Only these canonical expert ids are valid for routing and JSON envelopes: `expert-abstractions-liskov`, `expert-architect-descartes`, `expert-engineer-peirce`, `expert-formal-dijkstra`, `expert-information-shannon`, `expert-manager-blackmore`, `expert-orchestrator-simon`, `expert-performance-knuth`, `expert-qa-popper`, `expert-ux-rogers`, `expert-visionary-dennett`, `expert-craftsman-crawford`.
 
 ## Routing Preference
 
@@ -124,6 +124,7 @@ Safety Valves:
 - Interfaces & Abstractions -> .codex/skills/expert-abstractions-liskov -> .codex/skills/expert-architect-descartes -> .codex/skills/expert-engineer-peirce
 - Refactoring & Restructuring -> .codex/skills/expert-abstractions-liskov -> .codex/skills/expert-engineer-peirce
 - Quick Fix & Patch -> .codex/skills/expert-engineer-peirce | Anti-triggers: "interface", "coupling", "module boundary", "public api", "invariant", "state machine"
+- Manual Deliberation -> .codex/skills/expert-craftsman-crawford | Anti-triggers: "build error", "test fail", "performance", "optimize", "interface", "schema"
 - General Implementation -> .codex/skills/expert-engineer-peirce | Anti-triggers: "interface", "coupling", "module boundary", "public api", "performance", "latency", "memory", "bottleneck", "invariant", "state machine", "concurrency", "workflow", "stopping condition", "compression", "signal to noise"
 - Performance & Scaling -> .codex/skills/expert-performance-knuth -> .codex/skills/expert-engineer-peirce -> .codex/skills/expert-architect-descartes | Boost: "slow", "takes too long", "seconds to respond", "high memory", "bottleneck", "execution plan", "heap", "takes 5 seconds", "takes 8 seconds", "used to return in", "oom-killed", "grows to"
 - Test Authoring -> .codex/skills/expert-qa-popper -> .codex/skills/expert-engineer-peirce
@@ -145,6 +146,7 @@ Before finalizing expert selection, check these anti-patterns:
 - When 'refactor' means redesigning module boundaries or reducing coupling, prefer Liskov.
 - When 'implement' means 'design from scratch with no prior architecture', prefer Descartes first.
 - When the question is 'should we build this?', prefer Descartes or Dennett.
+- When the user asks to process items manually, one by one, by hand, or without scripting, prefer Crawford.
 
 **Do Not Route To Popper:**
 - When the user asks 'how should I write tests?' or 'how to structure tests', prefer Peirce (test authoring, not debugging).
@@ -160,6 +162,14 @@ Before finalizing expert selection, check these anti-patterns:
 **Do Not Route To Dennett:**
 - When the user asks for a concrete implementation plan with steps and ordering, prefer Simon.
 - When only one viable approach exists, do not fabricate artificial alternatives.
+
+**Do Not Route To Crawford:**
+- When the task involves debugging, testing, or finding failures, prefer Popper.
+- When the task is about performance, optimization, or profiling, prefer Knuth.
+- When the task involves architecture, schema design, or system contracts, prefer Descartes.
+- When the user asks for a script or automation, even reluctantly, prefer Peirce or Dijkstra.
+- When there is a build error, compile error, or import error, prefer Peirce.
+- When the task involves code that already works and needs to be extended, prefer Peirce or Liskov.
 
 ## Two-Pass Routing Refinement
 
@@ -186,13 +196,13 @@ Second-pass refinement targets. After the first pass identifies a broad domain, 
 ## Logging
 
 - Never pipe test, build, or run output directly into a filter.
-- Always write full output to a log file under .logs before inspecting it.
+- Always write full output to `.logs/` before inspecting it.
 
 ```bash
 mkdir -p .logs
 LOG_FILE=".logs/run-$(date +%s).log"
 your_command > "$LOG_FILE" 2>&1
-Then inspect the saved log file.
+tail -n 30 "$LOG_FILE"   # or grep -iE 'fail|error|exception' "$LOG_FILE"
 ```
 
 ## Definition Of Done
@@ -206,6 +216,7 @@ Then inspect the saved log file.
 
 - .codex/skills/expert-abstractions-liskov: Abstractions Liskov
 - .codex/skills/expert-architect-descartes: Architect Descartes
+- .codex/skills/expert-craftsman-crawford: Craftsman Crawford
 - .codex/skills/expert-engineer-peirce: Engineer Peirce
 - .codex/skills/expert-formal-dijkstra: Formal Dijkstra
 - .codex/skills/expert-information-shannon: Information Shannon
