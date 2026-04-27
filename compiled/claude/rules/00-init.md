@@ -40,30 +40,22 @@ Each layer restricts but never expands the constraints of the layer above. An ex
 
 ## 2. The Non-Destructive Logging Protocol
 
-**The Hazard:** Tool execution environments truncate standard output. Destructive piping (`command | grep`, `command | tail`) permanently deletes stack traces, context, and silent failures. You cannot fix what you cannot read.
+**Principle:** Persistence first, inspection second. Tool environments truncate stdout; destructive piping deletes stack traces. Write full output to a `.logs/` file, then inspect.
 
-**The Principle:** Persistence first, inspection second. Never pipe test, build, or run output directly into a filter. Always write full output to a log file under .logs before inspecting it.
-
-**The Pattern (adapt the command to your runtime):**
+**Pattern (adapt the command to your runtime):**
 
 ```bash
 mkdir -p .logs
 LOG_FILE=".logs/run-$(date +%s).log"
-your_test_command > "$LOG_FILE" 2>&1
-tail -n 30 "$LOG_FILE"
-grep -iE "(fail|error|exception|traceback|not ok)" -A 10 -B 2 "$LOG_FILE" || echo "No errors found."
+your_command > "$LOG_FILE" 2>&1
+tail -n 30 "$LOG_FILE"   # or grep -iE 'fail|error|exception' "$LOG_FILE"
 ```
-
-**Forbidden:**
-- `your_test_command | grep` (destroys context)
-- `pytest | tail` (hides early failures)
-- `cargo test 2>&1 | head` (truncates stack traces)
-
-Any direct piping from a test/build/run command to a filter is a violation.
 
 ## 3. All Test, Build, and Run Commands MUST Be Logged
 
 **Fail-Closed Enforcement:** Every `run_command` invocation MUST append `> .logs/run-<slug>-$(date +%s).log 2>&1` (or `| tee .logs/run-<slug>-$(date +%s).log`). Commands without one of these suffixes are non-compliant. Inline stdout capture is forbidden except for one-line probes (`echo`, `pwd`, `which`) that never produce failure output.
+
+A `PreToolUse` hook in supported IDEs (Claude, Cursor, Codex, Gemini, OpenCode) detects long-running commands without `.logs/` redirection and prompts you to re-issue them. The hook is a nudge, not a hard block.
 
 ## 4. Epistemic Humility & Communication Constraints
 

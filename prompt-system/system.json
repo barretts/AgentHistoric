@@ -78,32 +78,19 @@
     "trigger": "always",
     "handshake": "The first sentence of your first response in any session MUST be exactly: `[rules:loaded init router experts@{{EXPERT_COUNT}}]`. Absence of this token signals a failed preload.",
     "logging": {
-      "principle": "Persistence first, inspection second.",
-      "hazard": "Tool execution environments truncate standard output. Destructive piping (`command | grep`, `command | tail`) permanently deletes stack traces, context, and silent failures. You cannot fix what you cannot read.",
+      "principle": "Persistence first, inspection second. Tool environments truncate stdout; destructive piping deletes stack traces. Write full output to a `.logs/` file, then inspect.",
       "required": [
         "Never pipe test, build, or run output directly into a filter.",
-        "Always write full output to a log file under .logs before inspecting it."
+        "Always write full output to `.logs/` before inspecting it."
       ],
       "pattern": [
         "mkdir -p .logs",
         "LOG_FILE=\".logs/run-$(date +%s).log\"",
         "your_command > \"$LOG_FILE\" 2>&1",
-        "Then inspect the saved log file."
+        "tail -n 30 \"$LOG_FILE\"   # or grep -iE 'fail|error|exception' \"$LOG_FILE\""
       ],
-      "extendedPattern": [
-        "mkdir -p .logs",
-        "LOG_FILE=\".logs/run-$(date +%s).log\"",
-        "your_test_command > \"$LOG_FILE\" 2>&1",
-        "tail -n 30 \"$LOG_FILE\"",
-        "grep -iE \"(fail|error|exception|traceback|not ok)\" -A 10 -B 2 \"$LOG_FILE\" || echo \"No errors found.\""
-      ],
-      "mandate": "Every `run_command` invocation MUST append `> .logs/run-<slug>-$(date +%s).log 2>&1` (or `| tee .logs/run-<slug>-$(date +%s).log`). Commands without one of these suffixes are non-compliant. Inline stdout capture is forbidden except for one-line probes (`echo`, `pwd`, `which`) that never produce failure output.",
-      "violationNote": "Any direct piping from a test/build/run command to a filter is a violation.",
-      "forbidden": [
-        "your_test_command | grep",
-        "pytest | tail",
-        "cargo test 2>&1 | head"
-      ]
+      "mandate": "Append `> .logs/run-<slug>-$(date +%s).log 2>&1` (or `| tee .logs/run-<slug>-$(date +%s).log`) to every long-running `run_command`. One-line probes (`echo`, `pwd`, `which`) are exempt.",
+      "hookNote": "A `PreToolUse` hook in supported IDEs (Claude, Cursor, Codex, Gemini, OpenCode) detects long-running commands without `.logs/` redirection and prompts you to re-issue them. The hook is a nudge, not a hard block."
     },
     "uncertaintyRules": [
       "The codebase is the source of truth, not memory.",
@@ -155,7 +142,7 @@
     "strictMode": "--strict-vs throws on unresolved variables",
     "variables": {
       "EXPERT_ROSTER": {
-        "description": "Canonical list of all 11 expert IDs, pipe-separated",
+        "description": "Canonical list of all 12 expert IDs, pipe-separated",
         "example": "expert-abstractions-liskov | expert-architect-descartes | ..."
       },
       "EXPERT_ID_ALLOWLIST": {

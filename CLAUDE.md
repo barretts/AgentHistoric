@@ -39,7 +39,7 @@ The system generates rules for **Claude**, **Cursor**, **Windsurf**, and **Codex
 ### Canonical Source (`prompt-system/`)
 - `system.json` - Global runtime constraints, logging rules, uncertainty rules, foundational constraints
 - `router.json` - MoE routing heuristics, pipelines, disambiguation, negative examples
-- `experts/*.json` - 11 expert personas with behavioral guardrails and output contracts
+- `experts/*.json` - 12 expert personas with behavioral guardrails and output contracts
 - `modifiers/*.json` - Voice and style overlays
 
 ### Build System (`scripts/lib/`)
@@ -70,7 +70,7 @@ Four layers that restrict but never expand constraints:
 3. **Modifier** (`modifiers/*.json`) - Voice and style overlays
 4. **Expert Persona** (`experts/*.json`) - Active expert only
 
-### Expert Personas (11 total)
+### Expert Personas (12 total)
 - **Peirce** - Implementation & Execution (pragmatism)
 - **Descartes** - Architecture & System Design (methodological skepticism)
 - **Popper** - QA & Falsification (critical rationalism)
@@ -82,6 +82,7 @@ Four layers that restrict but never expand constraints:
 - **Knuth** - Performance & Scaling (algorithmic analysis)
 - **Shannon** - Context & Information Quality (information theory)
 - **Simon** - Agent Orchestration (bounded rationality)
+- **Crawford** - Manual Deliberation & Essential Friction (embodied knowledge, anti-automation craftsmanship)
 
 ### Routing Evolution Features
 1. **Negative Routing** - Anti-pattern guards preventing mis-routes
