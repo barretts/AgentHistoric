@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 # Enforce Tenet 3: long-running shell commands must write stdout+stderr to .logs/.
 #
-# Supports two host shapes via --mode:
+# Supports four host shapes via --mode:
 #   --mode=cursor   stdin: {"command": "..."}
 #                   stdout: {"permission": "allow|ask", "userMessage": "...", "agentMessage": "..."}
 #   --mode=claude   stdin: {"tool_name":"Bash","tool_input":{"command":"..."}}
 #                   stdout: {"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow|ask","permissionDecisionReason":"..."}}
+#   --mode=codex    Claude-compatible JSON contract. Codex parses "ask"/"allow"
+#                   but currently fails open on "ask"; the nudge still surfaces
+#                   via permissionDecisionReason in the transcript.
+#   --mode=gemini   Claude-compatible JSON contract per geminicli.com/docs/hooks.
 #
 # failClosed is handled by the host: if this script crashes or times out, the host
 # falls back to its default (allow). We therefore bias toward `allow` on uncertainty.
@@ -16,22 +20,74 @@ MODE="cursor"
 for arg in "$@"; do
   case "$arg" in
     --mode=cursor) MODE="cursor" ;;
-    --mode=claude) MODE="claude" ;;
+    --mode=claude|--mode=codex|--mode=gemini) MODE="claude" ;;
   esac
 done
 
 INPUT="$(cat)"
 
-# Only Bash tool calls in Claude carry a shell command. Non-Bash -> allow silently.
+# JSON helpers: prefer jq if installed, fall back to node (always present since
+# the install script requires Node >= 18). Both fall back to empty string on
+# parse failure -- empty CMD triggers fail-open allow downstream.
+HAVE_JQ=0
+if command -v jq >/dev/null 2>&1; then
+  HAVE_JQ=1
+fi
+
+# json_get <input> <jq-path-or-dotpath>
+# Examples: json_get "$INPUT" '.command'   json_get "$INPUT" '.tool_input.command'
+json_get() {
+  local input="$1" path="$2"
+  if [ "$HAVE_JQ" -eq 1 ]; then
+    printf '%s' "$input" | jq -r "$path // empty" 2>/dev/null
+  else
+    INPUT_FOR_NODE="$input" PATH_FOR_NODE="$path" node -e '
+      try {
+        const obj = JSON.parse(process.env.INPUT_FOR_NODE || "{}");
+        const segs = (process.env.PATH_FOR_NODE || "").replace(/^\.+/, "").split(".").filter(Boolean);
+        let v = obj;
+        for (const s of segs) { v = v == null ? v : v[s]; }
+        process.stdout.write(v == null ? "" : String(v));
+      } catch { process.stdout.write(""); }
+    ' 2>/dev/null
+  fi
+}
+
+# json_ask <user_msg> <agent_msg>: emits the host-appropriate "ask" payload.
+json_ask() {
+  local user_msg="$1" agent_msg="$2" mode="$3"
+  if [ "$HAVE_JQ" -eq 1 ]; then
+    if [ "$mode" = "claude" ]; then
+      jq -n --arg reason "$agent_msg" \
+        '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"ask",permissionDecisionReason:$reason}}'
+    else
+      jq -n --arg u "$user_msg" --arg a "$agent_msg" \
+        '{permission:"ask", userMessage:$u, agentMessage:$a}'
+    fi
+  else
+    USER_FOR_NODE="$user_msg" AGENT_FOR_NODE="$agent_msg" MODE_FOR_NODE="$mode" node -e '
+      const u = process.env.USER_FOR_NODE || "";
+      const a = process.env.AGENT_FOR_NODE || "";
+      const mode = process.env.MODE_FOR_NODE;
+      const out = mode === "claude"
+        ? { hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "ask", permissionDecisionReason: a } }
+        : { permission: "ask", userMessage: u, agentMessage: a };
+      process.stdout.write(JSON.stringify(out));
+    '
+    printf '\n'
+  fi
+}
+
+# Only Bash tool calls in Claude/Codex/Gemini carry a shell command. Non-Bash -> allow silently.
 if [ "$MODE" = "claude" ]; then
-  TOOL_NAME=$(printf '%s' "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null)
+  TOOL_NAME=$(json_get "$INPUT" '.tool_name')
   if [ -n "$TOOL_NAME" ] && [ "$TOOL_NAME" != "Bash" ]; then
     printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow"}}\n'
     exit 0
   fi
-  CMD=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
+  CMD=$(json_get "$INPUT" '.tool_input.command')
 else
-  CMD=$(printf '%s' "$INPUT" | jq -r '.command // empty' 2>/dev/null)
+  CMD=$(json_get "$INPUT" '.command')
 fi
 
 emit_allow() {
@@ -44,16 +100,7 @@ emit_allow() {
 }
 
 emit_ask() {
-  local user_msg="$1"
-  local agent_msg="$2"
-  if [ "$MODE" = "claude" ]; then
-    # Claude supports deny/ask/allow; we use "ask" so user can still approve.
-    jq -n --arg reason "$agent_msg" \
-      '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"ask",permissionDecisionReason:$reason}}'
-  else
-    jq -n --arg u "$user_msg" --arg a "$agent_msg" \
-      '{permission:"ask", userMessage:$u, agentMessage:$a}'
-  fi
+  json_ask "$1" "$2" "$MODE"
   exit 0
 }
 

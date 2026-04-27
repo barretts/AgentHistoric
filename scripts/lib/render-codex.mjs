@@ -15,7 +15,7 @@ export function renderAgents(system, options = {}) {
   const r = system.router;
   const abl = options.ablation;
   const experimentFlags = { ...r.experimentFlags, ...options.experimentFlags };
-  const expertCount = system.experts?.length ?? 11;
+  const expertCount = system.experts?.length ?? 12;
 
   const codexIntensity = options.intensity || "imperative";
 
