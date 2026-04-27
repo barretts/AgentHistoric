@@ -114,21 +114,14 @@ export function renderRichInit(system, options = {}) {
   out += `## 5. Definition of Done\n\n`;
   out += `Done = ${g.definitionOfDone.join(", ")}.\n\n`;
 
-  // Section 5: Constraints
+  // Section 5: Constraints (simple bullets only; the named constraints are
+  // already conveyed in the foundationalConstraints array)
   if (abl !== "foundational-constraints") {
     out += `## 6. Foundational Constraints\n\n`;
     out += g.foundationalConstraints
       .map((constraint) => `- ${constraint}`)
       .join("\n");
-    if (options.vsEnabled) {
-      out += `\n\n{{FOUNDATIONAL_CONSTRAINTS_DETAILED}}\n\n`;
-    } else {
-      out += `\n\n### Detailed Guidance\n\n`;
-      out += g.foundationalConstraintsDetailed
-        .map((c) => `* **${c.name}:** ${c.description}`)
-        .join("\n");
-      out += `\n\n`;
-    }
+    out += `\n\n`;
   }
 
   // Section 6: Registry
@@ -152,8 +145,7 @@ export function renderRichRouter(system, options = {}) {
 
   let out = "";
   out += `# ${r.name}\n\n`;
-  out += `**Role:** Front-line Triage and Pipeline Controller\n\n`;
-  out += `${r.personaIntro}\n\n`;
+  out += `**Role:** Front-line Triage and Pipeline Controller. Reads the user's input, determines the SDLC phase, and routes to the correct expert or pipeline.\n\n`;
   const routerIntensity = options.intensity || "imperative";
   out += `${resolveIntensity(system, "massiveTaskOverride", routerIntensity) || '**CRITICAL OVERRIDE:** If the user asks to perform a massive, repetitive task across multiple files ("verify all components," "update all imports," "check all stories"), do NOT route this as a manual task. Route to the \\`automation_generation\\` sequence to build a tool or script to delegate the work systematically.'}\n\n`;
   if (options.debug) {
@@ -186,32 +178,37 @@ export function renderRichRouter(system, options = {}) {
     out += `\n\n`;
   }
 
-  // Routing heuristics table
+  // Routing heuristics: compact one-line-per-row format with Anti-Triggers/Boost
+  // appended inline only when present.
   out += `## 2. Routing Heuristics\n\n`;
-  out += `Match the prompt against these heuristics in priority order. Anti-triggers deprioritize a domain; boost signals raise confidence.\n\n`;
-  out += `| Priority | Domain | Expert(s) | Keywords / Signals | Anti-Triggers | Boost Signals |\n`;
-  out += `|----------|--------|-----------|-------------------|---------------|---------------|\n`;
+  out += `In priority order. Anti-Triggers deprioritize; boost signals raise confidence.\n\n`;
   for (const h of r.routingHeuristics) {
     const experts = h.experts.map((id) => humanizeExpertId(id)).join(" -> ");
     const signals = h.signals.map((s) => `"${s}"`).join(", ");
-    const antiTriggers = (h.antiTriggers || []).map((s) => `"${s}"`).join(", ") || "-";
-    const boostSignals = (h.boostSignals || []).map((s) => `"${s}"`).join(", ") || "-";
-    out += `| ${h.priority} | ${h.domain} | ${experts} | ${signals} | ${antiTriggers} | ${boostSignals} |\n`;
+    let line = `- **P${h.priority} ${h.domain}** -> ${experts}. Signals: ${signals}.`;
+    if (h.antiTriggers?.length) {
+      line += ` Anti-Triggers: ${h.antiTriggers.map((s) => `"${s}"`).join(", ")}.`;
+    }
+    if (h.boostSignals?.length) {
+      line += ` Boost: ${h.boostSignals.map((s) => `"${s}"`).join(", ")}.`;
+    }
+    out += `${line}\n`;
   }
 
-  // Disambiguation
+  // Disambiguation: one line per key, examples comma-separated.
   out += `\n### Routing Disambiguation\n\n`;
   for (const [key, examples] of Object.entries(r.disambiguation)) {
     const heading = key.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase()).trim();
-    out += `**${heading}:**\n`;
-    out += examples.map((s) => `- "${s}"`).join("\n");
-    out += `\n\n`;
+    const quoted = examples.map((s) => `"${s}"`).join(", ");
+    out += `- **${heading}:** ${quoted}\n`;
   }
+  out += `\n`;
 
-  // Negative Examples (Routing Anti-Patterns)
+  // Negative Examples (Routing Anti-Patterns): keep one full rule per category
+  // for routing fidelity; remaining rules are summarized inline.
   if (r.negativeExamples) {
     out += `### Routing Anti-Patterns\n\n`;
-    out += `Before finalizing your expert selection, check these anti-patterns:\n\n`;
+    out += `Before finalizing the expert selection, check these anti-patterns:\n\n`;
     for (const [key, rules] of Object.entries(r.negativeExamples)) {
       const heading = key.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase()).trim();
       out += `**${heading}:**\n`;
@@ -230,24 +227,24 @@ export function renderRichRouter(system, options = {}) {
     out += `\n`;
   }
 
-  // Pipeline tables
+  // Pipeline sequences: compact list per pipeline, no per-pipeline tables.
   out += `\n\n## 3. Pipeline Sequences\n\n`;
-  out += `For multi-domain tasks, follow these sequences. Apply the primary expert's constraints first, then shift as the domain changes.\n\n`;
+  out += `For multi-domain tasks. Apply the primary expert's constraints first, then shift as the domain changes.\n\n`;
   for (const pipeline of r.pipelines) {
     out += `### ${pipeline.name}\n`;
     if (pipeline.description) {
-      out += `${pipeline.description}\n\n`;
+      out += `${pipeline.description}\n`;
     }
     if (pipeline.triggerSignals) {
-      out += `**Trigger signals:** ${pipeline.triggerSignals.map(s => `"${s}"`).join(", ")}\n\n`;
+      out += `Triggers: ${pipeline.triggerSignals.map(s => `"${s}"`).join(", ")}.`;
+      if (pipeline.autoTrigger) out += ` Auto: ${pipeline.autoTrigger}.`;
+      out += `\n`;
+    } else if (pipeline.autoTrigger) {
+      out += `Auto-trigger: ${pipeline.autoTrigger}\n`;
     }
-    if (pipeline.autoTrigger) {
-      out += `**Auto-trigger:** ${pipeline.autoTrigger}\n\n`;
-    }
-    out += `| Step | Expert | Task |\n|------|--------|------|\n`;
     for (let i = 0; i < pipeline.steps.length; i++) {
       const s = pipeline.steps[i];
-      out += `| ${i + 1} | ${humanizeExpertId(s.expert)} | ${s.task} |\n`;
+      out += `${i + 1}. ${humanizeExpertId(s.expert)}: ${s.task}\n`;
     }
     out += `\n`;
   }
@@ -255,7 +252,6 @@ export function renderRichRouter(system, options = {}) {
   // Modifier Activation
   if (r.modifierActivation) {
     out += `## 4. Modifier Activation\n\n`;
-    out += `${r.modifierActivation.description}\n\n`;
     out += r.modifierActivation.contract.map((c) => `- ${c}`).join("\n");
     out += `\n\n`;
   }
@@ -283,7 +279,6 @@ export function renderRichExpert(system, expert, options = {}) {
   out += `# PERSONA INIT: ${expert.id}\n\n`;
   out += `**Role:** ${expert.title}\n`;
   out += `**Philosophy:** ${expert.philosophy}\n\n`;
-  out += `${expert.personaIntro}\n\n`;
 
   const abl = options.ablation;
 
@@ -375,13 +370,16 @@ export function renderRichExpert(system, expert, options = {}) {
     const { defaultSections, complexSections } = resolveRequiredSections(expert.requiredSections);
     section++;
     out += `## ${section}. Output Contract\n\n`;
-    out += `### Default Structure\n\n`;
-    for (const s of defaultSections) {
-      out += `- ${s}\n`;
-    }
-    out += `\n### Complex Structure\n\n`;
-    for (const s of complexSections) {
-      out += `- ${s}\n`;
+    const sameStructure = defaultSections.length === complexSections.length
+      && defaultSections.every((s, i) => s === complexSections[i]);
+    if (sameStructure) {
+      out += `### Required Structure\n\n`;
+      for (const s of defaultSections) out += `- ${s}\n`;
+    } else {
+      out += `### Default Structure\n\n`;
+      for (const s of defaultSections) out += `- ${s}\n`;
+      out += `\n### Complex Structure\n\n`;
+      for (const s of complexSections) out += `- ${s}\n`;
     }
     out += `\nUse these headings verbatim; do not rename, merge, or paraphrase them. If context is incomplete, keep the structure and use each heading to state the missing evidence, provisional assumption, or next verification step.\n\n`;
     if (options.debug) {
@@ -402,15 +400,14 @@ export function renderRichExpert(system, expert, options = {}) {
     out += `\n`;
   }
 
-  // Behavioral Guardrails
+  // Behavioral Guardrails (compact one-liner per guardrail)
   if (expert.behavioralGuardrails?.length && abl !== "behavioral-guardrails") {
     section++;
     out += `## ${section}. Behavioral Guardrails\n\n`;
     for (const g of expert.behavioralGuardrails) {
-      out += `**Failure mode:** ${g.failureMode}\n`;
-      out += `**Rule:** ${g.rule}\n`;
-      out += `**But:** ${g.antiOverCorrection}\n\n`;
+      out += `- **Failure mode:** ${g.failureMode} **Rule:** ${g.rule} **But:** ${g.antiOverCorrection}\n`;
     }
+    out += `\n`;
   }
 
   // Allowed Handoffs

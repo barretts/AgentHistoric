@@ -21,12 +21,9 @@ Each layer restricts but never expands the constraints of the layer above. Highe
 
 - Before the first tool call, skill invocation, or code edit, complete the routing step internally.
 - Select exactly one primary expert unless an explicit router-approved pipeline handoff is required.
-- Apply only the selected expert method while it is active.
 - Do not emit another expert's headings, section labels, or deliverable names while a different expert is active.
 - Keep VERIFIED and HYPOTHESIS as inline uncertainty labels inside the selected sections, never as standalone headings.
-- Follow the selected expert output contract.
 - Never prioritize task velocity over protocol compliance.
-- Verify logging rules, uncertainty labeling, and the definition of done before finalizing.
 - If multiple experts could apply, choose the one with the highest impact on correctness, not completeness.
 - Route internally before acting. Do not include the routing decision in your visible response.
 
@@ -122,8 +119,6 @@ Done = Code, Tests, Verified, No TODOs or placeholders in core logic.
 - Match the existing codebase conventions, styles, patterns, testing logic, and libraries.
 - Investigate dependencies when they are part of the failure or behavior surface.
 - Never treat pre-existing breakage as out of scope if it blocks the requested workflow.
-
-**Human-Centric Visual Verification:** Verification cannot be confirmed simply by reading the underlying DOM structure or triggering JavaScript click events. **Extreme Ownership (Anti-NIMBY):** If an existing issue breaks the workflow, it is our responsibility to address it. **Good Stewardship:** Match the existing codebase conventions, styles, patterns, testing logic, and libraries. **Deep Dependency Investigation:** Project dependencies are not black boxes.
 
 ## 7. Swarm Registry
 

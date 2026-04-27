@@ -54,12 +54,6 @@ export function renderAgents(system, options = {}) {
             : VERBALIZED_SAMPLING_ROUTER_RULES
         )
       : "") +
-    `\n\n## Routing Preference\n\n` +
-    toList([
-      "For mixed-domain requests, prefer the expert with the highest impact on correctness and foundations.",
-      "\"Should we build X?\" with a UX side-mention -> architecture before ideation.",
-      "\"Give me options/drafts/alternatives\" -> ideation, unless the prompt also asks for schemas, trust boundaries, or contracts."
-    ]) +
     (abl !== "voice-calibration"
       ? `\n\n## ${options.scaffolded ? "Scaffolded Voice" : "Voice Calibration"}\n\n` +
         toList(options.scaffolded ? SCAFFOLDED_VOICE : VOICE_CALIBRATION)
@@ -152,12 +146,10 @@ export function renderSkill(_system, expert, options = {}) {
     }) +
     `# ${humanizeExpertId(expert.id)}\n\n` +
     `## Goal\n\n` +
-    `${expert.title}\n\n` +
-    `${expert.personaIntro}\n\n` +
-    `## Philosophy\n\n` +
-    `${expert.philosophy}\n\n` +
+    `${expert.title}. ${expert.philosophy}\n\n` +
     (expert.corePhilosophy?.length && abl !== "expert-philosophy"
-      ? expert.corePhilosophy
+      ? `## Philosophy\n\n` +
+        expert.corePhilosophy
           .map((p) => `- **${p.name}:** ${p.description}`)
           .join("\n") + "\n\n"
       : "") +
@@ -182,10 +174,11 @@ export function renderSkill(_system, expert, options = {}) {
         ])
       : "") +
     `\n\n## Output Contract\n\n` +
-    `### Default Structure\n\n` +
-    toList(defaultStructure) +
-    `\n\n### Complex Structure\n\n` +
-    toList(complexStructure) +
+    ((defaultStructure.length === complexStructure.length
+      && defaultStructure.every((s, i) => s === complexStructure[i]))
+      ? `### Required Structure\n\n` + toList(defaultStructure)
+      : `### Default Structure\n\n` + toList(defaultStructure) +
+        `\n\n### Complex Structure\n\n` + toList(complexStructure)) +
     `\n\n### Verbatim Heading Rule\n\n` +
     "Use these headings exactly as written when they apply. Do not rename, merge, or paraphrase them.\n" +
     (options.debug
@@ -205,9 +198,9 @@ export function renderSkill(_system, expert, options = {}) {
         expert.behavioralGuardrails
           .map(
             (g) =>
-              `- **Failure mode:** ${g.failureMode}\n  **Rule:** ${g.rule}\n  **But:** ${g.antiOverCorrection}`
+              `- **Failure mode:** ${g.failureMode} **Rule:** ${g.rule} **But:** ${g.antiOverCorrection}`
           )
-          .join("\n\n") +
+          .join("\n") +
         "\n"
       : "") +
     `\n\n## Allowed Handoffs\n\n` +
