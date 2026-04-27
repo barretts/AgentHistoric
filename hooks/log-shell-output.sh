@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Enforce Tenet 3: long-running shell commands must write stdout+stderr to .logs/.
+# Enforce Tenet 3: long-running shell commands must write stdout+stderr to a persistent log path.
 #
 # Supports four host shapes via --mode:
 #   --mode=cursor   stdin: {"command": "..."}
@@ -107,9 +107,21 @@ emit_ask() {
 # Empty or unparseable -> allow (fail open).
 [ -z "$CMD" ] && emit_allow
 
+LOG_PATH='(["'\'']?)(\.logs|\.([^/\\[:space:]"'\'']+)[/\\]([^/\\[:space:]"'\'']*logs|logs[^/\\[:space:]"'\'']*))[/\\]'
+LOG_VAR='[A-Za-z_][A-Za-z0-9_]*'
+
 # 1. Already-redirected commands -> allow.
-#    Matches: > .logs/...  >> .logs/...  | tee .logs/...  > /dev/null  >/dev/null
-if printf '%s' "$CMD" | grep -qE '(>>?[[:space:]]*\.logs/|\|[[:space:]]*tee[[:space:]]+(-a[[:space:]]+)?\.logs/|>[[:space:]]*/dev/null|>/dev/null)'; then
+#    Matches POSIX redirects/tee and PowerShell redirects/Tee-Object/Start-Transcript
+#    to .logs/... or hidden directories with a logs path segment, plus /dev/null/NUL.
+if printf '%s' "$CMD" | grep -qiE "(>>?[[:space:]]*$LOG_PATH|[0-9]*>>?[[:space:]]*$LOG_PATH|\\|[[:space:]]*tee[[:space:]]+(-a[[:space:]]+)?$LOG_PATH|Tee-Object([^;|]*[[:space:]])(-FilePath|-Path)[[:space:]]+$LOG_PATH|Start-Transcript([^;|]*[[:space:]])(-Path|-LiteralPath)[[:space:]]+$LOG_PATH|>[[:space:]]*/dev/null|>/dev/null|>[[:space:]]*NUL|>[[:space:]]*\\\$null)"; then
+  emit_allow
+fi
+
+if printf '%s' "$CMD" | grep -qE "$LOG_VAR=$LOG_PATH" && printf '%s' "$CMD" | grep -qE ">>?[[:space:]]*\\\"?\\\$($LOG_VAR)\\\"?"; then
+  emit_allow
+fi
+
+if printf '%s' "$CMD" | grep -qiE "\\\$[A-Za-z_][A-Za-z0-9_]*[[:space:]]*=[[:space:]]*$LOG_PATH" && printf '%s' "$CMD" | grep -qE ">>?[[:space:]]*\\\"?\\\$[A-Za-z_][A-Za-z0-9_]*\\\"?"; then
   emit_allow
 fi
 
@@ -157,8 +169,8 @@ esac
 DENYLIST='(^|[[:space:]\|&;(`$])(npx[[:space:]]+(tsx|tsc|vitest|jest|playwright|mocha|ava|eslint|prettier|cypress|webpack|vite|nuxt|next|ts-node)|npm[[:space:]]+(run|test|install|ci|exec|publish|audit)|pnpm[[:space:]]+(install|run|test|exec|dlx|build|publish|audit)|yarn[[:space:]]+(install|run|test|build|exec|publish|audit)|bun[[:space:]]+(run|test|install|build)|node[[:space:]]+[^-][^[:space:]]*\.(m?js|cjs|ts)|node[[:space:]]+-e|tsx[[:space:]]+[^[:space:]]+|deno[[:space:]]+(run|test)|pytest|python3?[[:space:]]+-m[[:space:]]+pytest|python3?[[:space:]]+[^-][^[:space:]]*\.py|cargo[[:space:]]+(test|build|run|check|bench)|go[[:space:]]+(test|build|run|generate)|mvn[[:space:]]|gradlew?[[:space:]]|make([[:space:]]|$)|docker[[:space:]]+(build|run|compose)|terraform[[:space:]]+(plan|apply)|ansible-playbook|claude[[:space:]]+(-p|--print)|rake[[:space:]]|bundle[[:space:]]+(exec|install))'
 
 if printf '%s' "$CMD" | grep -qE "$DENYLIST"; then
-  USER_MSG="Long-running shell command without \`.logs/\` redirect. Recommend re-issue with \`> .logs/run-<slug>-\$(date +%s).log 2>&1\`. See Tenet 3."
-  AGENT_MSG="TENET 3 VIOLATION: this command will lose context if the terminal dies. Re-issue as: mkdir -p .logs && LOG=\".logs/run-<slug>-\$(date +%s).log\" && (your command) > \"\$LOG\" 2>&1 ; then tail -n 50 \"\$LOG\" to inspect. Approve only if you have accepted the data-loss risk."
+  USER_MSG="Long-running shell command without a persistent log redirect. The agent should rewrite and re-issue it with logging before asking for human intervention. See Tenet 3."
+  AGENT_MSG="TENET 3 REWRITE REQUIRED: rewrite and re-issue this command with persistent logging instead of asking the human to accept data-loss risk. POSIX pattern: mkdir -p .logs && LOG=\".logs/run-<slug>-\$(date +%s).log\" && (your command) > \"\$LOG\" 2>&1; status=\$?; tail -n 50 \"\$LOG\"; exit \$status. PowerShell pattern: New-Item -ItemType Directory -Force .logs | Out-Null; \$Log = \".logs/run-<slug>-\$(Get-Date -Format yyyyMMddHHmmss).log\"; your command *> \$Log; \$Status = \$LASTEXITCODE; Get-Content -Tail 50 \$Log; exit \$Status."
   emit_ask "$USER_MSG" "$AGENT_MSG"
 fi
 

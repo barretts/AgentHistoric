@@ -63,17 +63,22 @@ function expectAllow(out, mode) {
 }
 
 function expectAsk(out, mode) {
+  let message;
   if (mode === 'cursor') {
     assert.equal(out.permission, 'ask', `cursor ask expected, got ${JSON.stringify(out)}`);
-    assert.match(out.agentMessage || '', /TENET 3/);
+    message = out.agentMessage || '';
   } else {
     assert.equal(
       out.hookSpecificOutput?.permissionDecision,
       'ask',
       `${mode} ask expected, got ${JSON.stringify(out)}`,
     );
-    assert.match(out.hookSpecificOutput?.permissionDecisionReason || '', /TENET 3/);
+    message = out.hookSpecificOutput?.permissionDecisionReason || '';
   }
+  assert.match(message, /TENET 3/);
+  assert.match(message, /REWRITE REQUIRED/);
+  assert.match(message, /PowerShell pattern/);
+  assert.doesNotMatch(message, /Approve only if/i);
 }
 
 // --- Bash hook: 4 modes x 3 cases = 12 tests ------------------------------
@@ -89,6 +94,30 @@ for (const mode of BASH_MODES) {
 
     test('already-redirected: denylist-shape with .logs/ redirect', () => {
       const cmd = 'npm test > .logs/run-smoke-$(date +%s).log 2>&1';
+      const out = runBashHook({ mode, payload: payloadFor(mode, cmd) });
+      expectAllow(out, mode);
+    });
+
+    test('already-redirected: hidden logs directory redirect', () => {
+      const cmd = 'npm run lint > .agent/logs/lint-$(date +%s).log 2>&1';
+      const out = runBashHook({ mode, payload: payloadFor(mode, cmd) });
+      expectAllow(out, mode);
+    });
+
+    test('already-redirected: POSIX variable points to hidden logs directory', () => {
+      const cmd = 'LOG=.agent/logs/lint-$(date +%s).log && npm run lint > "$LOG" 2>&1; echo "exit=$?"; tail -20 "$LOG"';
+      const out = runBashHook({ mode, payload: payloadFor(mode, cmd) });
+      expectAllow(out, mode);
+    });
+
+    test('already-redirected: PowerShell redirect points to hidden logs directory', () => {
+      const cmd = 'npm run lint *> .agent\\logs\\lint.log; Get-Content -Tail 20 .agent\\logs\\lint.log';
+      const out = runBashHook({ mode, payload: payloadFor(mode, cmd) });
+      expectAllow(out, mode);
+    });
+
+    test('already-redirected: PowerShell variable points to hidden logs directory', () => {
+      const cmd = '$Log = ".agent\\logs\\lint.log"; npm run lint *> $Log; Get-Content -Tail 20 $Log';
       const out = runBashHook({ mode, payload: payloadFor(mode, cmd) });
       expectAllow(out, mode);
     });
@@ -112,10 +141,33 @@ describe('HOOKS-SMOKE: opencode plugin (evaluateCommand)', () => {
     assert.equal(evaluateCommand(cmd), null);
   });
 
+  test('already-redirected: hidden logs directory returns null', () => {
+    const cmd = 'npm run lint > .agent/logs/lint-$(date +%s).log 2>&1';
+    assert.equal(evaluateCommand(cmd), null);
+  });
+
+  test('already-redirected: POSIX variable hidden logs directory returns null', () => {
+    const cmd = 'LOG=.agent/logs/lint-$(date +%s).log && npm run lint > "$LOG" 2>&1; echo "exit=$?"; tail -20 "$LOG"';
+    assert.equal(evaluateCommand(cmd), null);
+  });
+
+  test('already-redirected: PowerShell direct redirect returns null', () => {
+    const cmd = 'npm run lint *> .agent\\logs\\lint.log; Get-Content -Tail 20 .agent\\logs\\lint.log';
+    assert.equal(evaluateCommand(cmd), null);
+  });
+
+  test('already-redirected: PowerShell variable redirect returns null', () => {
+    const cmd = '$Log = ".agent\\logs\\lint.log"; npm run lint *> $Log; Get-Content -Tail 20 $Log';
+    assert.equal(evaluateCommand(cmd), null);
+  });
+
   test('denylist hit: returns { reason } containing TENET 3', () => {
     const verdict = evaluateCommand('npm test');
     assert.ok(verdict, 'expected a non-null verdict for denylist hit');
     assert.match(verdict.reason, /TENET 3/);
+    assert.match(verdict.reason, /REWRITE REQUIRED/);
+    assert.match(verdict.reason, /PowerShell pattern/);
+    assert.doesNotMatch(verdict.reason, /Approve only if/i);
   });
 
   test('null/empty input is fail-open (returns null)', () => {
