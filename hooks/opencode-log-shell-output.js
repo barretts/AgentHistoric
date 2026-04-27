@@ -1,5 +1,5 @@
 // Enforce Tenet 3 inside OpenCode: nudge long-running bash commands toward
-// `.logs/` redirection so transcripts survive a dropped terminal session.
+// persistent log redirection so transcripts survive a dropped terminal session.
 //
 // OpenCode plugins are loaded from `~/.config/opencode/plugins/*.{js,ts}` and
 // receive lifecycle events. We hook `tool.call` to inspect bash invocations
@@ -9,8 +9,13 @@
 // Mirrors the allowlist/denylist of `hooks/log-shell-output.sh`. Keep these in
 // sync if you change one.
 
-const ALLOW_REDIRECT_RE =
-  />>?\s*\.logs\/|\|\s*tee\s+(-a\s+)?\.logs\/|>\s*\/dev\/null|>\/dev\/null/;
+const LOG_PATH_RE = String.raw`(["']?)(?:\.logs|\.([^/\\\s"']+)[/\\]([^/\\\s"']*logs|logs[^/\\\s"']*))[/\\]`;
+const ALLOW_REDIRECT_RE = new RegExp(
+  String.raw`(?:>>?\s*${LOG_PATH_RE}|[0-9]*>>?\s*${LOG_PATH_RE}|\|\s*tee\s+(-a\s+)?${LOG_PATH_RE}|Tee-Object(?:[^;|]*\s)(?:-FilePath|-Path)\s+${LOG_PATH_RE}|Start-Transcript(?:[^;|]*\s)(?:-Path|-LiteralPath)\s+${LOG_PATH_RE}|>\s*/dev/null|>/dev/null|>\s*NUL|>\s*\$null)`,
+  'i',
+);
+const POSIX_LOG_VAR_RE = new RegExp(String.raw`\b([A-Za-z_][A-Za-z0-9_]*)=${LOG_PATH_RE}`);
+const POWERSHELL_LOG_VAR_RE = new RegExp(String.raw`\$([A-Za-z_][A-Za-z0-9_]*)\s*=\s*${LOG_PATH_RE}`, 'i');
 
 const ALLOW_FIRST_TOKEN = new Set([
   // Pure read / inspect.
@@ -81,7 +86,7 @@ function firstExecutableToken(cmd) {
 }
 
 /**
- * Decide whether a shell command needs a `.logs/` nudge.
+ * Decide whether a shell command needs a persistent logging nudge.
  * Returns null for "allow" (no modification needed) or { reason } to ask.
  */
 export function evaluateCommand(cmd) {
@@ -89,6 +94,10 @@ export function evaluateCommand(cmd) {
 
   // 1. Already redirected -> allow.
   if (ALLOW_REDIRECT_RE.test(cmd)) return null;
+  const posixLogVar = cmd.match(POSIX_LOG_VAR_RE)?.[1];
+  if (posixLogVar && new RegExp(String.raw`>>?\s*"?\$${posixLogVar}"?`).test(cmd)) return null;
+  const powershellLogVar = cmd.match(POWERSHELL_LOG_VAR_RE)?.[1];
+  if (powershellLogVar && new RegExp(String.raw`>>?\s*"?\$${powershellLogVar}"?`, 'i').test(cmd)) return null;
 
   // 2. Allowlist by first executable token.
   const first = firstExecutableToken(cmd);
@@ -110,9 +119,9 @@ export function evaluateCommand(cmd) {
   if (DENYLIST_RE.test(cmd)) {
     return {
       reason:
-        'TENET 3: long-running shell command without `.logs/` redirect. Re-issue as: ' +
-        'mkdir -p .logs && LOG=".logs/run-<slug>-$(date +%s).log" && (your command) > "$LOG" 2>&1 ; ' +
-        'then `tail -n 50 "$LOG"` to inspect.',
+        'TENET 3 REWRITE REQUIRED: rewrite and re-issue this command with persistent logging instead of asking the human to accept data-loss risk. ' +
+        'POSIX pattern: mkdir -p .logs && LOG=".logs/run-<slug>-$(date +%s).log" && (your command) > "$LOG" 2>&1; status=$?; tail -n 50 "$LOG"; exit $status. ' +
+        'PowerShell pattern: New-Item -ItemType Directory -Force .logs | Out-Null; $Log = ".logs/run-<slug>-$(Get-Date -Format yyyyMMddHHmmss).log"; your command *> $Log; $Status = $LASTEXITCODE; Get-Content -Tail 50 $Log; exit $Status.',
     };
   }
 
