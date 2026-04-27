@@ -59,9 +59,7 @@ Interrogate any appeal to common patterns or industry standard practice.
 - Foundation
 - Verification Flags
 
-Use these headings exactly as written. Do not rename, merge, or paraphrase them.
-Every required heading must still appear even when context is incomplete. Use the heading to state the missing evidence, provisional assumption, or next verification step.
-If context is incomplete, preserve the selected structure and explain what is missing.
+Use these headings verbatim; do not rename, merge, or paraphrase them. If context is incomplete, keep the structure and use each heading to state the missing evidence, provisional assumption, or next verification step.
 
 
 ## 6. Failure Signals

@@ -73,7 +73,7 @@ export function renderRichInit(system, options = {}) {
   if (abl !== "uncertainty-rules") {
     out += `## 4. Epistemic Humility & Communication Constraints\n\n`;
     out += `* **Truthfulness:** ${g.uncertaintyRules[0]}\n`;
-    out += `* **Uncertainty:** Quantify uncertainty. State claims as VERIFIED (backed by tests/docs) or HYPOTHESIS (needs checking). Provide confidence intervals: "~80% confidence; verify by running X."\n`;
+    out += `* **Uncertainty:** ${g.uncertaintyRules.slice(1).join(" ")}\n`;
     out += `* **Encoding:** ${g.encodingRules.join(" ")}`;
     out += `\n\n`;
   }
@@ -90,7 +90,7 @@ export function renderRichInit(system, options = {}) {
   // Modifiers
   if (system.modifiers?.length) {
     out += `## Modifiers\n\n`;
-    out += `Modifiers are voice and style overlays activated by user request. They change HOW you write within sections, never WHAT sections you produce. An active modifier overrides expert voice rules but never output contracts or structural headings.\n\n`;
+    out += `Voice and style overlays activated by user request. They change HOW you write, never WHAT sections you produce, and never override the output contract.\n\n`;
     for (const mod of system.modifiers) {
       out += `### ${mod.name}\n\n`;
       out += `**Trigger:** ${mod.trigger} | **Default intensity:** ${mod.defaultIntensity}\n\n`;
@@ -112,7 +112,7 @@ export function renderRichInit(system, options = {}) {
 
   // Section 4: Done
   out += `## 5. Definition of Done\n\n`;
-  out += `"Done" means code + tests + verified. Placeholders, pseudo-code, and "TODOs" in core logic are globally rejected.\n\n`;
+  out += `Done = ${g.definitionOfDone.join(", ")}.\n\n`;
 
   // Section 5: Constraints
   if (abl !== "foundational-constraints") {
@@ -188,7 +188,7 @@ export function renderRichRouter(system, options = {}) {
 
   // Routing heuristics table
   out += `## 2. Routing Heuristics\n\n`;
-  out += `Analyze the prompt against these heuristics, in priority order. Anti-triggers deprioritize a domain when present; boost signals increase confidence.\n\n`;
+  out += `Match the prompt against these heuristics in priority order. Anti-triggers deprioritize a domain; boost signals raise confidence.\n\n`;
   out += `| Priority | Domain | Expert(s) | Keywords / Signals | Anti-Triggers | Boost Signals |\n`;
   out += `|----------|--------|-----------|-------------------|---------------|---------------|\n`;
   for (const h of r.routingHeuristics) {
@@ -232,7 +232,7 @@ export function renderRichRouter(system, options = {}) {
 
   // Pipeline tables
   out += `\n\n## 3. Pipeline Sequences\n\n`;
-  out += `When a task spans multiple domains, adopt the sequence below. Apply the primary expert's constraints first, then shift methodology as the domain changes.\n\n`;
+  out += `For multi-domain tasks, follow these sequences. Apply the primary expert's constraints first, then shift as the domain changes.\n\n`;
   for (const pipeline of r.pipelines) {
     out += `### ${pipeline.name}\n`;
     if (pipeline.description) {
@@ -383,9 +383,7 @@ export function renderRichExpert(system, expert, options = {}) {
     for (const s of complexSections) {
       out += `- ${s}\n`;
     }
-    out += `\nUse these headings exactly as written. Do not rename, merge, or paraphrase them.\n`;
-    out += `Every required heading must still appear even when context is incomplete. Use the heading to state the missing evidence, provisional assumption, or next verification step.\n`;
-    out += `If context is incomplete, preserve the selected structure and explain what is missing.\n\n`;
+    out += `\nUse these headings verbatim; do not rename, merge, or paraphrase them. If context is incomplete, keep the structure and use each heading to state the missing evidence, provisional assumption, or next verification step.\n\n`;
     if (options.debug) {
       out += `Visible headings are limited to Selected Expert, Reason, Confidence, and this expert's required headings unless an allowed handoff is explicitly named.\n`;
       out += `Do not emit another expert's headings, section labels, or deliverable names while this expert is active.\n`;

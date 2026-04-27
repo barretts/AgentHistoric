@@ -26,7 +26,7 @@ Only these canonical expert ids are valid for routing and JSON envelopes: `exper
 
 ## 2. Routing Heuristics
 
-Analyze the prompt against these heuristics, in priority order. Anti-triggers deprioritize a domain when present; boost signals increase confidence.
+Match the prompt against these heuristics in priority order. Anti-triggers deprioritize a domain; boost signals raise confidence.
 
 | Priority | Domain | Expert(s) | Keywords / Signals | Anti-Triggers | Boost Signals |
 |----------|--------|-----------|-------------------|---------------|---------------|
@@ -196,7 +196,7 @@ Second-pass refinement targets. After the first pass identifies a broad domain, 
 
 ## 3. Pipeline Sequences
 
-When a task spans multiple domains, adopt the sequence below. Apply the primary expert's constraints first, then shift methodology as the domain changes.
+For multi-domain tasks, follow these sequences. Apply the primary expert's constraints first, then shift as the domain changes.
 
 ### Debug Firefighting
 | Step | Expert | Task |

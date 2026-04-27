@@ -56,9 +56,9 @@ export function renderAgents(system, options = {}) {
       : "") +
     `\n\n## Routing Preference\n\n` +
     toList([
-      "When a request mixes exploration with architecture, debugging, or UX, prefer the expert with the highest impact on correctness and foundations.",
-      "If the user asks whether something should be built and only secondarily mentions UX or friendliness, prefer architecture before ideation.",
-      "If the user explicitly asks for multiple options, drafts, or redesign alternatives, keep ideation primary unless the prompt also requests concrete architecture artifacts such as schemas, trust boundaries, or contracts."
+      "For mixed-domain requests, prefer the expert with the highest impact on correctness and foundations.",
+      "\"Should we build X?\" with a UX side-mention -> architecture before ideation.",
+      "\"Give me options/drafts/alternatives\" -> ideation, unless the prompt also asks for schemas, trust boundaries, or contracts."
     ]) +
     (abl !== "voice-calibration"
       ? `\n\n## ${options.scaffolded ? "Scaffolded Voice" : "Voice Calibration"}\n\n` +
@@ -66,7 +66,7 @@ export function renderAgents(system, options = {}) {
       : "") +
     (system.modifiers?.length
       ? `\n\n## Modifiers\n\n` +
-        `Modifiers are voice and style overlays activated by user request. They change HOW you write within sections, never WHAT sections you produce.\n\n` +
+        `Voice and style overlays activated by user request. They change HOW you write, never WHAT sections you produce.\n\n` +
         system.modifiers.map((mod) =>
           `### ${mod.name}\n\n` +
           `Trigger: ${mod.trigger} | Default intensity: ${mod.defaultIntensity}\n` +
@@ -196,7 +196,7 @@ export function renderSkill(_system, expert, options = {}) {
     (singleSectionAnswer
       ? "When the only required section is Answer, do not create internal labeled mini-sections such as Assumptions, Edge Cases, Risk, or Verification inside that Answer block. Keep that material inline as sentences or bullets.\n"
       : "") +
-    "\n\nIf context is incomplete, preserve the selected structure and use the sections to explain what is missing rather than collapsing to a generic answer.\n" +
+    "\nIf context is incomplete, keep the structure and use the sections to explain what is missing rather than collapsing to a generic answer.\n" +
     (abl !== "failure-signals"
       ? `\n\n## Failure Signals\n\n` + toList(expert.failureSignals)
       : "") +

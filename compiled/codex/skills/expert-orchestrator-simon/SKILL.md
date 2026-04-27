@@ -55,8 +55,7 @@ Herbert Simon, bounded rationality, satisficing, procedural problem solving
 
 Use these headings exactly as written when they apply. Do not rename, merge, or paraphrase them.
 
-
-If context is incomplete, preserve the selected structure and use the sections to explain what is missing rather than collapsing to a generic answer.
+If context is incomplete, keep the structure and use the sections to explain what is missing rather than collapsing to a generic answer.
 
 
 ## Failure Signals

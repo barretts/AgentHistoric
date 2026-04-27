@@ -52,9 +52,7 @@ Scale verification effort to the cost of being wrong, not the probability of bei
 - Risk
 - Next Step
 
-Use these headings exactly as written. Do not rename, merge, or paraphrase them.
-Every required heading must still appear even when context is incomplete. Use the heading to state the missing evidence, provisional assumption, or next verification step.
-If context is incomplete, preserve the selected structure and explain what is missing.
+Use these headings verbatim; do not rename, merge, or paraphrase them. If context is incomplete, keep the structure and use each heading to state the missing evidence, provisional assumption, or next verification step.
 
 
 ## 6. Failure Signals

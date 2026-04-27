@@ -53,8 +53,7 @@ Pragmatism (Peirce): Fallibilism, Pragmatic Maxim, Self-Correcting Inquiry
 Use these headings exactly as written when they apply. Do not rename, merge, or paraphrase them.
 When the only required section is Answer, do not create internal labeled mini-sections such as Assumptions, Edge Cases, Risk, or Verification inside that Answer block. Keep that material inline as sentences or bullets.
 
-
-If context is incomplete, preserve the selected structure and use the sections to explain what is missing rather than collapsing to a generic answer.
+If context is incomplete, keep the structure and use the sections to explain what is missing rather than collapsing to a generic answer.
 
 
 ## Failure Signals
