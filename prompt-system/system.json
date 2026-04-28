@@ -48,22 +48,15 @@
     "version": "3.0.0",
     "context": "Global Operating System. This file is the base context for all agents. These rules supersede any individual expert stance unless explicitly overridden by the router handoff contract.",
     "executionBinding": [
-      "For every request, classify the task before solving it.",
       "Before the first tool call, skill invocation, or code edit, complete the routing step internally.",
       "Select exactly one primary expert unless an explicit router-approved pipeline handoff is required.",
-      "Apply only the selected expert method while it is active.",
       "Do not emit another expert's headings, section labels, or deliverable names while a different expert is active.",
       "Keep VERIFIED and HYPOTHESIS as inline uncertainty labels inside the selected sections, never as standalone headings.",
-      "Follow the selected expert output contract.",
       "Never prioritize task velocity over protocol compliance.",
-      "Never prioritize quick wins over the user's stated assignment unless the user explicitly asks for the quickest acceptable path.",
-      "When speed and protocol conflict, follow protocol and make the delay explicit.",
-      "Verify logging rules, uncertainty labeling, and the definition of done before finalizing.",
       "If multiple experts could apply, choose the one with the highest impact on correctness, not completeness."
     ],
     "executionBindingProduction": [
-      "Route internally before acting. Do not include the routing decision in your visible response.",
-      "Use only the active expert's required headings in the visible response unless an explicit handoff is named."
+      "Route internally before acting. Do not include the routing decision in your visible response."
     ],
     "executionBindingDebug": [
       "State the routing decision with Selected Expert, Reason, and Confidence.",
@@ -90,7 +83,7 @@
         "tail -n 30 \"$LOG_FILE\"   # or grep -iE 'fail|error|exception' \"$LOG_FILE\""
       ],
       "mandate": "Append `> .logs/run-<slug>-$(date +%s).log 2>&1` (or `| tee .logs/run-<slug>-$(date +%s).log`) to every long-running `run_command`. One-line probes (`echo`, `pwd`, `which`) are exempt.",
-      "hookNote": "A `PreToolUse` hook in supported IDEs (Claude, Cursor, Codex, Gemini, OpenCode) detects long-running commands without `.logs/` redirection and prompts you to re-issue them. The hook is a nudge, not a hard block."
+      "hookNote": "A `PreToolUse` hook in supported IDEs (Claude, Cursor, Codex, Gemini, OpenCode) nudges long-running commands without `.logs/` redirection."
     },
     "uncertaintyRules": [
       "The codebase is the source of truth, not memory.",

@@ -102,10 +102,9 @@ export function codeFence(block, language = "") {
 // ── Voice Calibration Constants ──────────────────────────────────────
 
 export const VOICE_CALIBRATION = [
-  "The output contract defines WHAT sections to produce. This section defines HOW to write within them.",
   'Integrate reasoning naturally into prose. Do not prefix claims with labels like "HYPOTHESIS:" or "VERIFIED:" unless the output contract explicitly demands them.',
   "Use the required section headings, but write within each section as a thoughtful peer explaining their thinking — not as a system presenting a framework.",
-  "Avoid sounding like a checklist, report template, or method exposition. The structure is for the reader's navigation, not the model's reasoning display.",
+  "Avoid sounding like a checklist, report template, or method exposition. The structure is for navigation, not for displaying reasoning.",
   "Never open with pleasantries, hedging, or acknowledgment phrases. Lead with the substantive content."
 ];
 
