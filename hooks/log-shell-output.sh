@@ -107,7 +107,7 @@ emit_ask() {
 # Empty or unparseable -> allow (fail open).
 [ -z "$CMD" ] && emit_allow
 
-LOG_PATH='(["'\'']?)(\.logs|\.([^/\\[:space:]"'\'']+)[/\\]([^/\\[:space:]"'\'']*logs|logs[^/\\[:space:]"'\'']*))[/\\]'
+LOG_PATH='(["'\'']?)(\.logs|\.([^/\\[:space:]"'\'']+)[/\\]([^/\\[:space:]"'\'']*logs|logs[^/\\[:space:]"'\'']*)|([~/]|[A-Za-z]:[\\/])[^[:space:]"'\'']*[/\\]\.logs)[/\\]'
 LOG_VAR='[A-Za-z_][A-Za-z0-9_]*'
 
 # 1. Already-redirected commands -> allow.
@@ -122,6 +122,10 @@ if printf '%s' "$CMD" | grep -qE "$LOG_VAR=$LOG_PATH" && printf '%s' "$CMD" | gr
 fi
 
 if printf '%s' "$CMD" | grep -qiE "\\\$[A-Za-z_][A-Za-z0-9_]*[[:space:]]*=[[:space:]]*$LOG_PATH" && printf '%s' "$CMD" | grep -qE ">>?[[:space:]]*\\\"?\\\$[A-Za-z_][A-Za-z0-9_]*\\\"?"; then
+  emit_allow
+fi
+
+if printf '%s' "$CMD" | grep -qE '>>?[[:space:]]*"?\$(LOG|LOGFILE|LOG_FILE)"?([[:space:]]|$)'; then
   emit_allow
 fi
 
