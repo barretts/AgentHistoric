@@ -1207,6 +1207,27 @@ test("COMPLIANCE: system.json globalRuntime.logging.mandate includes fail-closed
   );
 });
 
+test("COMPLIANCE: global logging rules forbid heredocs and multi-line terminal payloads", () => {
+  const required = system.globalRuntime.logging?.required || [];
+  const mandate = system.globalRuntime.logging?.mandate || "";
+  const renderedInit = artifacts.get("compiled/claude/rules/00-init.md");
+
+  assert.ok(
+    required.some((rule) => /heredocs/i.test(rule) && /<<'NODE'/.test(rule)),
+    "logging.required must forbid heredocs including <<'NODE'"
+  );
+  assert.match(
+    mandate,
+    /multi-line terminal payloads/,
+    "logging.mandate must mention multi-line terminal payloads"
+  );
+  assert.match(
+    renderedInit,
+    /Do not use heredocs/,
+    "rendered 00-init must include heredoc avoidance guidance"
+  );
+});
+
 test("COMPLIANCE: system.json has globalRuntime.handshake that is non-empty", () => {
   const handshake = system.globalRuntime.handshake;
   assert.ok(handshake, "globalRuntime.handshake is missing");

@@ -104,10 +104,39 @@ for (const mode of BASH_MODES) {
       expectAllow(out, mode);
     });
 
+    test('already-redirected: absolute .logs path direct redirect', () => {
+      const cmd = 'node /tmp/x.mjs > /Users/me/proj/.logs/foo.log 2>&1';
+      const out = runBashHook({ mode, payload: payloadFor(mode, cmd) });
+      expectAllow(out, mode);
+    });
+
+    test('already-redirected: home .logs path direct redirect', () => {
+      const cmd = 'node /tmp/x.mjs > ~/proj/.logs/foo.log 2>&1';
+      const out = runBashHook({ mode, payload: payloadFor(mode, cmd) });
+      expectAllow(out, mode);
+    });
+
     test('already-redirected: POSIX variable points to hidden logs directory', () => {
       const cmd = 'LOG=.agent/logs/lint-$(date +%s).log && npm run lint > "$LOG" 2>&1; echo "exit=$?"; tail -20 "$LOG"';
       const out = runBashHook({ mode, payload: payloadFor(mode, cmd) });
       expectAllow(out, mode);
+    });
+
+    test('already-redirected: POSIX variable points to absolute .logs path', () => {
+      const cmd = 'LOG="/Users/me/proj/.logs/foo-$(date +%s).log"; node /tmp/x.mjs > "$LOG" 2>&1';
+      const out = runBashHook({ mode, payload: payloadFor(mode, cmd) });
+      expectAllow(out, mode);
+    });
+
+    test('already-redirected: bare whitelisted log variables', () => {
+      for (const cmd of [
+        'node /tmp/x.mjs > "$LOGFILE" 2>&1',
+        'node /tmp/x.mjs > "$LOG_FILE" 2>&1',
+        'node /tmp/x.mjs > $LOG 2>&1',
+      ]) {
+        const out = runBashHook({ mode, payload: payloadFor(mode, cmd) });
+        expectAllow(out, mode);
+      }
     });
 
     test('already-redirected: PowerShell redirect points to hidden logs directory', () => {
@@ -125,6 +154,16 @@ for (const mode of BASH_MODES) {
     test('denylist hit: long-running command without redirect', () => {
       const out = runBashHook({ mode, payload: payloadFor(mode, 'npm test') });
       expectAsk(out, mode);
+    });
+
+    test('denylist hit: bare non-whitelisted log variables', () => {
+      for (const cmd of [
+        'node /tmp/x.mjs > "$OUTPUT" 2>&1',
+        'node /tmp/x.mjs > "$FOO" 2>&1',
+      ]) {
+        const out = runBashHook({ mode, payload: payloadFor(mode, cmd) });
+        expectAsk(out, mode);
+      }
     });
   });
 }
@@ -146,9 +185,34 @@ describe('HOOKS-SMOKE: opencode plugin (evaluateCommand)', () => {
     assert.equal(evaluateCommand(cmd), null);
   });
 
+  test('already-redirected: absolute .logs path returns null', () => {
+    const cmd = 'node /tmp/x.mjs > /Users/me/proj/.logs/foo.log 2>&1';
+    assert.equal(evaluateCommand(cmd), null);
+  });
+
+  test('already-redirected: home .logs path returns null', () => {
+    const cmd = 'node /tmp/x.mjs > ~/proj/.logs/foo.log 2>&1';
+    assert.equal(evaluateCommand(cmd), null);
+  });
+
   test('already-redirected: POSIX variable hidden logs directory returns null', () => {
     const cmd = 'LOG=.agent/logs/lint-$(date +%s).log && npm run lint > "$LOG" 2>&1; echo "exit=$?"; tail -20 "$LOG"';
     assert.equal(evaluateCommand(cmd), null);
+  });
+
+  test('already-redirected: POSIX variable absolute .logs path returns null', () => {
+    const cmd = 'LOG="/Users/me/proj/.logs/foo-$(date +%s).log"; node /tmp/x.mjs > "$LOG" 2>&1';
+    assert.equal(evaluateCommand(cmd), null);
+  });
+
+  test('already-redirected: bare whitelisted log variables return null', () => {
+    for (const cmd of [
+      'node /tmp/x.mjs > "$LOGFILE" 2>&1',
+      'node /tmp/x.mjs > "$LOG_FILE" 2>&1',
+      'node /tmp/x.mjs > $LOG 2>&1',
+    ]) {
+      assert.equal(evaluateCommand(cmd), null);
+    }
   });
 
   test('already-redirected: PowerShell direct redirect returns null', () => {
@@ -167,7 +231,21 @@ describe('HOOKS-SMOKE: opencode plugin (evaluateCommand)', () => {
     assert.match(verdict.reason, /TENET 3/);
     assert.match(verdict.reason, /REWRITE REQUIRED/);
     assert.match(verdict.reason, /PowerShell pattern/);
+    assert.match(verdict.reason, /rc=\$\?/);
+    assert.doesNotMatch(verdict.reason, /status=\$\?/);
+    assert.doesNotMatch(verdict.reason, /exit \$status/);
     assert.doesNotMatch(verdict.reason, /Approve only if/i);
+  });
+
+  test('denylist hit: bare non-whitelisted log variables return TENET 3 verdict', () => {
+    for (const cmd of [
+      'node /tmp/x.mjs > "$OUTPUT" 2>&1',
+      'node /tmp/x.mjs > "$FOO" 2>&1',
+    ]) {
+      const verdict = evaluateCommand(cmd);
+      assert.ok(verdict, `expected a non-null verdict for ${cmd}`);
+      assert.match(verdict.reason, /TENET 3/);
+    }
   });
 
   test('null/empty input is fail-open (returns null)', () => {

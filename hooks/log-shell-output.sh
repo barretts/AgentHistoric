@@ -107,7 +107,7 @@ emit_ask() {
 # Empty or unparseable -> allow (fail open).
 [ -z "$CMD" ] && emit_allow
 
-LOG_PATH='(["'\'']?)(\.logs|\.([^/\\[:space:]"'\'']+)[/\\]([^/\\[:space:]"'\'']*logs|logs[^/\\[:space:]"'\'']*))[/\\]'
+LOG_PATH='(["'\'']?)(\.logs|\.([^/\\[:space:]"'\'']+)[/\\]([^/\\[:space:]"'\'']*logs|logs[^/\\[:space:]"'\'']*)|([~/]|[A-Za-z]:[\\/])[^[:space:]"'\'']*[/\\]\.logs)[/\\]'
 LOG_VAR='[A-Za-z_][A-Za-z0-9_]*'
 
 # 1. Already-redirected commands -> allow.
@@ -122,6 +122,10 @@ if printf '%s' "$CMD" | grep -qE "$LOG_VAR=$LOG_PATH" && printf '%s' "$CMD" | gr
 fi
 
 if printf '%s' "$CMD" | grep -qiE "\\\$[A-Za-z_][A-Za-z0-9_]*[[:space:]]*=[[:space:]]*$LOG_PATH" && printf '%s' "$CMD" | grep -qE ">>?[[:space:]]*\\\"?\\\$[A-Za-z_][A-Za-z0-9_]*\\\"?"; then
+  emit_allow
+fi
+
+if printf '%s' "$CMD" | grep -qE '>>?[[:space:]]*"?\$(LOG|LOGFILE|LOG_FILE)"?([[:space:]]|$)'; then
   emit_allow
 fi
 
@@ -170,7 +174,7 @@ DENYLIST='(^|[[:space:]\|&;(`$])(npx[[:space:]]+(tsx|tsc|vitest|jest|playwright|
 
 if printf '%s' "$CMD" | grep -qE "$DENYLIST"; then
   USER_MSG="Long-running shell command without a persistent log redirect. The agent should rewrite and re-issue it with logging before asking for human intervention. See Tenet 3."
-  AGENT_MSG="TENET 3 REWRITE REQUIRED: rewrite and re-issue this command with persistent logging instead of asking the human to accept data-loss risk. POSIX pattern: mkdir -p .logs && LOG=\".logs/run-<slug>-\$(date +%s).log\" && (your command) > \"\$LOG\" 2>&1; status=\$?; tail -n 50 \"\$LOG\"; exit \$status. PowerShell pattern: New-Item -ItemType Directory -Force .logs | Out-Null; \$Log = \".logs/run-<slug>-\$(Get-Date -Format yyyyMMddHHmmss).log\"; your command *> \$Log; \$Status = \$LASTEXITCODE; Get-Content -Tail 50 \$Log; exit \$Status."
+  AGENT_MSG="TENET 3 REWRITE REQUIRED: rewrite and re-issue this command with persistent logging instead of asking the human to accept data-loss risk. POSIX pattern: mkdir -p .logs && LOG=\".logs/run-<slug>-\$(date +%s).log\" && (your command) > \"\$LOG\" 2>&1; rc=\$?; tail -n 50 \"\$LOG\"; exit \$rc. PowerShell pattern: New-Item -ItemType Directory -Force .logs | Out-Null; \$Log = \".logs/run-<slug>-\$(Get-Date -Format yyyyMMddHHmmss).log\"; your command *> \$Log; \$Status = \$LASTEXITCODE; Get-Content -Tail 50 \$Log; exit \$Status."
   emit_ask "$USER_MSG" "$AGENT_MSG"
 fi
 
