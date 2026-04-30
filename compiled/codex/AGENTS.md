@@ -183,6 +183,8 @@ Second-pass refinement targets. After the first pass identifies a broad domain, 
 
 - Never pipe test, build, or run output directly into a filter.
 - Always write full output to `.logs/` before inspecting it.
+- Do not use heredocs (`<<EOF`, `<<'NODE'`, `<<PY`) in terminal commands or `run_command`; create a script file with file-edit tools and execute that file instead.
+- Avoid multi-line terminal payloads whose correctness depends on exact line boundaries; keep shell commands single-line unless executing a saved script.
 
 ```bash
 mkdir -p .logs

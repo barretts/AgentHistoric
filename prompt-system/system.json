@@ -74,7 +74,9 @@
       "principle": "Persistence first, inspection second. Tool environments truncate stdout; destructive piping deletes stack traces. Write full output to a `.logs/` file, then inspect.",
       "required": [
         "Never pipe test, build, or run output directly into a filter.",
-        "Always write full output to `.logs/` before inspecting it."
+        "Always write full output to `.logs/` before inspecting it.",
+        "Do not use heredocs (`<<EOF`, `<<'NODE'`, `<<PY`) in terminal commands or `run_command`; create a script file with file-edit tools and execute that file instead.",
+        "Avoid multi-line terminal payloads whose correctness depends on exact line boundaries; keep shell commands single-line unless executing a saved script."
       ],
       "pattern": [
         "mkdir -p .logs",
@@ -82,7 +84,7 @@
         "your_command > \"$LOG_FILE\" 2>&1",
         "tail -n 30 \"$LOG_FILE\"   # or grep -iE 'fail|error|exception' \"$LOG_FILE\""
       ],
-      "mandate": "Append `> .logs/run-<slug>-$(date +%s).log 2>&1` (or `| tee .logs/run-<slug>-$(date +%s).log`) to every long-running `run_command`. One-line probes (`echo`, `pwd`, `which`) are exempt.",
+      "mandate": "Append `> .logs/run-<slug>-$(date +%s).log 2>&1` (or `| tee .logs/run-<slug>-$(date +%s).log`) to every long-running `run_command`. One-line probes (`echo`, `pwd`, `which`) are exempt. Do not use heredocs (`<<EOF`, `<<'NODE'`, `<<PY`) or multi-line terminal payloads; create a script file with file-edit tools and execute it instead.",
       "hookNote": "A `PreToolUse` hook in supported IDEs (Claude, Cursor, Codex, Gemini, OpenCode) nudges long-running commands without `.logs/` redirection."
     },
     "uncertaintyRules": [
@@ -180,8 +182,8 @@
       "declarative": "Use the selected expert id exactly as listed in the Canonical expert roster allowlist. Do not modify, combine, or invent ids."
     },
     "loggingMandate": {
-      "imperative": "Every `run_command` invocation MUST append `> .logs/run-<slug>-$(date +%s).log 2>&1` (or `| tee .logs/run-<slug>-$(date +%s).log`). Commands without one of these suffixes are non-compliant. Inline stdout capture is forbidden except for one-line probes (`echo`, `pwd`, `which`) that never produce failure output.",
-      "declarative": "Append `> .logs/run-<slug>-$(date +%s).log 2>&1` (or `| tee .logs/run-<slug>-$(date +%s).log`) to `run_command` invocations. Commands without one of these suffixes are non-compliant. Inline stdout capture is acceptable only for one-line probes (`echo`, `pwd`, `which`) that never produce failure output."
+      "imperative": "Every `run_command` invocation MUST append `> .logs/run-<slug>-$(date +%s).log 2>&1` (or `| tee .logs/run-<slug>-$(date +%s).log`). Commands without one of these suffixes are non-compliant. Inline stdout capture is forbidden except for one-line probes (`echo`, `pwd`, `which`) that never produce failure output. Do not use heredocs (`<<EOF`, `<<'NODE'`, `<<PY`) or multi-line terminal payloads; create a script file with file-edit tools and execute it instead.",
+      "declarative": "Append `> .logs/run-<slug>-$(date +%s).log 2>&1` (or `| tee .logs/run-<slug>-$(date +%s).log`) to `run_command` invocations. Commands without one of these suffixes are non-compliant. Inline stdout capture is acceptable only for one-line probes (`echo`, `pwd`, `which`) that never produce failure output. Avoid heredocs (`<<EOF`, `<<'NODE'`, `<<PY`) and multi-line terminal payloads; create a script file with file-edit tools and execute it instead."
     },
     "loggingSectionHeading": {
       "imperative": "All Test, Build, and Run Commands MUST Be Logged",

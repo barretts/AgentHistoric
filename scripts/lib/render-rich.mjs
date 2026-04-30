@@ -51,6 +51,10 @@ export function renderRichInit(system, options = {}) {
   if (abl !== "logging-protocol") {
     out += `## 2. The Non-Destructive Logging Protocol\n\n`;
     out += `**Principle:** ${g.logging.principle}\n\n`;
+    if (g.logging.required?.length) {
+      out += g.logging.required.map((item) => `- ${item}`).join("\n");
+      out += `\n\n`;
+    }
     out += `**Pattern (adapt the command to your runtime):**\n\n`;
     out += codeFence(g.logging.pattern.join("\n"), "bash");
     out += `\n\n`;

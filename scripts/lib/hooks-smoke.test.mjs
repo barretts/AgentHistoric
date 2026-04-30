@@ -167,6 +167,9 @@ describe('HOOKS-SMOKE: opencode plugin (evaluateCommand)', () => {
     assert.match(verdict.reason, /TENET 3/);
     assert.match(verdict.reason, /REWRITE REQUIRED/);
     assert.match(verdict.reason, /PowerShell pattern/);
+    assert.match(verdict.reason, /rc=\$\?/);
+    assert.doesNotMatch(verdict.reason, /status=\$\?/);
+    assert.doesNotMatch(verdict.reason, /exit \$status/);
     assert.doesNotMatch(verdict.reason, /Approve only if/i);
   });
 

@@ -170,7 +170,7 @@ DENYLIST='(^|[[:space:]\|&;(`$])(npx[[:space:]]+(tsx|tsc|vitest|jest|playwright|
 
 if printf '%s' "$CMD" | grep -qE "$DENYLIST"; then
   USER_MSG="Long-running shell command without a persistent log redirect. The agent should rewrite and re-issue it with logging before asking for human intervention. See Tenet 3."
-  AGENT_MSG="TENET 3 REWRITE REQUIRED: rewrite and re-issue this command with persistent logging instead of asking the human to accept data-loss risk. POSIX pattern: mkdir -p .logs && LOG=\".logs/run-<slug>-\$(date +%s).log\" && (your command) > \"\$LOG\" 2>&1; status=\$?; tail -n 50 \"\$LOG\"; exit \$status. PowerShell pattern: New-Item -ItemType Directory -Force .logs | Out-Null; \$Log = \".logs/run-<slug>-\$(Get-Date -Format yyyyMMddHHmmss).log\"; your command *> \$Log; \$Status = \$LASTEXITCODE; Get-Content -Tail 50 \$Log; exit \$Status."
+  AGENT_MSG="TENET 3 REWRITE REQUIRED: rewrite and re-issue this command with persistent logging instead of asking the human to accept data-loss risk. POSIX pattern: mkdir -p .logs && LOG=\".logs/run-<slug>-\$(date +%s).log\" && (your command) > \"\$LOG\" 2>&1; rc=\$?; tail -n 50 \"\$LOG\"; exit \$rc. PowerShell pattern: New-Item -ItemType Directory -Force .logs | Out-Null; \$Log = \".logs/run-<slug>-\$(Get-Date -Format yyyyMMddHHmmss).log\"; your command *> \$Log; \$Status = \$LASTEXITCODE; Get-Content -Tail 50 \$Log; exit \$Status."
   emit_ask "$USER_MSG" "$AGENT_MSG"
 fi
 

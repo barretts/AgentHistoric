@@ -35,6 +35,11 @@ Each layer restricts but never expands the constraints of the layer above. Highe
 
 **Principle:** Persistence first, inspection second. Tool environments truncate stdout; destructive piping deletes stack traces. Write full output to a `.logs/` file, then inspect.
 
+- Never pipe test, build, or run output directly into a filter.
+- Always write full output to `.logs/` before inspecting it.
+- Do not use heredocs (`<<EOF`, `<<'NODE'`, `<<PY`) in terminal commands or `run_command`; create a script file with file-edit tools and execute that file instead.
+- Avoid multi-line terminal payloads whose correctness depends on exact line boundaries; keep shell commands single-line unless executing a saved script.
+
 **Pattern (adapt the command to your runtime):**
 
 ```bash
@@ -46,7 +51,7 @@ tail -n 30 "$LOG_FILE"   # or grep -iE 'fail|error|exception' "$LOG_FILE"
 
 ## 3. All Test, Build, and Run Commands Should Be Logged
 
-**Fail-Closed Enforcement:** Append `> .logs/run-<slug>-$(date +%s).log 2>&1` (or `| tee .logs/run-<slug>-$(date +%s).log`) to `run_command` invocations. Commands without one of these suffixes are non-compliant. Inline stdout capture is acceptable only for one-line probes (`echo`, `pwd`, `which`) that never produce failure output.
+**Fail-Closed Enforcement:** Append `> .logs/run-<slug>-$(date +%s).log 2>&1` (or `| tee .logs/run-<slug>-$(date +%s).log`) to `run_command` invocations. Commands without one of these suffixes are non-compliant. Inline stdout capture is acceptable only for one-line probes (`echo`, `pwd`, `which`) that never produce failure output. Avoid heredocs (`<<EOF`, `<<'NODE'`, `<<PY`) and multi-line terminal payloads; create a script file with file-edit tools and execute it instead.
 
 A `PreToolUse` hook in supported IDEs (Claude, Cursor, Codex, Gemini, OpenCode) nudges long-running commands without `.logs/` redirection.
 
