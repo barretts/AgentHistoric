@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url';
 
 import {
   evaluateCommand,
-} from '../../hooks/opencode-log-shell-output.js';
+} from '../../hooks/opencode-log-shell-output-evaluator.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..', '..');

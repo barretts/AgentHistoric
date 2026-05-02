@@ -65,10 +65,14 @@ const GEMINI_SETTINGS_JSON = path.join(HOME, '.gemini', 'settings.json');
 
 // OpenCode plugin: separate JS file (different contract from the bash hook).
 const OPENCODE_HOOK_NAME = 'log-shell-output.js';
+const OPENCODE_STALE_EVALUATOR_NAME = 'opencode-log-shell-output-evaluator.js';
 const SRC_OPENCODE_HOOK = path.join(repoDir, 'hooks', 'opencode-log-shell-output.js');
 const OPENCODE_HOOK_DEST = APPDATA
   ? path.join(APPDATA, 'opencode', 'plugins', OPENCODE_HOOK_NAME)
   : path.join(HOME, '.config', 'opencode', 'plugins', OPENCODE_HOOK_NAME);
+const OPENCODE_STALE_EVALUATOR_DEST = APPDATA
+  ? path.join(APPDATA, 'opencode', 'plugins', OPENCODE_STALE_EVALUATOR_NAME)
+  : path.join(HOME, '.config', 'opencode', 'plugins', OPENCODE_STALE_EVALUATOR_NAME);
 
 // --- Destination dirs ------------------------------------------------------
 
@@ -472,6 +476,10 @@ function installOpenCodeShellHook() {
   }
   ensureDir(path.dirname(OPENCODE_HOOK_DEST));
   fs.copyFileSync(SRC_OPENCODE_HOOK, OPENCODE_HOOK_DEST);
+  if (fileExists(OPENCODE_STALE_EVALUATOR_DEST)) {
+    fs.unlinkSync(OPENCODE_STALE_EVALUATOR_DEST);
+    console.log(`    Removed stale: ${OPENCODE_STALE_EVALUATOR_DEST}`);
+  }
   console.log(`    Hook:     ${OPENCODE_HOOK_DEST}`);
 }
 

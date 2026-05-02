@@ -1,14 +1,3 @@
-// Enforce Tenet 3 inside OpenCode: nudge long-running bash commands toward
-// persistent log redirection so transcripts survive a dropped terminal session.
-//
-// OpenCode plugins are loaded from `~/.config/opencode/plugins/*.{js,ts}` and
-// receive lifecycle events. We hook `tool.call` to inspect bash invocations
-// before the host executes them. The plugin biases toward allow on any error
-// (fail-open) so a regex bug never breaks the host.
-//
-// Mirrors the allowlist/denylist of `hooks/log-shell-output.sh`. Keep these in
-// sync if you change one.
-
 const LOG_PATH_RE = String.raw`(["']?)(?:\.logs|\.([^/\\\s"']+)[/\\]([^/\\\s"']*logs|logs[^/\\\s"']*)|(?:[~/]|[A-Za-z]:[\\/])[^\s"']*[/\\]\.logs)[/\\]`;
 const ALLOW_REDIRECT_RE = new RegExp(
   String.raw`(?:>>?\s*${LOG_PATH_RE}|[0-9]*>>?\s*${LOG_PATH_RE}|\|\s*tee\s+(-a\s+)?${LOG_PATH_RE}|Tee-Object(?:[^;|]*\s)(?:-FilePath|-Path)\s+${LOG_PATH_RE}|Start-Transcript(?:[^;|]*\s)(?:-Path|-LiteralPath)\s+${LOG_PATH_RE}|>\s*/dev/null|>/dev/null|>\s*NUL|>\s*\$null)`,
@@ -49,13 +38,13 @@ const DENYLIST_RE = new RegExp(
     '|pnpm\\s+(install|run|test|exec|dlx|build|publish|audit)' +
     '|yarn\\s+(install|run|test|build|exec|publish|audit)' +
     '|bun\\s+(run|test|install|build)' +
-    '|node\\s+[^-]\\S*\.(m?js|cjs|ts)' +
+    '|node\\s+[^-]\\S*\\.(m?js|cjs|ts)' +
     '|node\\s+-e' +
-    '|tsx\\s+\S+' +
+    '|tsx\\s+\\S+' +
     '|deno\\s+(run|test)' +
     '|pytest' +
     '|python3?\\s+-m\\s+pytest' +
-    '|python3?\\s+[^-]\\S*\.py' +
+    '|python3?\\s+[^-]\\S*\\.py' +
     '|cargo\\s+(test|build|run|check|bench)' +
     '|go\\s+(test|build|run|generate)' +
     '|mvn\\s' +
@@ -81,7 +70,7 @@ function firstExecutableToken(cmd) {
   return tokens[i] || '';
 }
 
-function evaluateCommand(cmd) {
+export function evaluateCommand(cmd) {
   if (!cmd || typeof cmd !== 'string') return null;
 
   if (ALLOW_REDIRECT_RE.test(cmd)) return null;
@@ -117,20 +106,3 @@ function evaluateCommand(cmd) {
 
   return null;
 }
-
-export const LogShellOutputPlugin = async (_input) => {
-  return {
-    'tool.execute.before': async (input, output) => {
-      try {
-        if (!input || input.tool !== 'bash') return;
-        const cmd = output?.args?.command;
-        const verdict = evaluateCommand(cmd);
-        if (!verdict) return;
-        throw new Error(verdict.reason);
-      } catch (error) {
-        if (error instanceof Error && error.message) throw error;
-        return;
-      }
-    },
-  };
-};
