@@ -26,8 +26,13 @@ const BASH_HOOK = path.join(repoRoot, 'hooks', 'log-shell-output.sh');
 // --- Helpers ---------------------------------------------------------------
 
 function runBashHook({ mode, payload }) {
-  const result = spawnSync('bash', [BASH_HOOK, `--mode=${mode}`], {
-    input: typeof payload === 'string' ? payload : JSON.stringify(payload),
+  const result = spawnSync('bash', ['-c', 'printf "%s" "$HOOK_PAYLOAD" | "$HOOK_PATH" "$HOOK_MODE"'], {
+    env: {
+      ...process.env,
+      HOOK_PATH: BASH_HOOK,
+      HOOK_MODE: `--mode=${mode}`,
+      HOOK_PAYLOAD: typeof payload === 'string' ? payload : JSON.stringify(payload),
+    },
     encoding: 'utf8',
     timeout: 5000,
   });
@@ -53,6 +58,8 @@ function payloadFor(mode, command) {
 function expectAllow(out, mode) {
   if (mode === 'cursor') {
     assert.equal(out.permission, 'allow', `cursor allow expected, got ${JSON.stringify(out)}`);
+  } else if (mode === 'codex') {
+    assert.deepEqual(out, {}, `codex allow must emit no unsupported permissionDecision, got ${JSON.stringify(out)}`);
   } else {
     assert.equal(
       out.hookSpecificOutput?.permissionDecision,
@@ -67,6 +74,13 @@ function expectAsk(out, mode) {
   if (mode === 'cursor') {
     assert.equal(out.permission, 'ask', `cursor ask expected, got ${JSON.stringify(out)}`);
     message = out.agentMessage || '';
+  } else if (mode === 'codex') {
+    assert.deepEqual(
+      Object.keys(out),
+      ['systemMessage'],
+      `codex ask should only emit systemMessage, got ${JSON.stringify(out)}`,
+    );
+    message = out.systemMessage || '';
   } else {
     assert.equal(
       out.hookSpecificOutput?.permissionDecision,

@@ -406,8 +406,8 @@ function installClaudeShellHook() {
   console.log(`    Config:   ${CLAUDE_SETTINGS_JSON} (${already ? 'unchanged' : 'appended'})`);
 }
 
-// Generic PreToolUse-hook writer used for Codex and Gemini, both of which
-// accept the same Claude-compatible JSON contract via the shared bash script.
+// Generic PreToolUse-hook writer used for Codex and Gemini. Both accept the
+// same Claude-compatible input shape; the shared hook emits host-specific output.
 // `createIfMissing` controls whether we bootstrap a settings file when none
 // exists yet (Claude refuses to write a fresh settings.json; Codex/Gemini are OK).
 function installPreToolUseHook({ settingsPath, mode, label, createIfMissing }) {

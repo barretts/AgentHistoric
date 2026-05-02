@@ -6,9 +6,8 @@
 #                   stdout: {"permission": "allow|ask", "userMessage": "...", "agentMessage": "..."}
 #   --mode=claude   stdin: {"tool_name":"Bash","tool_input":{"command":"..."}}
 #                   stdout: {"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow|ask","permissionDecisionReason":"..."}}
-#   --mode=codex    Claude-compatible JSON contract. Codex parses "ask"/"allow"
-#                   but currently fails open on "ask"; the nudge still surfaces
-#                   via permissionDecisionReason in the transcript.
+#   --mode=codex    Claude-compatible input contract. Output is either empty
+#                   for allow or {"systemMessage":"..."} for a nudge.
 #   --mode=gemini   Claude-compatible JSON contract per geminicli.com/docs/hooks.
 #
 # failClosed is handled by the host: if this script crashes or times out, the host
@@ -20,7 +19,8 @@ MODE="cursor"
 for arg in "$@"; do
   case "$arg" in
     --mode=cursor) MODE="cursor" ;;
-    --mode=claude|--mode=codex|--mode=gemini) MODE="claude" ;;
+    --mode=claude|--mode=gemini) MODE="claude" ;;
+    --mode=codex) MODE="codex" ;;
   esac
 done
 
@@ -60,6 +60,8 @@ json_ask() {
     if [ "$mode" = "claude" ]; then
       jq -n --arg reason "$agent_msg" \
         '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"ask",permissionDecisionReason:$reason}}'
+    elif [ "$mode" = "codex" ]; then
+      jq -n --arg reason "$agent_msg" '{systemMessage:$reason}'
     else
       jq -n --arg u "$user_msg" --arg a "$agent_msg" \
         '{permission:"ask", userMessage:$u, agentMessage:$a}'
@@ -71,7 +73,9 @@ json_ask() {
       const mode = process.env.MODE_FOR_NODE;
       const out = mode === "claude"
         ? { hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "ask", permissionDecisionReason: a } }
-        : { permission: "ask", userMessage: u, agentMessage: a };
+        : mode === "codex"
+          ? { systemMessage: a }
+          : { permission: "ask", userMessage: u, agentMessage: a };
       process.stdout.write(JSON.stringify(out));
     '
     printf '\n'
@@ -79,10 +83,9 @@ json_ask() {
 }
 
 # Only Bash tool calls in Claude/Codex/Gemini carry a shell command. Non-Bash -> allow silently.
-if [ "$MODE" = "claude" ]; then
+if [ "$MODE" = "claude" ] || [ "$MODE" = "codex" ]; then
   TOOL_NAME=$(json_get "$INPUT" '.tool_name')
   if [ -n "$TOOL_NAME" ] && [ "$TOOL_NAME" != "Bash" ]; then
-    printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow"}}\n'
     exit 0
   fi
   CMD=$(json_get "$INPUT" '.tool_input.command')
@@ -93,6 +96,8 @@ fi
 emit_allow() {
   if [ "$MODE" = "claude" ]; then
     printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow"}}\n'
+  elif [ "$MODE" = "codex" ]; then
+    true
   else
     printf '{"permission":"allow"}\n'
   fi
