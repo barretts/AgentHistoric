@@ -165,6 +165,75 @@ Second-pass refinement targets. After the first pass identifies a broad domain, 
 - **Pragmatic Implementation** -> Quick Fix & Patch, General Implementation, Refactoring & Restructuring
 - **Interfaces & Abstractions** -> Interfaces & Abstractions, Refactoring & Restructuring
 
+## Dynamic Panel Contract
+
+Contract for generating task-specific subagent panels without abandoning the canonical AgentHistoric roster.
+
+### Trigger Policy
+
+- Use Dynamic Panel Design only for explicit debate, multiple-perspective, build-vs-buy, tradeoff-heavy, or self-configuring agent requests.
+- Do not use a dynamic panel for simple implementation, direct debugging, narrow refactoring, or single-expert tasks.
+
+### Constraints
+
+- Generate 3-5 panel agents for complex problems; use 2 panel agents only when the problem is narrow and explicitly comparative.
+- Every panel agent must have a distinct optimizationGoal that creates useful tension with the others.
+- Every generated agent must map baseExpert to one canonical expert id from the allowlist; use overlayInstructions for task-specific specialization.
+- Inline personas are allowed only when no canonical base expert covers the domain; they must still declare the closest baseExpert and explain the gap in overlayInstructions.
+- One moderator is mandatory and must use expert-orchestrator-simon unless the task explicitly requires a different synthesis authority.
+- Persona files or generated overlays never expand globalRuntime, router, logging, or verification constraints.
+
+### Schema Fields
+
+- topLevelFields: panel, moderator, rounds, validation
+- panelFields: id, role, baseExpert, optimizationGoal, overlayInstructions
+- moderatorFields: id, baseExpert, decisionRule
+
+### Output Schema Example
+
+```json
+{
+  "panel": [
+    {
+      "id": "systems_engineer",
+      "role": "Distributed Systems Engineer",
+      "baseExpert": "expert-architect-descartes",
+      "optimizationGoal": "Minimize operational and failure-mode risk.",
+      "overlayInstructions": "Focus on scalability, deployment topology, and fallback behavior."
+    },
+    {
+      "id": "product_manager",
+      "role": "Product Manager",
+      "baseExpert": "expert-ux-rogers",
+      "optimizationGoal": "Maximize user value and time-to-learning.",
+      "overlayInstructions": "Focus on adoption friction, workflow clarity, and opportunity cost."
+    },
+    {
+      "id": "skeptical_reviewer",
+      "role": "Skeptical Reviewer",
+      "baseExpert": "expert-qa-popper",
+      "optimizationGoal": "Find blind spots and invalid assumptions.",
+      "overlayInstructions": "Challenge unsupported claims and identify tests that would falsify the recommendation."
+    }
+  ],
+  "moderator": {
+    "id": "moderator",
+    "baseExpert": "expert-orchestrator-simon",
+    "decisionRule": "Prefer the option that satisfies the hardest constraint with the fewest irreversible commitments."
+  },
+  "rounds": [
+    "independent",
+    "critique",
+    "synthesis"
+  ],
+  "validation": {
+    "panelSize": "3-5",
+    "moderatorPresent": true,
+    "nonRedundantGoals": true
+  }
+}
+```
+
 ## Global Rules
 
 - The codebase is the source of truth, not memory.

@@ -135,7 +135,7 @@ Regenerates all output directories from the canonical JSON in `prompt-system/`.
 
 ## Routing Evolution Features
 
-Five features enhance the routing layer beyond basic signal matching. All are defined in `prompt-system/router.json`, rendered into every target by the build system, and covered by dedicated test suites.
+Six features enhance the routing layer beyond basic signal matching. All are defined in `prompt-system/router.json`, rendered into every target by the build system, and covered by dedicated test suites.
 
 ### Negative Routing Examples
 
@@ -178,6 +178,14 @@ After implementation, a separate adversarial verification step by Popper prevent
 - **Design rationale:** Inspired by Claude Code's verification agent pattern; explicitly rejects rationalization patterns
 - **Test suite:** `verification` (AV1-AV3)
 
+### Dynamic Panel Design
+
+A self-configuring deliberation pipeline for prompts where the right set of specialists depends on the problem. The router first invokes Simon as an agent designer, generates a bounded panel spec, validates canonical `baseExpert` mappings and non-redundant optimization goals, then runs debate/synthesis only when useful.
+
+- **Data:** `router.json` → `dynamicPanel`, `pipelines["Dynamic Panel Design"]`
+- **Rendered as:** "Dynamic Panel Contract" in rich router artifacts and Codex `AGENTS.md`
+- **Test suite:** `dynamic-panel` (DP1-DP3)
+
 ## Testing
 
 ### Unit Tests
@@ -219,6 +227,7 @@ node scripts/run-regressions.mjs --suite diversity     # RB1-RB9: expert variety
 node scripts/run-regressions.mjs --suite twopass       # TP1-TP3: progressive routing
 node scripts/run-regressions.mjs --suite council       # CC1-CC4: deliberation council
 node scripts/run-regressions.mjs --suite verification  # AV1-AV3: adversarial verification
+node scripts/run-regressions.mjs --suite dynamic-panel # DP1-DP3: dynamic panel design
 node scripts/run-regressions.mjs --suite model-parity   # 13 cases: cross-model routing agreement
 ```
 

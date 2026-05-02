@@ -727,6 +727,75 @@ test("Implement & Verify pipeline exists with adversarial step", () => {
   assert.ok(adversarialStep, "Verify pipeline needs a step with VERDICT keyword");
 });
 
+test("Dynamic Panel Design pipeline exists with validation and moderator steps", () => {
+  const dynamicPanel = system.router.pipelines.find(p => p.name === "Dynamic Panel Design");
+  assert.ok(dynamicPanel, "Missing Dynamic Panel Design pipeline");
+  assert.ok(dynamicPanel.triggerSignals?.length >= 5, "Dynamic panel needs trigger signals");
+  assert.ok(dynamicPanel.autoTrigger, "Dynamic panel needs an auto-trigger condition");
+  assert.ok(
+    dynamicPanel.steps.some((s) => s.task.includes("Dynamic Panel Contract")),
+    "Dynamic panel pipeline must generate from the contract"
+  );
+  assert.ok(
+    dynamicPanel.steps.some((s) => s.task.includes("moderator") || s.expert === "moderator"),
+    "Dynamic panel pipeline must include moderator synthesis"
+  );
+});
+
+test("dynamicPanel contract enforces bounded diverse canonical panels", () => {
+  const contract = system.router.dynamicPanel;
+  assert.ok(contract, "Missing dynamicPanel contract");
+  assert.ok(contract.triggerPolicy?.length >= 2, "dynamicPanel needs trigger policy");
+  assert.ok(contract.constraints?.some((c) => c.includes("3-5 panel agents")), "dynamicPanel must bound panel size");
+  assert.ok(contract.constraints?.some((c) => c.includes("distinct optimizationGoal")), "dynamicPanel must require non-redundant goals");
+  assert.ok(contract.constraints?.some((c) => c.includes("canonical expert id")), "dynamicPanel must map agents to canonical experts");
+  assert.ok(contract.constraints?.some((c) => c.includes("moderator is mandatory")), "dynamicPanel must require a moderator");
+
+  const example = contract.outputSchemaExample;
+  assert.ok(example?.panel?.length >= 3, "dynamicPanel example needs at least 3 panel agents");
+  assert.ok(example?.moderator, "dynamicPanel example needs a moderator");
+  assert.strictEqual(example.moderator.baseExpert, "expert-orchestrator-simon", "moderator should default to Simon");
+
+  const allowed = new Set(system.router.expertIdAllowlist);
+  for (const agent of example.panel) {
+    assert.ok(allowed.has(agent.baseExpert), `Unknown baseExpert in dynamic panel example: ${agent.baseExpert}`);
+    assert.ok(agent.optimizationGoal, `${agent.id} missing optimizationGoal`);
+    assert.ok(agent.overlayInstructions, `${agent.id} missing overlayInstructions`);
+  }
+  assert.ok(allowed.has(example.moderator.baseExpert), `Unknown moderator baseExpert: ${example.moderator.baseExpert}`);
+});
+
+test("rich router renders Dynamic Panel Contract section", () => {
+  const routerFiles = [...artifacts].filter(([p]) => p.includes("01-router"));
+  for (const [filePath, content] of routerFiles) {
+    assert.match(
+      content,
+      /Dynamic Panel Contract/,
+      `${filePath}: missing Dynamic Panel Contract section`
+    );
+    assert.match(
+      content,
+      /optimizationGoal/,
+      `${filePath}: missing dynamic panel schema fields`
+    );
+  }
+});
+
+test("codex AGENTS.md renders Dynamic Panel Contract section", () => {
+  const content = artifacts.get("compiled/codex/AGENTS.md");
+  assert.ok(content, "Missing compiled/codex/AGENTS.md");
+  assert.match(
+    content,
+    /Dynamic Panel Contract/,
+    "compiled/codex/AGENTS.md: missing Dynamic Panel Contract section"
+  );
+  assert.match(
+    content,
+    /moderatorPresent/,
+    "compiled/codex/AGENTS.md: missing dynamic panel validation example"
+  );
+});
+
 // ── Routing Evolution: Two-Pass Refinement ───────────────────────────
 
 test("router has refinementHeuristics with at least 3 refinements", () => {

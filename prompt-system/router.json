@@ -42,7 +42,14 @@
         "decision procedure",
         "what order",
         "sequence these",
-        "plan this migration"
+        "plan this migration",
+        "generate subagents",
+        "dynamic agents",
+        "agent designer",
+        "design the debate",
+        "assemble experts",
+        "run a debate",
+        "debate this"
       ],
       "boostSignals": [
         "phases",
@@ -602,6 +609,27 @@
       ]
     },
     {
+      "name": "Dynamic Panel Design",
+      "description": "Self-configuring deliberation for prompts where the useful expert set depends on the problem rather than a fixed persona panel.",
+      "triggerSignals": [
+        "design the panel",
+        "dynamic agents",
+        "generate subagents",
+        "assemble experts",
+        "run a debate",
+        "debate this",
+        "self-configuring"
+      ],
+      "autoTrigger": "When the user asks for debate, multiple perspectives, or a build-vs-buy style decision and no fixed panel is specified, design a bounded panel before deliberation.",
+      "steps": [
+        { "expert": "expert-orchestrator-simon", "task": "Act as Agent Designer. Generate a bounded panel specification using the Dynamic Panel Contract before any debate content." },
+        { "expert": "router", "task": "Validate panel size, moderator presence, canonical baseExpert mappings, and non-redundant optimization goals." },
+        { "expert": "dynamic-panel", "task": "Run independent Round 1 analysis for each generated panel agent using its base expert plus overlay instructions." },
+        { "expert": "dynamic-panel", "task": "Run critique or rebuttal only when it changes the decision; skip redundant rounds." },
+        { "expert": "moderator", "task": "Synthesize the panel into a final recommendation, naming the dominant tradeoff and unresolved tensions." }
+      ]
+    },
+    {
       "name": "Implement & Verify",
       "description": "Adversarial verification pipeline where a separate expert actively tries to break the implementation.",
       "steps": [
@@ -624,6 +652,62 @@
     "Check negative routing examples before finalizing the expert selection. If a negative example matches, re-route to the suggested alternative.",
     "For non-trivial tasks, use two-pass routing: first identify the broad domain, then refine to the specific sub-domain and lead expert within it."
   ],
+  "dynamicPanel": {
+    "description": "Contract for generating task-specific subagent panels without abandoning the canonical AgentHistoric roster.",
+    "triggerPolicy": [
+      "Use Dynamic Panel Design only for explicit debate, multiple-perspective, build-vs-buy, tradeoff-heavy, or self-configuring agent requests.",
+      "Do not use a dynamic panel for simple implementation, direct debugging, narrow refactoring, or single-expert tasks."
+    ],
+    "schema": {
+      "topLevelFields": ["panel", "moderator", "rounds", "validation"],
+      "panelFields": ["id", "role", "baseExpert", "optimizationGoal", "overlayInstructions"],
+      "moderatorFields": ["id", "baseExpert", "decisionRule"]
+    },
+    "constraints": [
+      "Generate 3-5 panel agents for complex problems; use 2 panel agents only when the problem is narrow and explicitly comparative.",
+      "Every panel agent must have a distinct optimizationGoal that creates useful tension with the others.",
+      "Every generated agent must map baseExpert to one canonical expert id from the allowlist; use overlayInstructions for task-specific specialization.",
+      "Inline personas are allowed only when no canonical base expert covers the domain; they must still declare the closest baseExpert and explain the gap in overlayInstructions.",
+      "One moderator is mandatory and must use expert-orchestrator-simon unless the task explicitly requires a different synthesis authority.",
+      "Persona files or generated overlays never expand globalRuntime, router, logging, or verification constraints."
+    ],
+    "outputSchemaExample": {
+      "panel": [
+        {
+          "id": "systems_engineer",
+          "role": "Distributed Systems Engineer",
+          "baseExpert": "expert-architect-descartes",
+          "optimizationGoal": "Minimize operational and failure-mode risk.",
+          "overlayInstructions": "Focus on scalability, deployment topology, and fallback behavior."
+        },
+        {
+          "id": "product_manager",
+          "role": "Product Manager",
+          "baseExpert": "expert-ux-rogers",
+          "optimizationGoal": "Maximize user value and time-to-learning.",
+          "overlayInstructions": "Focus on adoption friction, workflow clarity, and opportunity cost."
+        },
+        {
+          "id": "skeptical_reviewer",
+          "role": "Skeptical Reviewer",
+          "baseExpert": "expert-qa-popper",
+          "optimizationGoal": "Find blind spots and invalid assumptions.",
+          "overlayInstructions": "Challenge unsupported claims and identify tests that would falsify the recommendation."
+        }
+      ],
+      "moderator": {
+        "id": "moderator",
+        "baseExpert": "expert-orchestrator-simon",
+        "decisionRule": "Prefer the option that satisfies the hardest constraint with the fewest irreversible commitments."
+      },
+      "rounds": ["independent", "critique", "synthesis"],
+      "validation": {
+        "panelSize": "3-5",
+        "moderatorPresent": true,
+        "nonRedundantGoals": true
+      }
+    }
+  },
   "expertIdAllowlist": [
     "expert-abstractions-liskov",
     "expert-architect-descartes",

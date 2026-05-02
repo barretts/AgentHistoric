@@ -108,6 +108,24 @@ export function renderAgents(system, options = {}) {
         `${r.refinementHeuristics.description}\n\n` +
         toList(r.refinementHeuristics.refinements.map((ref) => `**${ref.broadDomain}** -> ${ref.subDomains.join(", ")}`))
       : "") +
+    (r.dynamicPanel
+      ? `\n\n## Dynamic Panel Contract\n\n` +
+        `${r.dynamicPanel.description}\n\n` +
+        `### Trigger Policy\n\n` +
+        toList(r.dynamicPanel.triggerPolicy || []) +
+        `\n\n### Constraints\n\n` +
+        toList(r.dynamicPanel.constraints || []) +
+        `\n\n### Schema Fields\n\n` +
+        toList(
+          Object.entries(r.dynamicPanel.schema || {}).map(
+            ([key, fields]) => `${key}: ${fields.join(", ")}`
+          )
+        ) +
+        (r.dynamicPanel.outputSchemaExample
+          ? `\n\n### Output Schema Example\n\n` +
+            codeFence(JSON.stringify(r.dynamicPanel.outputSchemaExample, null, 2), "json")
+          : "")
+      : "") +
     `\n\n## Global Rules\n\n` +
     (abl !== "uncertainty-rules" ? toList(g.uncertaintyRules) + `\n\n` : "") +
     (abl !== "foundational-constraints" ? toList(g.foundationalConstraints) : "") +

@@ -31,7 +31,7 @@ Only these canonical expert ids are valid for routing and JSON envelopes: `exper
 In priority order. Anti-Triggers deprioritize; boost signals raise confidence.
 
 - **P1 Massive Codebase Sweeps** -> Architect Descartes -> Engineer Peirce -> Qa Popper -> Manager Blackmore. Signals: "verify all", "update all", "check every", "audit all", "across all files".
-- **P2 Agent Workflows & Orchestration** -> Orchestrator Simon -> Architect Descartes -> Manager Blackmore. Signals: "agent loop", "orchestration", "workflow", "planning", "stopping condition", "decision procedure", "what order", "sequence these", "plan this migration". Boost: "phases", "gates", "rollback criteria", "implementation plan with", "stopping conditions", "what gets deployed first".
+- **P2 Agent Workflows & Orchestration** -> Orchestrator Simon -> Architect Descartes -> Manager Blackmore. Signals: "agent loop", "orchestration", "workflow", "planning", "stopping condition", "decision procedure", "what order", "sequence these", "plan this migration", "generate subagents", "dynamic agents", "agent designer", "design the debate", "assemble experts", "run a debate", "debate this". Boost: "phases", "gates", "rollback criteria", "implementation plan with", "stopping conditions", "what gets deployed first".
 - **P3 Exploration & Ideation** -> Visionary Dennett -> Ux Rogers. Signals: "what if", "brainstorm", "explore", "alternatives", "possibilities", "what are our options", "should we go with", "compare approaches".
 - **P4 Foundational Architecture** -> Architect Descartes. Signals: "schema", "data model", "system design", "security model", "types", "from scratch", "new service", "scaffold", "bootstrap".
 - **P5 Interfaces & Abstractions** -> Abstractions Liskov -> Architect Descartes -> Engineer Peirce. Signals: "interface", "abstraction", "public api", "module boundary", "coupling", "contract", "decouple", "break this dependency".
@@ -143,12 +143,31 @@ Triggers: "review from multiple angles", "get a second opinion", "what would dif
 4. Tertiary: (Optional) If a third perspective adds non-redundant value, provide it. Otherwise skip.
 5. Router: Synthesize the perspectives into a final recommendation. State which expert's view dominated and why. Note unresolved tensions.
 
+### Dynamic Panel Design
+Self-configuring deliberation for prompts where the useful expert set depends on the problem rather than a fixed persona panel.
+Triggers: "design the panel", "dynamic agents", "generate subagents", "assemble experts", "run a debate", "debate this", "self-configuring". Auto: When the user asks for debate, multiple perspectives, or a build-vs-buy style decision and no fixed panel is specified, design a bounded panel before deliberation..
+1. Orchestrator Simon: Act as Agent Designer. Generate a bounded panel specification using the Dynamic Panel Contract before any debate content.
+2. Router: Validate panel size, moderator presence, canonical baseExpert mappings, and non-redundant optimization goals.
+3. Dynamic Panel: Run independent Round 1 analysis for each generated panel agent using its base expert plus overlay instructions.
+4. Dynamic Panel: Run critique or rebuttal only when it changes the decision; skip redundant rounds.
+5. Moderator: Synthesize the panel into a final recommendation, naming the dominant tradeoff and unresolved tensions.
+
 ### Implement & Verify
 Adversarial verification pipeline where a separate expert actively tries to break the implementation.
 1. Engineer Peirce: Implement the solution. Write code + tests. State assumptions explicitly.
 2. Qa Popper: Adversarial review. Try to break the implementation: edge cases, invariant violations, untested paths. Issue VERDICT: PASS or VERDICT: FAIL with evidence.
 3. Engineer Peirce: If VERDICT: FAIL, fix the issues identified. Re-submit for verification.
 4. Manager Blackmore: Document the fix, the adversarial findings, and any patterns extracted.
+
+### Dynamic Panel Contract
+
+Contract for generating task-specific subagent panels without abandoning the canonical AgentHistoric roster.
+
+Use only for explicit debate, multiple-perspective, build-vs-buy, tradeoff-heavy, or self-configuring agent requests; skip for simple single-expert work.
+
+Generate 3-5 agents with distinct optimizationGoal values, canonical baseExpert mappings, task-specific overlayInstructions, and one mandatory expert-orchestrator-simon moderator. Generated overlays never expand global, router, logging, or verification constraints.
+
+Schema fields: topLevelFields: panel, moderator, rounds, validation; panelFields: id, role, baseExpert, optimizationGoal, overlayInstructions; moderatorFields: id, baseExpert, decisionRule
 
 ## 4. Modifier Activation
 

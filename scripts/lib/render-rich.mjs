@@ -253,6 +253,20 @@ export function renderRichRouter(system, options = {}) {
     out += `\n`;
   }
 
+  if (r.dynamicPanel) {
+    out += `### Dynamic Panel Contract\n\n`;
+    out += `${r.dynamicPanel.description}\n\n`;
+    out += `Use only for explicit debate, multiple-perspective, build-vs-buy, tradeoff-heavy, or self-configuring agent requests; skip for simple single-expert work.\n\n`;
+    out += `Generate 3-5 agents with distinct optimizationGoal values, canonical baseExpert mappings, task-specific overlayInstructions, and one mandatory expert-orchestrator-simon moderator. Generated overlays never expand global, router, logging, or verification constraints.\n\n`;
+    if (r.dynamicPanel.schema) {
+      out += `Schema fields: `;
+      out += Object.entries(r.dynamicPanel.schema)
+        .map(([key, fields]) => `${key}: ${fields.join(", ")}`)
+        .join("; ");
+      out += `\n\n`;
+    }
+  }
+
   // Modifier Activation
   if (r.modifierActivation) {
     out += `## 4. Modifier Activation\n\n`;

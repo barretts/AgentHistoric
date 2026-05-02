@@ -95,7 +95,7 @@ test("buildWrappedPrompt adds confidenceDistribution when verbalizedSampling", (
 test("routePrompt matches fixture expectations for representative cases", async () => {
   const system = await loadPromptSystemSpec(workspaceRoot);
   const fixtures = await loadRegressionFixtures(workspaceRoot);
-  const caseIds = ["R1", "R2", "R3", "R4", "R5", "R6", "C2"];
+  const caseIds = ["R1", "R2", "R3", "R4", "R5", "R6", "C2", "DP1", "DP2", "DP3"];
 
   for (const caseId of caseIds) {
     const testCase = fixtures.cases.find((item) => item.id === caseId);

@@ -85,7 +85,10 @@
       "TP3b",
       "TP5b",
       "SP-Kn3",
-      "MI3b"
+      "MI3b",
+      "DP1",
+      "DP2",
+      "DP3"
     ],
     "modifier": [
       "MO1",
@@ -175,6 +178,11 @@
       "MI3b",
       "TP3b",
       "TP5b"
+    ],
+    "dynamic-panel": [
+      "DP1",
+      "DP2",
+      "DP3"
     ]
   },
   "cases": [
@@ -1429,6 +1437,42 @@
       "expectedSections": ["Objective", "Procedure", "Stopping Conditions", "Procedure Risks", "Evaluation"],
       "allowedHandoffs": ["expert-architect-descartes"],
       "forbiddenBehaviors": ["Foundational architecture redesign instead of a rollout plan", "No stopping conditions", "Starting implementation without phases"]
+    },
+    {
+      "id": "DP1",
+      "category": "dynamic-panel",
+      "name": "Dynamic panel: generated subagents for build-vs-buy debate",
+      "targets": ["cursor", "codex"],
+      "prompt": "Use dynamic agents to run a debate on whether we should build our own agent framework or use LangGraph.",
+      "expectedParity": true,
+      "expectedPrimaryExpert": "expert-orchestrator-simon",
+      "expectedSections": ["Objective", "Procedure", "Stopping Conditions", "Procedure Risks", "Evaluation"],
+      "allowedHandoffs": ["expert-architect-descartes", "expert-qa-popper", "expert-ux-rogers", "expert-performance-knuth"],
+      "forbiddenBehaviors": ["Static fixed panel only", "No moderator", "Redundant agents with the same optimization goal", "Generated expert ids treated as canonical"]
+    },
+    {
+      "id": "DP2",
+      "category": "dynamic-panel",
+      "name": "Dynamic panel: explicit subagent generation",
+      "targets": ["cursor", "codex"],
+      "prompt": "Generate subagents on demand for this cloud migration decision, then synthesize the panel into a recommendation.",
+      "expectedParity": true,
+      "expectedPrimaryExpert": "expert-orchestrator-simon",
+      "expectedSections": ["Objective", "Procedure", "Stopping Conditions", "Procedure Risks", "Evaluation"],
+      "allowedHandoffs": ["expert-architect-descartes", "expert-performance-knuth", "expert-qa-popper"],
+      "forbiddenBehaviors": ["No bounded panel size", "No baseExpert mapping", "No decision rule"]
+    },
+    {
+      "id": "DP3",
+      "category": "dynamic-panel",
+      "name": "Dynamic panel negative: simple implementation stays single expert",
+      "targets": ["cursor", "codex"],
+      "prompt": "Add a CLI flag for verbose logging and update the related tests.",
+      "expectedParity": true,
+      "expectedPrimaryExpert": "expert-engineer-peirce",
+      "expectedSections": ["Answer"],
+      "allowedHandoffs": ["expert-qa-popper"],
+      "forbiddenBehaviors": ["Dynamic panel for simple implementation", "Debate loop before coding", "Moderator synthesis for a direct patch"]
     }
   ]
 }
