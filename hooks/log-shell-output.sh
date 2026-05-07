@@ -109,6 +109,38 @@ emit_ask() {
   exit 0
 }
 
+# emit_nudge <user_msg> <agent_msg>: emits a non-blocking nudge payload.
+# The command is always allowed through; the nudge text guides the agent
+# toward the logging pattern without requiring human intervention.
+emit_nudge() {
+  local user_msg="$1" agent_msg="$2" mode="$3"
+  if [ "$HAVE_JQ" -eq 1 ]; then
+    if [ "$mode" = "claude" ]; then
+      jq -n --arg reason "$agent_msg" \
+        '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"allow",permissionDecisionReason:$reason}}'
+    elif [ "$mode" = "codex" ]; then
+      # codex: empty output = allow, no blocking payload
+      true
+    else
+      jq -n --arg a "$agent_msg" \
+        '{permission:"allow", agentMessage:$a}'
+    fi
+  else
+    AGENT_FOR_NODE="$agent_msg" MODE_FOR_NODE="$mode" node -e '
+      const a = process.env.AGENT_FOR_NODE || "";
+      const mode = process.env.MODE_FOR_NODE;
+      const out = mode === "claude"
+        ? { hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "allow", permissionDecisionReason: a } }
+        : mode === "codex"
+          ? {}
+          : { permission: "allow", agentMessage: a };
+      process.stdout.write(JSON.stringify(out));
+    '
+    printf '\n'
+  fi
+  exit 0
+}
+
 # Empty or unparseable -> allow (fail open).
 [ -z "$CMD" ] && emit_allow
 
@@ -180,7 +212,7 @@ DENYLIST='(^|[[:space:]\|&;(`$])(npx[[:space:]]+(tsx|tsc|vitest|jest|playwright|
 if printf '%s' "$CMD" | grep -qE "$DENYLIST"; then
   USER_MSG="Long-running shell command without a persistent log redirect. The agent should rewrite and re-issue it with logging before asking for human intervention. See Tenet 3."
   AGENT_MSG="TENET 3 REWRITE REQUIRED: rewrite and re-issue this command with persistent logging instead of asking the human to accept data-loss risk. POSIX pattern: mkdir -p .logs && LOG=\".logs/run-<slug>-\$(date +%s).log\" && (your command) > \"\$LOG\" 2>&1; rc=\$?; tail -n 50 \"\$LOG\"; exit \$rc. PowerShell pattern: New-Item -ItemType Directory -Force .logs | Out-Null; \$Log = \".logs/run-<slug>-\$(Get-Date -Format yyyyMMddHHmmss).log\"; your command *> \$Log; \$Status = \$LASTEXITCODE; Get-Content -Tail 50 \$Log; exit \$Status."
-  emit_ask "$USER_MSG" "$AGENT_MSG"
+  emit_nudge "$USER_MSG" "$AGENT_MSG" "$MODE"
 fi
 
 # 4. Default: allow.

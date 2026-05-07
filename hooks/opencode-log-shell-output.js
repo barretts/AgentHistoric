@@ -107,12 +107,13 @@ function evaluateCommand(cmd) {
   }
 
   if (DENYLIST_RE.test(cmd)) {
-    return {
-      reason:
-        'TENET 3 REWRITE REQUIRED: rewrite and re-issue this command with persistent logging instead of asking the human to accept data-loss risk. ' +
-        'POSIX pattern: mkdir -p .logs && LOG=".logs/run-<slug>-$(date +%s).log" && (your command) > "$LOG" 2>&1; rc=$?; tail -n 50 "$LOG"; exit $rc. ' +
-        'PowerShell pattern: New-Item -ItemType Directory -Force .logs | Out-Null; $Log = ".logs/run-<slug>-$(Get-Date -Format yyyyMMddHHmmss).log"; your command *> $Log; $Status = $LASTEXITCODE; Get-Content -Tail 50 $Log; exit $Status.',
-    };
+    // Non-blocking nudge: return null (allow) and write guidance to stderr.
+    process.stderr.write(
+      '[TENET 3 NUDGE] REWRITE REQUIRED: rewrite and re-issue this command with persistent logging instead of asking the human to accept data-loss risk. ' +
+      'POSIX pattern: mkdir -p .logs && LOG=".logs/run-<slug>-$(date +%s).log" && (your command) > "$LOG" 2>&1; rc=$?; tail -n 50 "$LOG"; exit $rc. ' +
+      'PowerShell pattern: New-Item -ItemType Directory -Force .logs | Out-Null; $Log = ".logs/run-<slug>-$(Get-Date -Format yyyyMMddHHmmss).log"; your command *> $Log; $Status = $LASTEXITCODE; Get-Content -Tail 50 $Log; exit $Status.\n'
+    );
+    return null;
   }
 
   return null;
@@ -126,7 +127,10 @@ export const LogShellOutputPlugin = async (_input) => {
         const cmd = output?.args?.command;
         const verdict = evaluateCommand(cmd);
         if (!verdict) return;
-        throw new Error(verdict.reason);
+        // verdict is non-null only in legacy code path; evaluateCommand now
+        // returns null and writes nudge to stderr. Keep the throw guard for
+        // safety but it should never fire.
+        return;
       } catch (error) {
         if (error instanceof Error && error.message) throw error;
         return;

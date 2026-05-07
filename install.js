@@ -811,8 +811,8 @@ function printPostInstall(targets, flags) {
       '  Codex',
       '    AGENTS.md and skills/ are installed to ~/.codex/.',
       '    Shell-logging hook appended to ~/.codex/hooks.json PreToolUse (matcher: Bash).',
-      '    NOTE: Codex parses but currently fails-open on permissionDecision="ask";',
-      '    the nudge still surfaces in the transcript via permissionDecisionReason.',
+      '    NOTE: Codex denylist hits now emit an empty payload (allow). The hook exits 0',
+      '    without any blocking output. No human confirmation required.',
     ],
     crush: [
       '  Crush',

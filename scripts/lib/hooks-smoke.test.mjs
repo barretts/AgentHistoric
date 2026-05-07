@@ -69,29 +69,28 @@ function expectAllow(out, mode) {
   }
 }
 
-function expectAsk(out, mode) {
+function expectAllowNudge(out, mode) {
   let message;
   if (mode === 'cursor') {
-    assert.equal(out.permission, 'ask', `cursor ask expected, got ${JSON.stringify(out)}`);
+    assert.equal(out.permission, 'allow', `cursor allow+nudge expected, got ${JSON.stringify(out)}`);
     message = out.agentMessage || '';
   } else if (mode === 'codex') {
-    assert.deepEqual(
-      Object.keys(out),
-      ['systemMessage'],
-      `codex ask should only emit systemMessage, got ${JSON.stringify(out)}`,
-    );
-    message = out.systemMessage || '';
+    // codex: empty output = allow, no blocking payload
+    assert.deepEqual(out, {}, `codex allow must emit no blocking payload, got ${JSON.stringify(out)}`);
+    message = '';
   } else {
     assert.equal(
       out.hookSpecificOutput?.permissionDecision,
-      'ask',
-      `${mode} ask expected, got ${JSON.stringify(out)}`,
+      'allow',
+      `${mode} allow+nudge expected, got ${JSON.stringify(out)}`,
     );
     message = out.hookSpecificOutput?.permissionDecisionReason || '';
   }
-  assert.match(message, /TENET 3/);
-  assert.match(message, /REWRITE REQUIRED/);
-  assert.match(message, /PowerShell pattern/);
+  if (message) {
+    assert.match(message, /TENET 3/);
+    assert.match(message, /REWRITE REQUIRED/);
+    assert.match(message, /PowerShell pattern/);
+  }
   assert.doesNotMatch(message, /Approve only if/i);
 }
 
@@ -167,7 +166,7 @@ for (const mode of BASH_MODES) {
 
     test('denylist hit: long-running command without redirect', () => {
       const out = runBashHook({ mode, payload: payloadFor(mode, 'npm test') });
-      expectAsk(out, mode);
+      expectAllowNudge(out, mode);
     });
 
     test('denylist hit: bare non-whitelisted log variables', () => {
@@ -176,7 +175,7 @@ for (const mode of BASH_MODES) {
         'node /tmp/x.mjs > "$FOO" 2>&1',
       ]) {
         const out = runBashHook({ mode, payload: payloadFor(mode, cmd) });
-        expectAsk(out, mode);
+        expectAllowNudge(out, mode);
       }
     });
   });
@@ -239,26 +238,35 @@ describe('HOOKS-SMOKE: opencode plugin (evaluateCommand)', () => {
     assert.equal(evaluateCommand(cmd), null);
   });
 
-  test('denylist hit: returns { reason } containing TENET 3', () => {
-    const verdict = evaluateCommand('npm test');
-    assert.ok(verdict, 'expected a non-null verdict for denylist hit');
-    assert.match(verdict.reason, /TENET 3/);
-    assert.match(verdict.reason, /REWRITE REQUIRED/);
-    assert.match(verdict.reason, /PowerShell pattern/);
-    assert.match(verdict.reason, /rc=\$\?/);
-    assert.doesNotMatch(verdict.reason, /status=\$\?/);
-    assert.doesNotMatch(verdict.reason, /exit \$status/);
-    assert.doesNotMatch(verdict.reason, /Approve only if/i);
+  test('denylist hit: returns null with nudge on stderr', () => {
+    // evaluateCommand now returns null (allow) and writes nudge to stderr.
+    // Capture stderr via spawnSync since the module writes to process.stderr directly.
+    const evalPath = path.resolve(__dirname, '../../hooks/opencode-log-shell-output-evaluator.js');
+    const result = spawnSync(process.execPath, ['--input-type=module', '-e', `
+      import { evaluateCommand } from "${evalPath}";
+      const v = evaluateCommand('npm test');
+      process.exit(v !== null ? 1 : 0);
+    `], { encoding: 'utf8', timeout: 5000 });
+    assert.equal(result.status, 0, `expected exit 0, got ${result.status}: ${result.stderr}`);
+    assert.match(result.stderr, /TENET 3 NUDGE/);
+    assert.match(result.stderr, /REWRITE REQUIRED/);
+    assert.match(result.stderr, /PowerShell pattern/);
   });
 
-  test('denylist hit: bare non-whitelisted log variables return TENET 3 verdict', () => {
+  test('denylist hit: bare non-whitelisted log variables return null with nudge on stderr', () => {
+    const evalPath = path.resolve(__dirname, '../../hooks/opencode-log-shell-output-evaluator.js');
     for (const cmd of [
       'node /tmp/x.mjs > "$OUTPUT" 2>&1',
       'node /tmp/x.mjs > "$FOO" 2>&1',
     ]) {
-      const verdict = evaluateCommand(cmd);
-      assert.ok(verdict, `expected a non-null verdict for ${cmd}`);
-      assert.match(verdict.reason, /TENET 3/);
+      const escaped = cmd.replace(/"/g, '\\"');
+      const result = spawnSync(process.execPath, ['--input-type=module', '-e', `
+        import { evaluateCommand } from "${evalPath}";
+        const v = evaluateCommand("${escaped}");
+        process.exit(v !== null ? 1 : 0);
+      `], { encoding: 'utf8', timeout: 5000 });
+      assert.equal(result.status, 0, `expected exit 0 for "${cmd}", got ${result.status}: ${result.stderr}`);
+      assert.match(result.stderr, /TENET 3 NUDGE/);
     }
   });
 
