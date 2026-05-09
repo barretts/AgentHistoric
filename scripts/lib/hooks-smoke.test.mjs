@@ -90,8 +90,27 @@ function expectAllowNudge(out, mode) {
     assert.match(message, /TENET 3/);
     assert.match(message, /REWRITE REQUIRED/);
     assert.match(message, /PowerShell pattern/);
+    assert.match(message, /\.logs\/run-test-1\.log/);
+    assert.doesNotMatch(message, /run-<slug>-\$\(|Get-Date -Format|mktemp .*\.logs|`[^`]*\.logs[^`]*`/);
   }
   assert.doesNotMatch(message, /Approve only if/i);
+}
+
+function captureStderr(fn) {
+  const originalWrite = process.stderr.write;
+  let stderr = '';
+  process.stderr.write = function write(chunk, ...args) {
+    stderr += String(chunk);
+    const callback = args.find((arg) => typeof arg === 'function');
+    if (callback) callback();
+    return true;
+  };
+  try {
+    const value = fn();
+    return { value, stderr };
+  } finally {
+    process.stderr.write = originalWrite;
+  }
 }
 
 // --- Bash hook: 4 modes x 3 cases = 12 tests ------------------------------
@@ -106,13 +125,13 @@ for (const mode of BASH_MODES) {
     });
 
     test('already-redirected: denylist-shape with .logs/ redirect', () => {
-      const cmd = 'npm test > .logs/run-smoke-$(date +%s).log 2>&1';
+      const cmd = 'npm test > .logs/run-smoke-1.log 2>&1';
       const out = runBashHook({ mode, payload: payloadFor(mode, cmd) });
       expectAllow(out, mode);
     });
 
     test('already-redirected: hidden logs directory redirect', () => {
-      const cmd = 'npm run lint > .agent/logs/lint-$(date +%s).log 2>&1';
+      const cmd = 'npm run lint > .agent/logs/lint-1.log 2>&1';
       const out = runBashHook({ mode, payload: payloadFor(mode, cmd) });
       expectAllow(out, mode);
     });
@@ -130,13 +149,13 @@ for (const mode of BASH_MODES) {
     });
 
     test('already-redirected: POSIX variable points to hidden logs directory', () => {
-      const cmd = 'LOG=.agent/logs/lint-$(date +%s).log && npm run lint > "$LOG" 2>&1; echo "exit=$?"; tail -20 "$LOG"';
+      const cmd = 'LOG=.agent/logs/lint-1.log && npm run lint > "$LOG" 2>&1; echo "exit=$?"; tail -20 "$LOG"';
       const out = runBashHook({ mode, payload: payloadFor(mode, cmd) });
       expectAllow(out, mode);
     });
 
     test('already-redirected: POSIX variable points to absolute .logs path', () => {
-      const cmd = 'LOG="/Users/me/proj/.logs/foo-$(date +%s).log"; node /tmp/x.mjs > "$LOG" 2>&1';
+      const cmd = 'LOG="/Users/me/proj/.logs/foo-1.log"; node /tmp/x.mjs > "$LOG" 2>&1';
       const out = runBashHook({ mode, payload: payloadFor(mode, cmd) });
       expectAllow(out, mode);
     });
@@ -189,12 +208,12 @@ describe('HOOKS-SMOKE: opencode plugin (evaluateCommand)', () => {
   });
 
   test('already-redirected: pre-piped to .logs/ returns null', () => {
-    const cmd = 'npm test > .logs/run-smoke-$(date +%s).log 2>&1';
+    const cmd = 'npm test > .logs/run-smoke-1.log 2>&1';
     assert.equal(evaluateCommand(cmd), null);
   });
 
   test('already-redirected: hidden logs directory returns null', () => {
-    const cmd = 'npm run lint > .agent/logs/lint-$(date +%s).log 2>&1';
+    const cmd = 'npm run lint > .agent/logs/lint-1.log 2>&1';
     assert.equal(evaluateCommand(cmd), null);
   });
 
@@ -209,12 +228,12 @@ describe('HOOKS-SMOKE: opencode plugin (evaluateCommand)', () => {
   });
 
   test('already-redirected: POSIX variable hidden logs directory returns null', () => {
-    const cmd = 'LOG=.agent/logs/lint-$(date +%s).log && npm run lint > "$LOG" 2>&1; echo "exit=$?"; tail -20 "$LOG"';
+    const cmd = 'LOG=.agent/logs/lint-1.log && npm run lint > "$LOG" 2>&1; echo "exit=$?"; tail -20 "$LOG"';
     assert.equal(evaluateCommand(cmd), null);
   });
 
   test('already-redirected: POSIX variable absolute .logs path returns null', () => {
-    const cmd = 'LOG="/Users/me/proj/.logs/foo-$(date +%s).log"; node /tmp/x.mjs > "$LOG" 2>&1';
+    const cmd = 'LOG="/Users/me/proj/.logs/foo-1.log"; node /tmp/x.mjs > "$LOG" 2>&1';
     assert.equal(evaluateCommand(cmd), null);
   });
 
@@ -239,33 +258,30 @@ describe('HOOKS-SMOKE: opencode plugin (evaluateCommand)', () => {
   });
 
   test('denylist hit: returns null with nudge on stderr', () => {
-    // evaluateCommand now returns null (allow) and writes nudge to stderr.
-    // Capture stderr via spawnSync since the module writes to process.stderr directly.
-    const evalPath = path.resolve(__dirname, '../../hooks/opencode-log-shell-output-evaluator.js');
-    const result = spawnSync(process.execPath, ['--input-type=module', '-e', `
-      import { evaluateCommand } from "${evalPath}";
-      const v = evaluateCommand('npm test');
-      process.exit(v !== null ? 1 : 0);
-    `], { encoding: 'utf8', timeout: 5000 });
-    assert.equal(result.status, 0, `expected exit 0, got ${result.status}: ${result.stderr}`);
+    const result = captureStderr(() => evaluateCommand('npm test'));
+    assert.equal(result.value, null);
     assert.match(result.stderr, /TENET 3 NUDGE/);
     assert.match(result.stderr, /REWRITE REQUIRED/);
     assert.match(result.stderr, /PowerShell pattern/);
+    assert.match(result.stderr, /\.logs\/run-test-1\.log/);
+    assert.doesNotMatch(result.stderr, /run-<slug>-\$\(|Get-Date -Format|mktemp .*\.logs/);
+  });
+
+  test('generated log filename command substitution returns null with nudge on stderr', () => {
+    const result = captureStderr(() => evaluateCommand('npm test > .logs/run-smoke-$(date +%s).log 2>&1'));
+    assert.equal(result.value, null);
+    assert.match(result.stderr, /TENET 3 NUDGE/);
+    assert.match(result.stderr, /literal log filename/);
+    assert.match(result.stderr, /\.logs\/run-test-1\.log/);
   });
 
   test('denylist hit: bare non-whitelisted log variables return null with nudge on stderr', () => {
-    const evalPath = path.resolve(__dirname, '../../hooks/opencode-log-shell-output-evaluator.js');
     for (const cmd of [
       'node /tmp/x.mjs > "$OUTPUT" 2>&1',
       'node /tmp/x.mjs > "$FOO" 2>&1',
     ]) {
-      const escaped = cmd.replace(/"/g, '\\"');
-      const result = spawnSync(process.execPath, ['--input-type=module', '-e', `
-        import { evaluateCommand } from "${evalPath}";
-        const v = evaluateCommand("${escaped}");
-        process.exit(v !== null ? 1 : 0);
-      `], { encoding: 'utf8', timeout: 5000 });
-      assert.equal(result.status, 0, `expected exit 0 for "${cmd}", got ${result.status}: ${result.stderr}`);
+      const result = captureStderr(() => evaluateCommand(cmd));
+      assert.equal(result.value, null);
       assert.match(result.stderr, /TENET 3 NUDGE/);
     }
   });

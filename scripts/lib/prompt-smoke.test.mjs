@@ -1205,6 +1205,37 @@ test("COMPLIANCE: system.json globalRuntime.logging.mandate includes fail-closed
     /2>&1/,
     "logging.mandate must require 2>&1 for stderr capture"
   );
+  assert.match(
+    mandate,
+    /literal log filename/i,
+    "logging.mandate must require literal filename selection"
+  );
+  assert.match(
+    mandate,
+    /\.logs\/run-test-1\.log/,
+    "logging.mandate must include a literal example filename"
+  );
+});
+
+test("COMPLIANCE: logging mandate forbids shell-generated log filenames", () => {
+  const logging = system.globalRuntime.logging || {};
+  const text = [
+    logging.mandate || "",
+    system.intensityProfiles?.loggingMandate?.imperative || "",
+    system.intensityProfiles?.loggingMandate?.declarative || "",
+  ].join("\n");
+
+  for (const forbidden of ["$(date)", "$(pwd)", "mktemp", "backticks"]) {
+    assert.ok(
+      text.includes(forbidden),
+      `logging mandate must mention forbidden ${forbidden} filename construction`
+    );
+  }
+  assert.doesNotMatch(
+    text,
+    /run-<slug>-\$\(date/,
+    "logging mandate must not recommend timestamp command substitution"
+  );
 });
 
 test("COMPLIANCE: global logging rules forbid heredocs and multi-line terminal payloads", () => {

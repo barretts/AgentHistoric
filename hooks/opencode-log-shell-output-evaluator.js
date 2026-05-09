@@ -6,6 +6,10 @@ const ALLOW_REDIRECT_RE = new RegExp(
 const POSIX_LOG_VAR_RE = new RegExp(String.raw`\b([A-Za-z_][A-Za-z0-9_]*)=${LOG_PATH_RE}`);
 const POWERSHELL_LOG_VAR_RE = new RegExp(String.raw`\$([A-Za-z_][A-Za-z0-9_]*)\s*=\s*${LOG_PATH_RE}`, 'i');
 const BARE_LOG_REDIRECT_RE = />>?\s*"?\$(?:LOG|LOGFILE|LOG_FILE)"?(?:\s|$)/;
+const GENERATED_LOG_VALUE_RE = new RegExp(
+  String.raw`${LOG_PATH_RE}[\s\S]*(?:\$\((?:date|pwd|Get-Date)(?:\s[^)]*)?\)|` + '`[^`]*`' + String.raw`|\bmktemp\b)|(?:\$\([^)]*\bmktemp\b[^)]*\)|` + '`[^`]*\\bmktemp\\b[^`]*`' + String.raw`)[\s\S]*${LOG_PATH_RE}`,
+  'i',
+);
 
 const ALLOW_FIRST_TOKEN = new Set([
   'echo', 'printf', 'pwd', 'which', 'cd', 'ls', 'cat', 'head', 'tail', 'wc',
@@ -73,6 +77,16 @@ function firstExecutableToken(cmd) {
 export function evaluateCommand(cmd) {
   if (!cmd || typeof cmd !== 'string') return null;
 
+  if (GENERATED_LOG_VALUE_RE.test(cmd)) {
+    process.stderr.write(
+      '[TENET 3 NUDGE] REWRITE REQUIRED: choose a literal log filename before re-running, for example .logs/run-test-1.log. ' +
+      'For retries, use .logs/run-test-2.log. Do not use $(date), $(pwd), mktemp, backticks, or shell-generated values for log filenames. ' +
+      'POSIX pattern: mkdir -p .logs && your command > .logs/run-<slug>-1.log 2>&1; rc=$?; tail -n 50 .logs/run-<slug>-1.log; exit $rc. ' +
+      'PowerShell pattern: New-Item -ItemType Directory -Force .logs | Out-Null; your command *> .logs/run-<slug>-1.log; $Status = $LASTEXITCODE; Get-Content -Tail 50 .logs/run-<slug>-1.log; exit $Status.\n'
+    );
+    return null;
+  }
+
   if (ALLOW_REDIRECT_RE.test(cmd)) return null;
   const posixLogVar = cmd.match(POSIX_LOG_VAR_RE)?.[1];
   if (posixLogVar && new RegExp(String.raw`>>?\s*"?\$${posixLogVar}"?`).test(cmd)) return null;
@@ -100,8 +114,9 @@ export function evaluateCommand(cmd) {
     // so the agent sees it without the host blocking the command.
     process.stderr.write(
       '[TENET 3 NUDGE] REWRITE REQUIRED: rewrite and re-issue this command with persistent logging instead of asking the human to accept data-loss risk. ' +
-      'POSIX pattern: mkdir -p .logs && LOG=".logs/run-<slug>-$(date +%s).log" && (your command) > "$LOG" 2>&1; rc=$?; tail -n 50 "$LOG"; exit $rc. ' +
-      'PowerShell pattern: New-Item -ItemType Directory -Force .logs | Out-Null; $Log = ".logs/run-<slug>-$(Get-Date -Format yyyyMMddHHmmss).log"; your command *> $Log; $Status = $LASTEXITCODE; Get-Content -Tail 50 $Log; exit $Status.\n'
+      'Choose a literal filename before re-running, for example .logs/run-test-1.log. For retries, use .logs/run-test-2.log. ' +
+      'POSIX pattern: mkdir -p .logs && your command > .logs/run-<slug>-1.log 2>&1; rc=$?; tail -n 50 .logs/run-<slug>-1.log; exit $rc. ' +
+      'PowerShell pattern: New-Item -ItemType Directory -Force .logs | Out-Null; your command *> .logs/run-<slug>-1.log; $Status = $LASTEXITCODE; Get-Content -Tail 50 .logs/run-<slug>-1.log; exit $Status.\n'
     );
     return null;
   }

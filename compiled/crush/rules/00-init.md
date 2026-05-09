@@ -44,14 +44,13 @@ Each layer restricts but never expands the constraints of the layer above. Highe
 
 ```bash
 mkdir -p .logs
-LOG_FILE=".logs/run-$(date +%s).log"
-your_command > "$LOG_FILE" 2>&1
-tail -n 30 "$LOG_FILE"   # or grep -iE 'fail|error|exception' "$LOG_FILE"
+your_command > .logs/run-<slug>-1.log 2>&1
+tail -n 30 .logs/run-<slug>-1.log   # or grep -iE 'fail|error|exception' .logs/run-<slug>-1.log
 ```
 
 ## 3. All Test, Build, and Run Commands Should Be Logged
 
-**Fail-Closed Enforcement:** Append `> .logs/run-<slug>-$(date +%s).log 2>&1` (or `| tee .logs/run-<slug>-$(date +%s).log`) to `run_command` invocations. Commands without one of these suffixes are non-compliant. Inline stdout capture is acceptable only for one-line probes (`echo`, `pwd`, `which`) that never produce failure output. Avoid heredocs (`<<EOF`, `<<'NODE'`, `<<PY`) and multi-line terminal payloads; create a script file with file-edit tools and execute it instead.
+**Fail-Closed Enforcement:** Use a literal log filename chosen before the command runs, such as `.logs/run-test-1.log`, and append `> .logs/run-<slug>-1.log 2>&1` (or `| tee .logs/run-<slug>-1.log`) to `run_command` invocations. On retry, choose a new literal suffix such as `-2.log`. Commands without one of these literal `.logs/` suffixes are non-compliant. Avoid `$(date)`, `$(pwd)`, `mktemp`, backticks, or any shell-generated value when constructing log filenames. Inline stdout capture is acceptable only for one-line probes (`echo`, `pwd`, `which`) that never produce failure output. Avoid heredocs (`<<EOF`, `<<'NODE'`, `<<PY`) and multi-line terminal payloads; create a script file with file-edit tools and execute it instead.
 
 A `PreToolUse` hook in supported IDEs (Claude, Cursor, Codex, Gemini, OpenCode) nudges long-running commands without `.logs/` redirection.
 

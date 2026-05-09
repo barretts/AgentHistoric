@@ -146,6 +146,13 @@ emit_nudge() {
 
 LOG_PATH='(["'\'']?)(\.logs|\.([^/\\[:space:]"'\'']+)[/\\]([^/\\[:space:]"'\'']*logs|logs[^/\\[:space:]"'\'']*)|([~/]|[A-Za-z]:[\\/])[^[:space:]"'\'']*[/\\]\.logs)[/\\]'
 LOG_VAR='[A-Za-z_][A-Za-z0-9_]*'
+GENERATED_LOG_VALUE='(\$\((date|pwd|Get-Date)([[:space:]][^)]*)?\)|`[^`]*`|mktemp)'
+
+if printf '%s' "$CMD" | grep -qiE "$LOG_PATH" && printf '%s' "$CMD" | grep -qiE "$GENERATED_LOG_VALUE"; then
+  USER_MSG="Log filename uses a shell-generated value. The agent should choose a literal .logs/ filename before re-running. See Tenet 3."
+  AGENT_MSG="TENET 3 REWRITE REQUIRED: choose a literal log filename before re-running, for example .logs/run-test-1.log. For retries, use .logs/run-test-2.log. Do not use \$(date), \$(pwd), mktemp, backticks, or shell-generated values for log filenames. POSIX pattern: mkdir -p .logs && your command > .logs/run-<slug>-1.log 2>&1; rc=\$?; tail -n 50 .logs/run-<slug>-1.log; exit \$rc. PowerShell pattern: New-Item -ItemType Directory -Force .logs | Out-Null; your command *> .logs/run-<slug>-1.log; \$Status = \$LASTEXITCODE; Get-Content -Tail 50 .logs/run-<slug>-1.log; exit \$Status."
+  emit_nudge "$USER_MSG" "$AGENT_MSG" "$MODE"
+fi
 
 # 1. Already-redirected commands -> allow.
 #    Matches POSIX redirects/tee and PowerShell redirects/Tee-Object/Start-Transcript
@@ -211,7 +218,7 @@ DENYLIST='(^|[[:space:]\|&;(`$])(npx[[:space:]]+(tsx|tsc|vitest|jest|playwright|
 
 if printf '%s' "$CMD" | grep -qE "$DENYLIST"; then
   USER_MSG="Long-running shell command without a persistent log redirect. The agent should rewrite and re-issue it with logging before asking for human intervention. See Tenet 3."
-  AGENT_MSG="TENET 3 REWRITE REQUIRED: rewrite and re-issue this command with persistent logging instead of asking the human to accept data-loss risk. POSIX pattern: mkdir -p .logs && LOG=\".logs/run-<slug>-\$(date +%s).log\" && (your command) > \"\$LOG\" 2>&1; rc=\$?; tail -n 50 \"\$LOG\"; exit \$rc. PowerShell pattern: New-Item -ItemType Directory -Force .logs | Out-Null; \$Log = \".logs/run-<slug>-\$(Get-Date -Format yyyyMMddHHmmss).log\"; your command *> \$Log; \$Status = \$LASTEXITCODE; Get-Content -Tail 50 \$Log; exit \$Status."
+  AGENT_MSG="TENET 3 REWRITE REQUIRED: rewrite and re-issue this command with persistent logging instead of asking the human to accept data-loss risk. Choose a literal filename before re-running, for example .logs/run-test-1.log. For retries, use .logs/run-test-2.log. POSIX pattern: mkdir -p .logs && your command > .logs/run-<slug>-1.log 2>&1; rc=\$?; tail -n 50 .logs/run-<slug>-1.log; exit \$rc. PowerShell pattern: New-Item -ItemType Directory -Force .logs | Out-Null; your command *> .logs/run-<slug>-1.log; \$Status = \$LASTEXITCODE; Get-Content -Tail 50 .logs/run-<slug>-1.log; exit \$Status."
   emit_nudge "$USER_MSG" "$AGENT_MSG" "$MODE"
 fi
 

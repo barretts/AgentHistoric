@@ -188,9 +188,8 @@ Second-pass refinement targets. After the first pass identifies a broad domain, 
 
 ```bash
 mkdir -p .logs
-LOG_FILE=".logs/run-$(date +%s).log"
-your_command > "$LOG_FILE" 2>&1
-tail -n 30 "$LOG_FILE"   # or grep -iE 'fail|error|exception' "$LOG_FILE"
+your_command > .logs/run-<slug>-1.log 2>&1
+tail -n 30 .logs/run-<slug>-1.log   # or grep -iE 'fail|error|exception' .logs/run-<slug>-1.log
 ```
 
 ## Definition Of Done
