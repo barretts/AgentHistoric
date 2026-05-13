@@ -21,7 +21,7 @@ import {
   selectCases,
   shouldRequireVerbalizedSampling
 } from "./lib/regression.mjs";
-import { decorateWrappedPromptForClr, runCasesViaClr } from "./lib/clr-runner.mjs";
+import { attachJudgeResults } from "./lib/eval-judge.mjs";
 
 const VS_ABLATION_SECTION = {
   id: "verbalized-sampling",
@@ -33,6 +33,11 @@ const VS_ABLATION_SECTION = {
 const workspaceRoot = process.cwd();
 const system = await loadPromptSystemSpec(workspaceRoot);
 const options = parseArgs(process.argv.slice(2));
+let decorateWrappedPromptForClr;
+let runCasesViaClr;
+if (options.viaClr) {
+  ({ decorateWrappedPromptForClr, runCasesViaClr } = await import("./lib/clr-runner.mjs"));
+}
 const trials = Math.max(options.trials, 3);
 const timestamp = createTimestamp();
 const fixtures = await loadRegressionFixtures(workspaceRoot);
@@ -151,7 +156,8 @@ process.on("SIGINT", async () => { await restoreHandler(); process.exit(130); })
 process.on("SIGTERM", async () => { await restoreHandler(); process.exit(143); });
 
 for (const section of sectionsToRun) {
-  console.log(`\nAblating: ${section.id} — ${section.description}`);
+  const positiveVariant = section.conditionKind === "positive";
+  console.log(`\n${positiveVariant ? "Testing positive variant" : "Ablating"}: ${section.id} — ${section.description}`);
 
   const omitSectionAblation = Boolean(
     options.verbalizedSampling && !options.sectionFilter?.length
@@ -248,21 +254,27 @@ for (const section of sectionsToRun) {
               score: 0,
               selectedExpert: null,
               expectedExpert: orig.expectedPrimaryExpert,
-              behavioralMetrics: { overEngineering: 1, concision: 1 }
+              behavioralMetrics: { overEngineering: 1, concision: 1 },
+              judgeAxes: emptyJudgeAxes()
             });
             continue;
           }
-          const score = scoreCase(system, orig, r.response, {
+          let score = scoreCase(system, orig, r.response, {
             requireVerbalizedSampling:
               options.verbalizedSampling
               && condition === "ablated"
               && shouldRequireVerbalizedSampling(system, orig)
           });
+          score = await attachJudgeResults(system, orig, r.response, {
+            scoreResult: score,
+            local: !options.judge
+          });
           trialRecords.push({
             score: score.score,
             selectedExpert: score.selectedExpert,
             expectedExpert: orig.expectedPrimaryExpert,
-            behavioralMetrics: score.behavioralMetrics
+            behavioralMetrics: score.behavioralMetrics,
+            judgeAxes: summarizeJudgeAxes(score.judgeResult)
           });
         }
         return trialRecords;
@@ -310,30 +322,47 @@ for (const section of sectionsToRun) {
                 rawLogPath,
                 options
               });
-          const score = scoreCase(system, testCase, response, {
+          let score = scoreCase(system, testCase, response, {
             requireVerbalizedSampling:
               options.verbalizedSampling
               && condition === "ablated"
               && shouldRequireVerbalizedSampling(system, testCase)
           });
+          score = await attachJudgeResults(system, testCase, response, {
+            scoreResult: score,
+            local: !options.judge
+          });
           return {
             score: score.score,
             selectedExpert: score.selectedExpert,
             expectedExpert: testCase.expectedPrimaryExpert,
-            behavioralMetrics: score.behavioralMetrics
+            behavioralMetrics: score.behavioralMetrics,
+            judgeAxes: summarizeJudgeAxes(score.judgeResult)
           };
         };
 
+        if (!options.local) {
+          await installArtifactsToDisk(controlArtifacts);
+          installedAblated = false;
+        }
         const controlTrials = await runTrials(
           (trialIndex) => runOneTrial("control", trialIndex),
           { trials, parallel: options.parallel }
         );
 
+        if (!options.local) {
+          await installArtifactsToDisk(ablatedArtifacts);
+          installedAblated = true;
+        }
         const ablatedTrials = await runTrials(
           (trialIndex) => runOneTrial("ablated", trialIndex),
           { trials, parallel: options.parallel }
         );
 
+        if (!options.local) {
+          await installArtifactsToDisk(controlArtifacts);
+          installedAblated = false;
+        }
         controlResults.push(...controlTrials);
         ablatedResults.push(...ablatedTrials);
       }
@@ -347,6 +376,10 @@ for (const section of sectionsToRun) {
   const ablatedOE = mean(ablatedResults.map((r) => r.behavioralMetrics?.overEngineering ?? 1));
   const controlConc = mean(controlResults.map((r) => r.behavioralMetrics?.concision ?? 1));
   const ablatedConc = mean(ablatedResults.map((r) => r.behavioralMetrics?.concision ?? 1));
+  const controlPersona = mean(controlResults.map((r) => r.judgeAxes?.persona ?? 1));
+  const ablatedPersona = mean(ablatedResults.map((r) => r.judgeAxes?.persona ?? 1));
+  const controlPhilosophy = mean(controlResults.map((r) => r.judgeAxes?.philosophy ?? 1));
+  const ablatedPhilosophy = mean(ablatedResults.map((r) => r.judgeAxes?.philosophy ?? 1));
 
   const passHatKDelta = (ablatedAgg.passHatK ? 1 : 0) - (controlAgg.passHatK ? 1 : 0);
 
@@ -359,14 +392,24 @@ for (const section of sectionsToRun) {
     passHatKDelta,
     overEngineeringDelta: round(ablatedOE - controlOE),
     concisionDelta: round(ablatedConc - controlConc),
-    verdict: deriveVerdict(controlAgg, ablatedAgg, controlOE, ablatedOE, controlConc, ablatedConc)
+    personaDelta: round(ablatedPersona - controlPersona),
+    philosophyDelta: round(ablatedPhilosophy - controlPhilosophy),
+    controlPersona: round(controlPersona),
+    ablatedPersona: round(ablatedPersona),
+    controlPhilosophy: round(controlPhilosophy),
+    ablatedPhilosophy: round(ablatedPhilosophy),
+    conditionKind: section.conditionKind || "ablation",
+    verdict: deriveVerdict(controlAgg, ablatedAgg, controlOE, ablatedOE, controlConc, ablatedConc, section, {
+      personaDelta: ablatedPersona - controlPersona,
+      philosophyDelta: ablatedPhilosophy - controlPhilosophy
+    })
   });
 }
 
 // Final safety net: if we exited the section loop with ablated artifacts still
 // on disk (shouldn't happen thanks to per-target restore, but just in case),
 // restore the control artifacts before writing the report.
-if (options.viaClr) {
+if (!options.local) {
   await restoreControlArtifacts();
   installedAblated = false;
 }
@@ -389,14 +432,49 @@ function round(value) {
   return Math.round(value * 100) / 100;
 }
 
-function deriveVerdict(controlAgg, ablatedAgg, controlOE, ablatedOE, controlConc, ablatedConc) {
+function deriveVerdict(controlAgg, ablatedAgg, controlOE, ablatedOE, controlConc, ablatedConc, section = {}, axes = {}) {
   const scoreDelta = ablatedAgg.meanScore - controlAgg.meanScore;
   const oeDelta = ablatedOE - controlOE;
   const concDelta = ablatedConc - controlConc;
+  const axisDelta = Math.max(
+    Math.abs(axes.personaDelta || 0),
+    Math.abs(axes.philosophyDelta || 0)
+  );
 
+  if (section.conditionKind === "positive") {
+    if ((axes.personaDelta || 0) > 0.1 || (axes.philosophyDelta || 0) > 0.1) return "KEEP";
+    if (scoreDelta > 0.15 || oeDelta > 0.1 || concDelta > 0.1) return "KEEP";
+    if ((axes.personaDelta || 0) < -0.1 || (axes.philosophyDelta || 0) < -0.1) return "REMOVE";
+    if (scoreDelta < -0.15 || oeDelta < -0.1 || concDelta < -0.1) return "REMOVE";
+    return "REVIEW";
+  }
+
+  if (axisDelta > 0.1 && ((axes.personaDelta || 0) < 0 || (axes.philosophyDelta || 0) < 0)) return "KEEP";
+  if (axisDelta > 0.1 && ((axes.personaDelta || 0) > 0 || (axes.philosophyDelta || 0) > 0)) return "REMOVE";
   if (scoreDelta < -0.15 || oeDelta < -0.1 || concDelta < -0.1) return "KEEP";
   if (scoreDelta > 0.15 || oeDelta > 0.1 || concDelta > 0.1) return "REMOVE";
   return "REVIEW";
+}
+
+function summarizeJudgeAxes(judgeResult) {
+  const results = judgeResult?.results || [];
+  const personaScores = results
+    .filter((result) => result.rubricId === "persona-stance-fidelity")
+    .map((result) => result.score / 2);
+  const philosophyScores = results
+    .filter((result) => result.rubricId?.startsWith("philosophical-"))
+    .map((result) => result.score / 2);
+  return {
+    persona: personaScores.length > 0 ? mean(personaScores) : 1,
+    philosophy: philosophyScores.length > 0 ? mean(philosophyScores) : 1
+  };
+}
+
+function emptyJudgeAxes() {
+  return {
+    persona: 0,
+    philosophy: 0
+  };
 }
 
 async function runTarget({ target, wrappedPrompt, rawLogPath }) {

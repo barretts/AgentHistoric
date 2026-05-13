@@ -962,6 +962,8 @@ test("formatAblationReport renders table with all sections", () => {
         controlMean: 1.8,
         ablatedMean: 1.7,
         passHatKDelta: 0,
+        personaDelta: -0.25,
+        philosophyDelta: -0.5,
         overEngineeringDelta: 0.0,
         concisionDelta: 0.0,
         verdict: "KEEP"
@@ -973,6 +975,8 @@ test("formatAblationReport renders table with all sections", () => {
         controlMean: 1.9,
         ablatedMean: 1.9,
         passHatKDelta: 0,
+        personaDelta: 0,
+        philosophyDelta: 0,
         overEngineeringDelta: 0.0,
         concisionDelta: 0.0,
         verdict: "REVIEW"
@@ -987,6 +991,10 @@ test("formatAblationReport renders table with all sections", () => {
   assert.match(md, /KEEP/);
   assert.match(md, /REVIEW/);
   assert.match(md, /Trials per condition: 3/);
+  assert.match(md, /Persona Delta/);
+  assert.match(md, /Philosophy Delta/);
+  assert.match(md, /-0.25/);
+  assert.match(md, /-0.50/);
 });
 
 // ── Ablation Build ──────────────────────────────────────────────────

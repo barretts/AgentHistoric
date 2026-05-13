@@ -467,6 +467,12 @@ export function routePrompt(system, prompt) {
   if (text.includes("from multiple angles") || text.includes("second opinion")) {
     return "expert-architect-descartes";
   }
+  if (
+    text.includes("architecture")
+    && (text.includes("assumption") || text.includes("bedrock") || text.includes("trust boundaries"))
+  ) {
+    return "expert-architect-descartes";
+  }
 
   // Phase 1d: Hard-coded UX/Blackmore signals not in disambiguation
   if (
@@ -1145,12 +1151,12 @@ export function formatAblationReport(report) {
   lines.push(`- Timestamp: ${report.timestamp}`);
   lines.push(`- Trials per condition: ${report.trialsPerCondition}`);
   lines.push("");
-  lines.push("| Section | Chars Saved | pass^k Delta | Over-Engineering Delta | Concision Delta | Verdict |");
-  lines.push("|---------|:----------:|:------------:|:---------------------:|:--------------:|:-------:|");
+  lines.push("| Section | Kind | Chars Saved | pass^k Delta | Persona Delta | Philosophy Delta | Over-Engineering Delta | Concision Delta | Verdict |");
+  lines.push("|---------|:----:|:----------:|:------------:|:-------------:|:----------------:|:---------------------:|:--------------:|:-------:|");
 
   for (const s of report.sections) {
     lines.push(
-      `| ${s.id} | ${s.charsSaved} | ${formatDelta(s.passHatKDelta)} | ${formatDelta(s.overEngineeringDelta)} | ${formatDelta(s.concisionDelta)} | ${s.verdict} |`
+      `| ${s.id} | ${s.conditionKind || "ablation"} | ${s.charsSaved} | ${formatDelta(s.passHatKDelta)} | ${formatDelta(s.personaDelta || 0)} | ${formatDelta(s.philosophyDelta || 0)} | ${formatDelta(s.overEngineeringDelta)} | ${formatDelta(s.concisionDelta)} | ${s.verdict} |`
     );
   }
 
@@ -1158,8 +1164,10 @@ export function formatAblationReport(report) {
   lines.push("## Verdict Legend");
   lines.push("");
   lines.push("- **KEEP:** Removing this section measurably worsens behavior. It earns its token cost.");
+  lines.push("- **KEEP for positive variants:** Adding this variant measurably improves behavior.");
   lines.push("- **REVIEW:** No measurable impact detected. Candidate for rewriting or removal.");
   lines.push("- **REMOVE:** Removing this section measurably improves behavior. It may be counterproductive.");
+  lines.push("- **REMOVE for positive variants:** Adding this variant measurably worsens behavior.");
   lines.push("");
 
   return lines.join("\n");

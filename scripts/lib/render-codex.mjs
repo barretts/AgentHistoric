@@ -150,6 +150,9 @@ export function renderSkill(_system, expert, options = {}) {
     `# ${humanizeExpertId(expert.id)}\n\n` +
     `## Goal\n\n` +
     `${expert.title}. ${expert.philosophy}\n\n` +
+    (expert.personaIntro && abl === "persona-intro"
+      ? `## Persona Stance\n\n${expert.personaIntro}\n\n`
+      : "") +
     (expert.corePhilosophy?.length && abl !== "expert-philosophy"
       ? `## Philosophy\n\n` +
         expert.corePhilosophy
