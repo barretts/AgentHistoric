@@ -183,12 +183,15 @@ Second-pass refinement targets. After the first pass identifies a broad domain, 
 
 - Never pipe test, build, or run output directly into a filter.
 - Always write full output to `.logs/` before inspecting it.
+- Run terminal commands through the host's background/non-blocking execution path by default, then inspect completion with status polling instead of blocking the chat.
 - Do not use heredocs (`<<EOF`, `<<'NODE'`, `<<PY`) in terminal commands or `run_command`; create a script file with file-edit tools and execute that file instead.
 - Avoid multi-line terminal payloads whose correctness depends on exact line boundaries; keep shell commands single-line unless executing a saved script.
 
 ```bash
 mkdir -p .logs
 your_command > .logs/run-<slug>-1.log 2>&1
+launch the logged command in background/non-blocking mode
+poll command status until it completes
 tail -n 30 .logs/run-<slug>-1.log   # or grep -iE 'fail|error|exception' .logs/run-<slug>-1.log
 ```
 

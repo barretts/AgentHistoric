@@ -37,6 +37,7 @@ Each layer restricts but never expands the constraints of the layer above. An ex
 
 - Never pipe test, build, or run output directly into a filter.
 - Always write full output to `.logs/` before inspecting it.
+- Run terminal commands through the host's background/non-blocking execution path by default, then inspect completion with status polling instead of blocking the chat.
 - Do not use heredocs (`<<EOF`, `<<'NODE'`, `<<PY`) in terminal commands or `run_command`; create a script file with file-edit tools and execute that file instead.
 - Avoid multi-line terminal payloads whose correctness depends on exact line boundaries; keep shell commands single-line unless executing a saved script.
 
@@ -45,14 +46,16 @@ Each layer restricts but never expands the constraints of the layer above. An ex
 ```bash
 mkdir -p .logs
 your_command > .logs/run-<slug>-1.log 2>&1
+launch the logged command in background/non-blocking mode
+poll command status until it completes
 tail -n 30 .logs/run-<slug>-1.log   # or grep -iE 'fail|error|exception' .logs/run-<slug>-1.log
 ```
 
 ## 3. All Test, Build, and Run Commands MUST Be Logged
 
-**Fail-Closed Enforcement:** Every `run_command` invocation MUST use a literal log filename chosen before the command runs, such as `.logs/run-test-1.log`, and append `> .logs/run-<slug>-1.log 2>&1` (or `| tee .logs/run-<slug>-1.log`). On retry, choose a new literal suffix such as `-2.log`. Commands without one of these literal `.logs/` suffixes are non-compliant. Do not use `$(date)`, `$(pwd)`, `mktemp`, backticks, or any shell-generated value to construct log filenames. Inline stdout capture is forbidden except for one-line probes (`echo`, `pwd`, `which`) that never produce failure output. Do not use heredocs (`<<EOF`, `<<'NODE'`, `<<PY`) or multi-line terminal payloads; create a script file with file-edit tools and execute it instead.
+**Fail-Closed Enforcement:** Every `run_command` invocation MUST use the host's background/non-blocking execution path so command status can be polled instead of blocking the chat. For logged commands, use a literal log filename chosen before the command runs, such as `.logs/run-test-1.log`, and append `> .logs/run-<slug>-1.log 2>&1` (or `| tee .logs/run-<slug>-1.log`). On retry, choose a new literal suffix such as `-2.log`. Commands without one of these literal `.logs/` suffixes are non-compliant. After launching non-blocking, poll command status and inspect the saved log. Do not use `$(date)`, `$(pwd)`, `mktemp`, backticks, or any shell-generated value to construct log filenames. Inline stdout capture is forbidden except for one-line probes (`echo`, `pwd`, `which`) that never produce failure output; those probes are exempt from persistent logging only, not from the background/status-poll preference when the host supports it. Do not use heredocs (`<<EOF`, `<<'NODE'`, `<<PY`) or multi-line terminal payloads; create a script file with file-edit tools and execute it instead.
 
-A `PreToolUse` hook in supported IDEs (Claude, Cursor, Codex, Gemini, OpenCode) nudges long-running commands without `.logs/` redirection.
+A `PreToolUse` hook in supported IDEs (Claude, Cursor, Codex, Gemini, OpenCode) nudges long-running commands without `.logs/` redirection and reminds agents to prefer background/non-blocking execution plus status polling.
 
 ## 4. Epistemic Humility & Communication Constraints
 

@@ -91,6 +91,8 @@ function expectAllowNudge(out, mode) {
     assert.match(message, /REWRITE REQUIRED/);
     assert.match(message, /PowerShell pattern/);
     assert.match(message, /\.logs\/run-test-1\.log/);
+    assert.match(message, /background\/non-blocking/);
+    assert.match(message, /poll status|poll command status/);
     assert.doesNotMatch(message, /run-<slug>-\$\(|Get-Date -Format|mktemp .*\.logs|`[^`]*\.logs[^`]*`/);
   }
   assert.doesNotMatch(message, /Approve only if/i);
@@ -264,6 +266,8 @@ describe('HOOKS-SMOKE: opencode plugin (evaluateCommand)', () => {
     assert.match(result.stderr, /REWRITE REQUIRED/);
     assert.match(result.stderr, /PowerShell pattern/);
     assert.match(result.stderr, /\.logs\/run-test-1\.log/);
+    assert.match(result.stderr, /background\/non-blocking/);
+    assert.match(result.stderr, /poll command status/);
     assert.doesNotMatch(result.stderr, /run-<slug>-\$\(|Get-Date -Format|mktemp .*\.logs/);
   });
 
@@ -273,6 +277,8 @@ describe('HOOKS-SMOKE: opencode plugin (evaluateCommand)', () => {
     assert.match(result.stderr, /TENET 3 NUDGE/);
     assert.match(result.stderr, /literal log filename/);
     assert.match(result.stderr, /\.logs\/run-test-1\.log/);
+    assert.match(result.stderr, /background\/non-blocking/);
+    assert.match(result.stderr, /poll command status/);
   });
 
   test('denylist hit: bare non-whitelisted log variables return null with nudge on stderr', () => {
@@ -283,6 +289,8 @@ describe('HOOKS-SMOKE: opencode plugin (evaluateCommand)', () => {
       const result = captureStderr(() => evaluateCommand(cmd));
       assert.equal(result.value, null);
       assert.match(result.stderr, /TENET 3 NUDGE/);
+      assert.match(result.stderr, /background\/non-blocking/);
+      assert.match(result.stderr, /poll command status/);
     }
   });
 

@@ -81,8 +81,9 @@ export function evaluateCommand(cmd) {
     process.stderr.write(
       '[TENET 3 NUDGE] REWRITE REQUIRED: choose a literal log filename before re-running, for example .logs/run-test-1.log. ' +
       'For retries, use .logs/run-test-2.log. Do not use $(date), $(pwd), mktemp, backticks, or shell-generated values for log filenames. ' +
-      'POSIX pattern: mkdir -p .logs && your command > .logs/run-<slug>-1.log 2>&1; rc=$?; tail -n 50 .logs/run-<slug>-1.log; exit $rc. ' +
-      'PowerShell pattern: New-Item -ItemType Directory -Force .logs | Out-Null; your command *> .logs/run-<slug>-1.log; $Status = $LASTEXITCODE; Get-Content -Tail 50 .logs/run-<slug>-1.log; exit $Status.\n'
+      'Launch the logged command in background/non-blocking mode, poll command status until completion, then inspect the saved log. ' +
+      'POSIX pattern: mkdir -p .logs && your command > .logs/run-<slug>-1.log 2>&1; run it non-blocking; poll status; tail -n 50 .logs/run-<slug>-1.log. ' +
+      'PowerShell pattern: New-Item -ItemType Directory -Force .logs | Out-Null; your command *> .logs/run-<slug>-1.log; run it non-blocking; poll status; Get-Content -Tail 50 .logs/run-<slug>-1.log.\n'
     );
     return null;
   }
@@ -115,8 +116,9 @@ export function evaluateCommand(cmd) {
     process.stderr.write(
       '[TENET 3 NUDGE] REWRITE REQUIRED: rewrite and re-issue this command with persistent logging instead of asking the human to accept data-loss risk. ' +
       'Choose a literal filename before re-running, for example .logs/run-test-1.log. For retries, use .logs/run-test-2.log. ' +
-      'POSIX pattern: mkdir -p .logs && your command > .logs/run-<slug>-1.log 2>&1; rc=$?; tail -n 50 .logs/run-<slug>-1.log; exit $rc. ' +
-      'PowerShell pattern: New-Item -ItemType Directory -Force .logs | Out-Null; your command *> .logs/run-<slug>-1.log; $Status = $LASTEXITCODE; Get-Content -Tail 50 .logs/run-<slug>-1.log; exit $Status.\n'
+      'Launch the logged command in background/non-blocking mode, poll command status until completion, then inspect the saved log. ' +
+      'POSIX pattern: mkdir -p .logs && your command > .logs/run-<slug>-1.log 2>&1; run it non-blocking; poll status; tail -n 50 .logs/run-<slug>-1.log. ' +
+      'PowerShell pattern: New-Item -ItemType Directory -Force .logs | Out-Null; your command *> .logs/run-<slug>-1.log; run it non-blocking; poll status; Get-Content -Tail 50 .logs/run-<slug>-1.log.\n'
     );
     return null;
   }
