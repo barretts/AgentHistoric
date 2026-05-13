@@ -29,7 +29,22 @@ test("resolveRubricsForCase returns rubrics for UX expert", () => {
   const rubrics = resolveRubricsForCase({}, "expert-ux-rogers");
   assert.ok(rubrics.some(r => r.id === "factual-grounding"));
   assert.ok(rubrics.some(r => r.id === "human-cost-awareness"));
+  assert.ok(rubrics.some(r => r.id === "philosophical-rogers-nonblame"));
   assert.ok(!rubrics.some(r => r.id === "draft-diversity"));
+});
+
+test("resolveRubricsForCase returns philosophical rubrics for protected experts", () => {
+  const expected = [
+    ["expert-qa-popper", "philosophical-popper-falsification"],
+    ["expert-architect-descartes", "philosophical-descartes-doubt"],
+    ["expert-ux-rogers", "philosophical-rogers-nonblame"],
+    ["expert-information-shannon", "philosophical-shannon-signal-retention"]
+  ];
+  for (const [expertId, rubricId] of expected) {
+    const rubrics = resolveRubricsForCase({}, expertId);
+    assert.ok(rubrics.some(r => r.id === "persona-stance-fidelity"), `${expertId} missing persona-stance-fidelity`);
+    assert.ok(rubrics.some(r => r.id === rubricId), `${expertId} missing ${rubricId}`);
+  }
 });
 
 test("resolveRubricsForCase returns all rubrics when judgeRubrics explicitly set", () => {
@@ -148,6 +163,62 @@ test("judgeResponse heuristic: optimization without measurement scores 0", async
     local: true
   });
   assert.strictEqual(result.score, 0);
+});
+
+// ── Heuristic Judge: Philosophical Steering ─────────────────────────
+
+test("judgeResponse heuristic: Popper falsification scores 2 with refutation path", async () => {
+  const result = await judgeResponse({
+    response: "Accept this only if the fix survives a reproduction with duplicate values; a counterexample would refute the claim.",
+    rubric: BUILTIN_RUBRICS.find(r => r.id === "philosophical-popper-falsification"),
+    local: true
+  });
+  assert.strictEqual(result.score, 2);
+});
+
+test("judgeResponse heuristic: persona stance fidelity scores 2 with selected expert markers", async () => {
+  const result = await judgeResponse({
+    response: "Selected Expert: expert-qa-popper\nAccept only after a counterexample attempt fails to refute the fix.",
+    rubric: BUILTIN_RUBRICS.find(r => r.id === "persona-stance-fidelity"),
+    local: true
+  });
+  assert.strictEqual(result.score, 2);
+});
+
+test("judgeResponse heuristic: persona stance fidelity scores 1 when expert is named generically", async () => {
+  const result = await judgeResponse({
+    response: "Selected Expert: expert-qa-popper\nThis looks good and should work.",
+    rubric: BUILTIN_RUBRICS.find(r => r.id === "persona-stance-fidelity"),
+    local: true
+  });
+  assert.strictEqual(result.score, 1);
+});
+
+test("judgeResponse heuristic: Descartes doubt scores 2 with assumption and foundation", async () => {
+  const result = await judgeResponse({
+    response: "Challenge the inherited assumption first. Reduce the design to bedrock trust boundary and data constraints before design.",
+    rubric: BUILTIN_RUBRICS.find(r => r.id === "philosophical-descartes-doubt"),
+    local: true
+  });
+  assert.strictEqual(result.score, 2);
+});
+
+test("judgeResponse heuristic: Rogers non-blame scores 2 with interface cost", async () => {
+  const result = await judgeResponse({
+    response: "This is not user fault. The interface affordance makes the destructive action look safe, creating cognitive friction and human cost.",
+    rubric: BUILTIN_RUBRICS.find(r => r.id === "philosophical-rogers-nonblame"),
+    local: true
+  });
+  assert.strictEqual(result.score, 2);
+});
+
+test("judgeResponse heuristic: Shannon signal retention scores 2 with retention criteria", async () => {
+  const result = await judgeResponse({
+    response: "Signal is request id and error class; noise is repeated debug chatter. Critical retention: must keep causality for incident reconstruction.",
+    rubric: BUILTIN_RUBRICS.find(r => r.id === "philosophical-shannon-signal-retention"),
+    local: true
+  });
+  assert.strictEqual(result.score, 2);
 });
 
 // ── Multi-Rubric Evaluation ─────────────────────────────────────────

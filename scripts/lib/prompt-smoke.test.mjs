@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import path from "node:path";
+import { readFile } from "node:fs/promises";
 
 import { generateArtifacts } from "./build-prompt-system.mjs";
 import {
@@ -8,6 +9,11 @@ import {
   resolveRequiredSections,
   VERBALIZED_SAMPLING_ROUTER_RULES
 } from "./prompt-system.mjs";
+import {
+  evaluateResponse,
+  loadRegressionFixtures,
+  routePrompt
+} from "./regression.mjs";
 
 const workspaceRoot = path.resolve(import.meta.dirname, "..", "..");
 const system = await loadPromptSystemSpec(workspaceRoot);
@@ -928,11 +934,6 @@ test("constraint hierarchy includes Modifier layer", () => {
   );
 });
 
-// ── Ablation Manifest ───────────────────────────────────────────────
-
-import { readFile } from "node:fs/promises";
-import { loadRegressionFixtures, routePrompt, evaluateResponse } from "./regression.mjs";
-
 // ── Experiment Framework: Suites ──────────────────────────────────
 
 test("cases.json has specialist-pressure suite with at least 12 cases", async () => {
@@ -1162,6 +1163,35 @@ test("ablation manifest has at least 5 sections with required fields", async () 
     assert.ok(s.source, "Missing source");
     assert.ok(s.expectedImpact, "Missing expectedImpact");
   }
+});
+
+test("philosophical-steering cases exist and use philosophical judge rubrics", async () => {
+  const fixtures = await loadRegressionFixtures(workspaceRoot);
+  const cases = fixtures.cases.filter((c) => c.category === "philosophical-steering");
+  assert.ok(cases.length >= 8, `Expected >= 8 philosophical-steering cases, got ${cases.length}`);
+  for (const c of cases) {
+    assert.ok(c.experimentTag, `${c.id}: missing experimentTag`);
+    assert.ok(c.experimentHypothesis, `${c.id}: missing experimentHypothesis`);
+    assert.ok(
+      c.judgeRubrics?.some((id) => id.startsWith("philosophical-")),
+      `${c.id}: missing philosophical judge rubric`
+    );
+    assert.strictEqual(routePrompt(system, c.prompt), c.expectedPrimaryExpert, `${c.id}: local route mismatch`);
+  }
+});
+
+test("persona-intro positive variant renders Persona Stance across rich and Codex experts", () => {
+  const withPersonaIntro = generateArtifacts(system, { ablation: "persona-intro" });
+  const rogersRich = withPersonaIntro.get("compiled/claude/rules/expert-ux-rogers.md");
+  const rogersCodex = withPersonaIntro.get("compiled/codex/skills/expert-ux-rogers/SKILL.md");
+  assert.match(rogersRich, /## 1\. Persona Stance/);
+  assert.match(rogersRich, /You do not care about backend code efficiency/);
+  assert.match(rogersCodex, /## Persona Stance/);
+  assert.match(rogersCodex, /You do not care about backend code efficiency/);
+  assert.ok(
+    !artifacts.get("compiled/claude/rules/expert-ux-rogers.md").includes("## 1. Persona Stance"),
+    "Control artifacts should not render Persona Stance"
+  );
 });
 
 // ── Compliance Signal Tests (RED: will fail until implemented) ─────────

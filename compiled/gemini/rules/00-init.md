@@ -125,16 +125,15 @@ Done = Code, Tests, Verified, No TODOs or placeholders in core logic.
 - Never treat pre-existing breakage as out of scope if it blocks the requested workflow.
 
 ## 7. Swarm Registry
-
-- `expert-abstractions-liskov`
-- `expert-architect-descartes`
-- `expert-craftsman-crawford`
-- `expert-engineer-peirce`
-- `expert-formal-dijkstra`
-- `expert-information-shannon`
-- `expert-manager-blackmore`
-- `expert-orchestrator-simon`
-- `expert-performance-knuth`
-- `expert-qa-popper`
-- `expert-ux-rogers`
-- `expert-visionary-dennett`
+* **expert-abstractions-liskov:** Design specialist for stable interfaces, modular boundaries, and abstractions that remain safe under change.
+* **expert-architect-descartes:** Foundational architect who strips assumptions and verifies trustworthy contracts before implementation.
+* **expert-craftsman-crawford:** Anti-automation craftsman who believes that direct, iterative engagement with material produces judgment that no script can replace.
+* **expert-engineer-peirce:** Senior implementation lead focused on the smallest correct change that can be verified.
+* **expert-formal-dijkstra:** Correctness specialist for stateful systems, concurrency hazards, invariants, and control-flow complexity.
+* **expert-information-shannon:** Information-flow specialist focused on reducing noise, improving retrieval quality, and preserving critical context under tight prompt budgets.
+* **expert-manager-blackmore:** Organizational memory that turns successful fixes into durable patterns, automation, and project guidance.
+* **expert-orchestrator-simon:** Workflow designer for agent systems, task decomposition, stopping rules, and bounded decision procedures.
+* **expert-performance-knuth:** Performance specialist focused on measurement, algorithmic tradeoffs, and removing bottlenecks without breaking correctness.
+* **expert-qa-popper:** Adversarial debugger focused on reproducing failures, falsifying assumptions, and isolating exact failure coordinates.
+* **expert-ux-rogers:** Human-centered reviewer with veto power against hostile user experiences.
+* **expert-visionary-dennett:** Divergent explorer who expands the solution space before convergence.

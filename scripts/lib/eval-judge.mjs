@@ -138,6 +138,106 @@ ${response}
 
 Return ONLY a JSON object: {"score": 0|1|2, "reasoning": "brief explanation"}`,
     applicableTo: ["expert-performance-knuth"]
+  },
+  {
+    id: "persona-stance-fidelity",
+    name: "Persona Stance Fidelity",
+    description: "Does the response inhabit the selected expert persona instead of collapsing into generic assistant behavior?",
+    prompt: (response, context) =>
+      `Evaluate the following response for persona stance fidelity.
+
+Rubric:
+- Score 2: Response visibly inhabits the selected expert's persona through its priorities, resisted temptation, and domain-specific stance.
+- Score 1: Response names or routes to the expert but mostly sounds like a generic assistant.
+- Score 0: Response does not preserve a recognizable selected expert persona.
+
+Context: ${context || "No specific context provided."}
+
+Response:
+${response}
+
+Return ONLY a JSON object: {"score": 0|1|2, "reasoning": "brief explanation"}`,
+    applicableTo: "all"
+  },
+  {
+    id: "philosophical-popper-falsification",
+    name: "Popper Falsification Pressure",
+    description: "Does the response resist confirmation by naming how the claim or fix could be falsified?",
+    prompt: (response, context) =>
+      `Evaluate the following response for Popper-style falsification pressure.
+
+Rubric:
+- Score 2: Response names what evidence, reproduction, counterexample, or failure would falsify the claim before accepting it.
+- Score 1: Response mentions testing or verification but does not state a concrete falsifier.
+- Score 0: Response validates or assumes correctness without an adversarial falsification path.
+
+Context: ${context || "No specific context provided."}
+
+Response:
+${response}
+
+Return ONLY a JSON object: {"score": 0|1|2, "reasoning": "brief explanation"}`,
+    applicableTo: ["expert-qa-popper"]
+  },
+  {
+    id: "philosophical-descartes-doubt",
+    name: "Descartes Assumption Doubt",
+    description: "Does the response resist inherited assumptions by reducing the problem to bedrock constraints?",
+    prompt: (response, context) =>
+      `Evaluate the following response for Descartes-style assumption doubt.
+
+Rubric:
+- Score 2: Response explicitly challenges assumptions and reduces the design to foundational constraints before proposing structure.
+- Score 1: Response lists assumptions or constraints but does not visibly doubt or reduce them.
+- Score 0: Response accepts the prompt framing and jumps into design details.
+
+Context: ${context || "No specific context provided."}
+
+Response:
+${response}
+
+Return ONLY a JSON object: {"score": 0|1|2, "reasoning": "brief explanation"}`,
+    applicableTo: ["expert-architect-descartes"]
+  },
+  {
+    id: "philosophical-rogers-nonblame",
+    name: "Rogers Non-Blame User Proxy",
+    description: "Does the response resist blaming the user and assign responsibility to interface affordances or system design?",
+    prompt: (response, context) =>
+      `Evaluate the following response for Rogers-style non-blame user advocacy.
+
+Rubric:
+- Score 2: Response explicitly avoids blaming users and explains the human cost or interface affordance that caused the problem.
+- Score 1: Response mentions user experience or friction but does not clearly reject user blame.
+- Score 0: Response blames users, treats confusion as user error, or ignores human cost.
+
+Context: ${context || "No specific context provided."}
+
+Response:
+${response}
+
+Return ONLY a JSON object: {"score": 0|1|2, "reasoning": "brief explanation"}`,
+    applicableTo: ["expert-ux-rogers"]
+  },
+  {
+    id: "philosophical-shannon-signal-retention",
+    name: "Shannon Signal Retention",
+    description: "Does the response resist more-context-is-better by separating signal, noise, compression, and critical retention?",
+    prompt: (response, context) =>
+      `Evaluate the following response for Shannon-style signal retention discipline.
+
+Rubric:
+- Score 2: Response distinguishes signal from noise and states what must be retained during compression or filtering.
+- Score 1: Response mentions signal, noise, compression, or filtering but lacks explicit retention criteria.
+- Score 0: Response adds context or truncates content without signal/noise analysis.
+
+Context: ${context || "No specific context provided."}
+
+Response:
+${response}
+
+Return ONLY a JSON object: {"score": 0|1|2, "reasoning": "brief explanation"}`,
+    applicableTo: ["expert-information-shannon"]
   }
 ];
 
@@ -310,6 +410,88 @@ async function judgeResponseHeuristic(response, rubric, context) {
       } else {
         score = 1;
         reasoning = "Neither measurement nor explicit optimization detected.";
+      }
+      break;
+
+    case "persona-stance-fidelity":
+      const selectedExpertMatch = text.match(/\bSelected Expert:\s*(expert-[\w-]+)/i);
+      const selectedExpert = selectedExpertMatch?.[1]?.toLowerCase();
+      const personaPatterns = {
+        "expert-qa-popper": /\b(falsif|refut|disprov|counterexample|try to break|reproduc|failure coordinate)\b/i,
+        "expert-architect-descartes": /\b(assumption|doubt|bedrock|foundation|first principle|trust boundary|constraint)\b/i,
+        "expert-ux-rogers": /\b(user|human cost|cognitive|confusion|friction|accessibility|interface|affordance)\b/i,
+        "expert-information-shannon": /\b(signal|noise|compression|retention|fidelity|critical.*retain)\b/i
+      };
+      if (selectedExpert && personaPatterns[selectedExpert]?.test(text)) {
+        score = 2;
+        reasoning = "Selected expert and matching persona stance markers detected.";
+      } else if (selectedExpert) {
+        score = 1;
+        reasoning = "Selected expert is named but persona stance markers are weak.";
+      } else {
+        score = 0;
+        reasoning = "No selected expert persona marker detected.";
+      }
+      break;
+
+    case "philosophical-popper-falsification":
+      const hasFalsifier = /\b(falsif|refut|disprov|counterexample|would break|try to break|reproduc|failure coordinate)\b/i.test(text);
+      const hasAcceptanceBoundary = /\b(if|unless|until|only then|survive|accept)\b/i.test(text);
+      if (hasFalsifier && hasAcceptanceBoundary) {
+        score = 2;
+        reasoning = "Names a concrete falsification path and acceptance boundary.";
+      } else if (hasFalsifier || /\b(test|verify|evidence)\b/i.test(text)) {
+        score = 1;
+        reasoning = "Mentions testing pressure but lacks a complete falsifier.";
+      } else {
+        score = 0;
+        reasoning = "No falsification pressure detected.";
+      }
+      break;
+
+    case "philosophical-descartes-doubt":
+      const hasDoubt = /\b(assumption|doubt|challenge|strip|reduce|bedrock|first principle)\b/i.test(text);
+      const hasFoundation = /\b(foundat|constraint|invariant|trust boundary|irreducible|before design)\b/i.test(text);
+      if (hasDoubt && hasFoundation) {
+        score = 2;
+        reasoning = "Challenges assumptions and reduces to foundational constraints.";
+      } else if (hasDoubt || hasFoundation) {
+        score = 1;
+        reasoning = "Names assumptions or foundations without full reduction.";
+      } else {
+        score = 0;
+        reasoning = "No assumption doubt detected.";
+      }
+      break;
+
+    case "philosophical-rogers-nonblame":
+      const rejectsBlame = /\b(not.*user.*fault|do not blame|interface.*afford|design failure|system.*responsib)\b/i.test(text);
+      const hasHumanCost = /\b(human cost|cognitive|confusion|friction|accessibility|user.*feel|misclick)\b/i.test(text);
+      if (rejectsBlame && hasHumanCost) {
+        score = 2;
+        reasoning = "Rejects user blame and names human/interface cost.";
+      } else if (hasHumanCost || /\b(user experience|usability|ux)\b/i.test(text)) {
+        score = 1;
+        reasoning = "Mentions user impact without explicit non-blame stance.";
+      } else {
+        score = 0;
+        reasoning = "No non-blame user advocacy detected.";
+      }
+      break;
+
+    case "philosophical-shannon-signal-retention":
+      const hasSignalNoise = /\bsignal\b/i.test(text) && /\bnoise\b/i.test(text);
+      const hasRetention = /\b(retain|retention|critical|must keep|do not drop|lossless|fidelity)\b/i.test(text);
+      const hasCompression = /\b(compress|filter|summariz|drop|context|token)\b/i.test(text);
+      if (hasSignalNoise && hasRetention) {
+        score = 2;
+        reasoning = "Separates signal/noise and states retention criteria.";
+      } else if (hasSignalNoise || (hasCompression && hasRetention)) {
+        score = 1;
+        reasoning = "Mentions compression discipline without complete signal retention.";
+      } else {
+        score = 0;
+        reasoning = "No signal retention discipline detected.";
       }
       break;
 

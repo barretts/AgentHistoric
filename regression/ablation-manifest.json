@@ -37,6 +37,13 @@
       "expectedImpact": "Expert-specific reasoning approach"
     },
     {
+      "id": "persona-intro",
+      "description": "Positive variant that renders personaIntro as a Persona Stance section",
+      "conditionKind": "positive",
+      "source": "experts/*.json → personaIntro",
+      "expectedImpact": "Expert-specific philosophical stance and resisted temptation"
+    },
+    {
       "id": "failure-signals",
       "description": "Failure Signals section from expert prompts",
       "source": "experts/*.json → failureSignals",

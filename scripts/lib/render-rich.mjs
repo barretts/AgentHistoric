@@ -287,6 +287,12 @@ export function renderRichExpert(system, expert, options = {}) {
   const abl = options.ablation;
 
   // Core Philosophy
+  if (expert.personaIntro && abl === "persona-intro") {
+    section++;
+    out += `## ${section}. Persona Stance\n\n`;
+    out += `${expert.personaIntro}\n\n`;
+  }
+
   if (expert.corePhilosophy?.length && abl !== "expert-philosophy") {
     section++;
     out += `## ${section}. Core Philosophy\n\n`;
