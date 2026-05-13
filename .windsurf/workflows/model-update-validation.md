@@ -23,10 +23,11 @@ Stop if either command fails. Inspect the logs before making prompt changes.
 
 ```bash
 node scripts/run-regressions.mjs --local --suite smoke --targets cursor,codex --trials 3 --trace > .logs/model-update-local-smoke-1.log 2>&1
-node scripts/run-regressions.mjs --local --suite model-parity --targets cursor,codex --trials 3 --trace > .logs/model-update-local-parity-1.log 2>&1
+node scripts/run-regressions.mjs --local --suite model-parity --targets cursor,codex --trials 3 --trace --parity-only > .logs/model-update-local-parity-1.log 2>&1
+npm run test:model-parity:strict > .logs/model-update-local-parity-strict-1.log 2>&1
 ```
 
-Use local results to verify the harness and fixtures. Do not treat local accuracy as proof that real models are safe.
+Use local parity as the required cross-target equivalence gate. Treat strict local parity as informational unless the scorecard declares strict quality gating for the update; local accuracy is not proof that real models are safe.
 
 ## 4. Run a real-model sample
 
@@ -46,10 +47,10 @@ node scripts/run-via-clr.mjs --suite model-parity --targets cursor,crush --timeo
 
 ```bash
 node scripts/analyze-traces.mjs --all > .logs/model-update-trace-analysis-1.log 2>&1
-node scripts/analyze-distribution-shift.mjs --all > .logs/model-update-shift-analysis-1.log 2>&1
+node scripts/analyze-distribution-shift.mjs --all --view both --output .logs/model-update-shift-report-1.md > .logs/model-update-shift-analysis-1.log 2>&1
 ```
 
-Add novel prompts to fixtures only when they represent repeated real usage or uncovered task shapes.
+Add novel prompts to fixtures only when they represent repeated real usage or uncovered task shapes; use the well-covered view to avoid adding duplicate fixture coverage.
 
 ## 6. Apply the triage ladder
 

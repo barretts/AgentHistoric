@@ -69,3 +69,8 @@ Use this scorecard as the evidence record for finishing philosopher-maintenance 
 - **Follow-up issues:** upgrade or pin Codex CLI/model; rerun Crush `MI3b` or harden CLR extraction for malformed JSON escaping; investigate PN4 concision drift only if repeated.
 - **Prompt-system files changed:** `prompt-system/router.json` gained narrow Descartes boost signals for `trust boundaries`, `data constraints`, and `bedrock`; generated router artifacts were rebuilt.
 - **Verification logs after changes:** `.logs/final-test-unit-after-parser-fix-1.log`, `.logs/final-real-sample-cursor-rescore-1.log`, `.logs/final-clr-model-parity-2.log`, `.logs/final-shift-report-2.md`.
+
+## Follow-up: PR Review Fixes
+
+- **Local parity semantics:** `npm run test:model-parity` now runs as a parity-only equivalence gate. Strict score quality remains available through `npm run test:model-parity:strict` and is informational for this scorecard unless the update explicitly requires strict local quality gating.
+- **Novel prompt semantics:** distribution-shift reporting now separates novel candidates from well-covered prompts. Re-evaluate the table above with `node scripts/analyze-distribution-shift.mjs --all --view both --output .logs/final-shift-report-both-1.md`; prompts copied from existing fixtures should appear as well-covered, not novel.
