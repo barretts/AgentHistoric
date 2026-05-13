@@ -19,6 +19,7 @@ function parseArgs(argv) {
     all: false,
     runId: null,
     output: null,
+    view: "novel",
     traceFiles: []
   };
 
@@ -32,9 +33,16 @@ function parseArgs(argv) {
     } else if (arg === "--output" || arg === "-o") {
       options.output = argv[index + 1];
       index += 1;
+    } else if (arg === "--view") {
+      options.view = argv[index + 1];
+      index += 1;
     } else if (!arg.startsWith("--")) {
       options.traceFiles.push(arg);
     }
+  }
+
+  if (!["novel", "well-covered", "both"].includes(options.view)) {
+    throw new Error(`Unsupported --view "${options.view}". Use novel, well-covered, or both.`);
   }
 
   return options;
@@ -92,7 +100,7 @@ async function main() {
   const report = formatShiftReport({
     ...result,
     traceFiles: traceFiles.map((file) => path.relative(workspaceRoot, file))
-  });
+  }, { view: options.view });
 
   if (options.output) {
     const outputPath = path.resolve(workspaceRoot, options.output);

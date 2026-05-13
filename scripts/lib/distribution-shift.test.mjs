@@ -88,6 +88,10 @@ test("detectDistributionShift: significant shift when domains differ", () => {
   assert.strictEqual(result.shiftScore, "significant");
   assert.ok(result.classifierAccuracy >= 0.8,
     `Accuracy should be >= 0.8 for different domains, got ${result.classifierAccuracy}`);
+  assert.ok(result.novelPrompts.length > 0);
+  result.novelPrompts.forEach(p => {
+    assert.ok(p.noveltyScore > 0.5 && p.noveltyScore <= 1);
+  });
 });
 
 // ── Marginal: slightly different but overlapping ───────────────────
@@ -175,6 +179,30 @@ test("detectDistributionShift: identifies novel prompts when shift is detected",
   }
 });
 
+test("detectDistributionShift: exact fixture prompt matches are well-covered, not novel", () => {
+  const existing = [
+    "Fix the null pointer in the user service.",
+    "Add validation to the API handler.",
+    "Debug the failing test in the parser.",
+    "Refactor the routing module.",
+    "Handle errors in the database layer."
+  ];
+  const newPrompts = [
+    "Fix the null pointer in the user service.",
+    "Add validation to the API handler.",
+    "Debug the failing test in the parser.",
+    "Refactor the routing module.",
+    "Handle errors in the database layer."
+  ];
+
+  const result = detectDistributionShift(existing, newPrompts);
+  assert.strictEqual(result.novelPrompts.length, 0);
+  assert.strictEqual(result.wellCoveredPrompts.length, 5);
+  result.wellCoveredPrompts.forEach(p => {
+    assert.strictEqual(p.coverageScore, 1);
+  });
+});
+
 // ── Report formatting ──────────────────────────────────────────────
 
 test("formatShiftReport renders markdown with shift detected", () => {
@@ -206,6 +234,7 @@ test("formatShiftReport renders markdown with no shift", () => {
     shiftScore: "no-shift",
     totalNewPrompts: 3,
     novelPrompts: [],
+    wellCoveredPrompts: [],
     message: "Classifier accuracy: 45.0%. Shift: no-shift."
   };
 
@@ -213,6 +242,31 @@ test("formatShiftReport renders markdown with no shift", () => {
   assert.match(md, /Shift detected: No/);
   assert.match(md, /no-shift/);
   assert.match(md, /Novel prompts found: 0/);
+});
+
+test("formatShiftReport renders well-covered and both views", () => {
+  const result = {
+    shiftDetected: false,
+    classifierAccuracy: 0.45,
+    shiftScore: "no-shift",
+    totalNewPrompts: 2,
+    novelPrompts: [
+      { index: 0, prompt: "Design a new capability", noveltyScore: 0.62 }
+    ],
+    wellCoveredPrompts: [
+      { index: 1, prompt: "Fix the null pointer", coverageScore: 0.91 }
+    ],
+    message: "Classifier accuracy: 45.0%. Shift: no-shift."
+  };
+
+  const wellCovered = formatShiftReport(result, { view: "well-covered" });
+  assert.match(wellCovered, /Well-Covered Prompts/);
+  assert.match(wellCovered, /Coverage Score/);
+  assert.doesNotMatch(wellCovered, /Novel Prompts \(candidates for test inclusion\)/);
+
+  const both = formatShiftReport(result, { view: "both" });
+  assert.match(both, /Novel Prompts \(candidates for test inclusion\)/);
+  assert.match(both, /Well-Covered Prompts/);
 });
 
 // ── Deterministic results with fixed seed ──────────────────────────
