@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "src/site/**"
+      - "site/**"
       - ".github/workflows/deploy-pages.yml"
   workflow_dispatch:
 
@@ -27,52 +27,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-          cache-dependency-path: src/site/package-lock.json
-
-      - name: Install dependencies
-        working-directory: src/site
-        run: npm ci
-
-      - name: Build React app
-        working-directory: src/site
-        run: npm run build
-
-      - name: Prepare site directory
-        run: |
-          # Save tracked-in-git content that must survive the wipe
-          if [ -f site/CNAME ]; then
-            cp site/CNAME /tmp/CNAME
-          fi
-          if [ -f site/README.md ]; then
-            cp site/README.md /tmp/README.md
-          fi
-          if [ -d site/experts ]; then
-            cp -r site/experts /tmp/experts
-          fi
-          # Remove old site contents
-          rm -rf site/*
-          mkdir -p site
-          # Copy build output to site
-          cp -r src/site/dist/* site/
-          # Restore preserved content
-          if [ -f /tmp/CNAME ]; then
-            cp /tmp/CNAME site/
-          fi
-          if [ -f /tmp/README.md ]; then
-            cp /tmp/README.md site/
-          fi
-          # Merge preserved experts (.md source essays) into the built
-          # experts/ dir (which holds SPA shells from generate-expert-shells).
-          if [ -d /tmp/experts ]; then
-            mkdir -p site/experts
-            cp -r /tmp/experts/. site/experts/
-          fi
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
