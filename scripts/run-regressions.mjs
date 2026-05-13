@@ -18,7 +18,8 @@ import {
   runCommandLogged,
   runTrials,
   scoreCase,
-  selectCases
+  selectCases,
+  shouldRequireVerbalizedSampling
 } from "./lib/regression.mjs";
 import { attachJudgeResults } from "./lib/eval-judge.mjs";
 import { buildAndAppendTrace, analyzeTraceFailures, formatTraceAnalysis } from "./lib/tracer.mjs";
@@ -74,7 +75,9 @@ for (const testCase of cases) {
         }
 
         let score = scoreCase(system, testCase, response, {
-          requireVerbalizedSampling: options.verbalizedSampling
+          requireVerbalizedSampling:
+            options.verbalizedSampling
+            && shouldRequireVerbalizedSampling(system, testCase)
         });
 
         // LLM-as-a-Judge evaluation

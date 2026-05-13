@@ -125,6 +125,63 @@ export async function ensureLogsDirectory(workspaceRoot) {
   return logDir;
 }
 
+/**
+ * Closeness threshold for verbalized-sampling gating. The prompt asks the LLM
+ * to emit `confidenceDistribution` whenever the two strongest routing
+ * heuristic scores are within this margin; the scorer uses the same constant
+ * to decide when to enforce the schema. Single source of truth for prompt
+ * text and scorer wiring.
+ */
+export const VS_CLOSENESS_THRESHOLD = 0.2;
+
+/**
+ * Compute a coarse 0..1 "match strength" for each routing heuristic against
+ * the prompt text. Score = (matched signals + matched boostSignals) / total
+ * declared signals for that heuristic. Heuristics with no matches are
+ * omitted. Used only by `shouldRequireVerbalizedSampling`; the live router
+ * still uses first-match semantics in `routePrompt`.
+ */
+function computeHeuristicMatchScores(system, promptText) {
+  const text = normalizeText(promptText);
+  const heuristics = system?.router?.routingHeuristics || [];
+  const scored = [];
+  for (const heuristic of heuristics) {
+    const signals = heuristic.signals || [];
+    const boosts = heuristic.boostSignals || [];
+    const total = signals.length + boosts.length;
+    if (total === 0) continue;
+    const matched =
+      signals.filter((s) => text.includes(normalizeText(s))).length
+      + boosts.filter((s) => text.includes(normalizeText(s))).length;
+    if (matched === 0) continue;
+    scored.push({
+      expert: heuristic.experts?.[0] || null,
+      score: matched / total
+    });
+  }
+  scored.sort((a, b) => b.score - a.score);
+  return scored;
+}
+
+/**
+ * Decide whether the verbalized-sampling schema should be enforced for a
+ * given case. Mirrors the prompt rule: require `confidenceDistribution`
+ * only when routing is genuinely close. We treat a case as "close" if either
+ *  (a) the fixture flags it as ambiguous via `ambiguousBetween` (curator
+ *      ground truth), or
+ *  (b) the top two heuristic match scores fall within
+ *      `VS_CLOSENESS_THRESHOLD` of each other.
+ * Returns false otherwise so that easy/clear cases do not penalise responses
+ * that omit a distribution.
+ */
+export function shouldRequireVerbalizedSampling(system, testCase) {
+  if (!testCase) return false;
+  if ((testCase.ambiguousBetween || []).length >= 1) return true;
+  const scores = computeHeuristicMatchScores(system, testCase.prompt || "");
+  if (scores.length < 2) return false;
+  return scores[0].score - scores[1].score <= VS_CLOSENESS_THRESHOLD;
+}
+
 export function buildWrappedPrompt(testCase, opts = {}) {
   const requiredHeadings = expectedResponseSections(testCase);
   const verbalizedSampling = Boolean(opts.verbalizedSampling);
@@ -175,7 +232,7 @@ export function buildWrappedPrompt(testCase, opts = {}) {
 
   if (verbalizedSampling) {
     lines.push(
-      "When the two strongest routing heuristic scores are within 0.2 on a 0-1 scale, you must include confidenceDistribution: an array of at least two objects { \"expert\": \"<canonical-id>\", \"probability\": <number> } using only ids from the router Canonical expert roster, sorted by descending probability, non-negative probabilities summing to 1.0±0.02, and at least three ranked candidates whenever you emit this field; the first entry's expert must match routingDecision.selectedExpert and activeExpert."
+      `When the two strongest routing heuristic scores are within ${VS_CLOSENESS_THRESHOLD} on a 0-1 scale, you must include confidenceDistribution: an array of at least three objects { "expert": "<canonical-id>", "probability": <number> } using only ids from the router Canonical expert roster, sorted by descending probability, non-negative probabilities summing to 1.0±0.02; the first entry's expert must match routingDecision.selectedExpert and activeExpert.`
     );
   }
 
@@ -249,7 +306,9 @@ export function buildLocalResponse(system, testCase, opts = {}) {
   const envelope = {
     routingDecision: {
       selectedExpert,
-      domain: "local-synthetic"
+      domain: "local-synthetic",
+      reason: `Local synthetic router selected ${selectedExpert} via routePrompt heuristic.`,
+      confidence: confidenceLabeled ? "HIGH (local heuristic)" : "MEDIUM (local heuristic)"
     },
     activeExpert: selectedExpert,
     handoffs: [],
@@ -718,10 +777,10 @@ export function assertConcision(response, maxChars = 4000) {
 export function assertVerbalizedSamplingSchema(system, response) {
   const roster = expertRosterAllowlistSet(system);
   const dist = response?.confidenceDistribution;
-  if (!Array.isArray(dist) || dist.length < 2) {
+  if (!Array.isArray(dist) || dist.length < 3) {
     return {
       pass: false,
-      finding: "Verbalized sampling: confidenceDistribution must be an array of length >= 2."
+      finding: "Verbalized sampling: confidenceDistribution must be an array of length >= 3."
     };
   }
 

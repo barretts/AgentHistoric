@@ -18,7 +18,8 @@ import {
   runCommandLogged,
   runTrials,
   scoreCase,
-  selectCases
+  selectCases,
+  shouldRequireVerbalizedSampling
 } from "./lib/regression.mjs";
 import { decorateWrappedPromptForClr, runCasesViaClr } from "./lib/clr-runner.mjs";
 
@@ -252,7 +253,10 @@ for (const section of sectionsToRun) {
             continue;
           }
           const score = scoreCase(system, orig, r.response, {
-            requireVerbalizedSampling: options.verbalizedSampling && condition === "ablated"
+            requireVerbalizedSampling:
+              options.verbalizedSampling
+              && condition === "ablated"
+              && shouldRequireVerbalizedSampling(system, orig)
           });
           trialRecords.push({
             score: score.score,
@@ -307,7 +311,10 @@ for (const section of sectionsToRun) {
                 options
               });
           const score = scoreCase(system, testCase, response, {
-            requireVerbalizedSampling: options.verbalizedSampling && condition === "ablated"
+            requireVerbalizedSampling:
+              options.verbalizedSampling
+              && condition === "ablated"
+              && shouldRequireVerbalizedSampling(system, testCase)
           });
           return {
             score: score.score,
