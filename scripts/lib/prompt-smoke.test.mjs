@@ -67,6 +67,13 @@ function extractNegativeExampleKeys(content) {
   });
 }
 
+function extractBashFenceContaining(content, needle) {
+  for (const match of content.matchAll(/```bash\n([\s\S]*?)\n```/g)) {
+    if (match[1].includes(needle)) return match[1];
+  }
+  return null;
+}
+
 test("PROTOCOL: all targets reference the same set of expert IDs in init artifacts", () => {
   const claudeInit = artifacts.get("compiled/claude/rules/00-init.md");
   const cursorInit = artifacts.get("compiled/cursor/rules/00-init.mdc");
@@ -114,6 +121,33 @@ test("PROTOCOL: all targets render the same negative routing example keys", () =
   const codexNeg = extractNegativeExampleKeys(codexAgents);
 
   assert.deepEqual(claudeNeg, codexNeg, "Rich and Codex must render the same negative routing example categories");
+});
+
+test("PROTOCOL: logging host-execution notes render outside shell pattern fences", () => {
+  const initTargets = [
+    "compiled/claude/rules/00-init.md",
+    "compiled/windsurf/rules/00-init.md",
+    "compiled/cursor/rules/00-init.mdc",
+    "compiled/crush/rules/00-init.md",
+    "compiled/gemini/rules/00-init.md",
+    "compiled/codex/AGENTS.md"
+  ];
+  const notes = system.globalRuntime.logging.hostExecutionNotes || [];
+
+  for (const filePath of initTargets) {
+    const content = artifacts.get(filePath);
+    assert.ok(content, `Missing artifact: ${filePath}`);
+    assert.match(content, /Host execution notes/, `${filePath}: missing host execution notes heading`);
+    for (const note of notes) {
+      assert.ok(content.includes(note), `${filePath}: missing host execution note: ${note}`);
+    }
+
+    const loggingFence = extractBashFenceContaining(content, "mkdir -p .logs");
+    assert.ok(loggingFence, `${filePath}: missing logging bash fence`);
+    assert.doesNotMatch(loggingFence, /launch the logged command/i, `${filePath}: host launch prose leaked into bash fence`);
+    assert.doesNotMatch(loggingFence, /poll command status/i, `${filePath}: host polling prose leaked into bash fence`);
+    assert.match(loggingFence, /tail -n 30 \.logs\/run-/, `${filePath}: logging bash fence missing log inspection command`);
+  }
 });
 
 test("PROTOCOL: every expert has matching required sections across rich and codex artifacts", () => {

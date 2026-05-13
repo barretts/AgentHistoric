@@ -58,6 +58,11 @@ export function renderRichInit(system, options = {}) {
     out += `**Pattern (adapt the command to your runtime):**\n\n`;
     out += codeFence(g.logging.pattern.join("\n"), "bash");
     out += `\n\n`;
+    if (g.logging.hostExecutionNotes?.length) {
+      out += `**Host execution notes:**\n\n`;
+      out += g.logging.hostExecutionNotes.map((item) => `- ${item}`).join("\n");
+      out += `\n\n`;
+    }
 
     // Section 2: Mandate
     const mandateHeading = resolveIntensity(system, "loggingSectionHeading", intensity) || "All Test, Build, and Run Commands MUST Be Logged";
