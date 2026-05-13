@@ -190,10 +190,13 @@ Second-pass refinement targets. After the first pass identifies a broad domain, 
 ```bash
 mkdir -p .logs
 your_command > .logs/run-<slug>-1.log 2>&1
-launch the logged command in background/non-blocking mode
-poll command status until it completes
 tail -n 30 .logs/run-<slug>-1.log   # or grep -iE 'fail|error|exception' .logs/run-<slug>-1.log
 ```
+
+**Host execution notes:**
+
+- Launch the logged command through the host's background/non-blocking execution path.
+- Poll command status until it completes, then inspect the saved log.
 
 ## Definition Of Done
 

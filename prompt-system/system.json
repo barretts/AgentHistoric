@@ -82,9 +82,11 @@
       "pattern": [
         "mkdir -p .logs",
         "your_command > .logs/run-<slug>-1.log 2>&1",
-        "launch the logged command in background/non-blocking mode",
-        "poll command status until it completes",
         "tail -n 30 .logs/run-<slug>-1.log   # or grep -iE 'fail|error|exception' .logs/run-<slug>-1.log"
+      ],
+      "hostExecutionNotes": [
+        "Launch the logged command through the host's background/non-blocking execution path.",
+        "Poll command status until it completes, then inspect the saved log."
       ],
       "mandate": "Before issuing any terminal command, use the host's background/non-blocking execution path so command status can be polled instead of blocking the chat. For logged commands, choose a literal log filename yourself, such as `.logs/run-test-1.log`. If retrying, choose a new literal filename such as `.logs/run-test-2.log`. Append `> .logs/run-<slug>-1.log 2>&1` (or `| tee .logs/run-<slug>-1.log`) to every long-running `run_command`, start it non-blocking, then poll status and inspect the saved log. Do not use `$(date)`, `$(pwd)`, `mktemp`, backticks, or any shell-generated value to construct log filenames; Claude may flag those as command substitution before the shell runs. One-line probes (`echo`, `pwd`, `which`) are exempt from persistent logging only, not from the background/status-poll preference when the host supports it. Do not use heredocs (`<<EOF`, `<<'NODE'`, `<<PY`) or multi-line terminal payloads; create a script file with file-edit tools and execute it instead.",
       "hookNote": "A `PreToolUse` hook in supported IDEs (Claude, Cursor, Codex, Gemini, OpenCode) nudges long-running commands without `.logs/` redirection and reminds agents to prefer background/non-blocking execution plus status polling."
