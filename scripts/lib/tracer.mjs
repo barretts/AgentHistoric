@@ -29,6 +29,7 @@ export function buildTrace(params) {
     caseId,
     caseName,
     prompt,
+    userPrompt,
     target,
     trialIndex,
     response,
@@ -68,6 +69,10 @@ export function buildTrace(params) {
     },
     judge: scoreResult.judgeResult || null,
     promptHash: hashForIndexing(prompt),
+    prompt: {
+      userPrompt: userPrompt || extractUserPrompt(prompt),
+      wrappedSnippet: truncate(prompt || "", 2000)
+    },
     response: {
       outputSections: response.outputSections || [],
       confidenceLabeled: response.confidenceLabeled ?? null,
@@ -103,6 +108,11 @@ function appendFile(filePath, data) {
   return readFile(filePath, "utf8")
     .then((existing) => writeFile(filePath, existing + data, "utf8"))
     .catch(() => writeFile(filePath, data, "utf8"));
+}
+
+function extractUserPrompt(prompt) {
+  const match = String(prompt || "").match(/^User prompt:\s*(.+)$/m);
+  return match ? match[1].trim() : null;
 }
 
 /**

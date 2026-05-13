@@ -8,6 +8,7 @@ import {
   buildLocalResponse,
   buildWrappedPrompt,
   compareTargets,
+  computeRegressionGateFailures,
   createTimestamp,
   ensureLogsDirectory,
   formatSummary,
@@ -58,21 +59,13 @@ for (const testCase of cases) {
           `regression-${timestamp}-${testCase.id}-${target}${trialSuffix}.log`
         );
 
-        let response;
-        if (options.local) {
-          response = buildLocalResponse(system, testCase, {
-            trialIndex,
-            seed: options.seed,
-            verbalizedSampling: options.verbalizedSampling
-          });
-          await writeFile(rawLogPath, JSON.stringify(response, null, 2) + "\n", "utf8");
-        } else {
-          response = await runTarget({
-            target,
-            wrappedPrompt,
-            rawLogPath
-          });
-        }
+        const response = await runTarget({
+          target,
+          testCase,
+          trialIndex,
+          wrappedPrompt,
+          rawLogPath
+        });
 
         let score = scoreCase(system, testCase, response, {
           requireVerbalizedSampling:
@@ -92,6 +85,7 @@ for (const testCase of cases) {
             caseId: testCase.id,
             caseName: testCase.name,
             prompt: wrappedPrompt,
+            userPrompt: testCase.prompt,
             target,
             trialIndex,
             response,
@@ -156,7 +150,26 @@ await writeFile(mdPath, formatSummary(run), "utf8");
 console.log(`JSON summary: ${path.relative(workspaceRoot, jsonPath)}`);
 console.log(`Markdown summary: ${path.relative(workspaceRoot, mdPath)}`);
 
-async function runTarget({ target, wrappedPrompt, rawLogPath }) {
+const gateFailures = computeRegressionGateFailures(run, options);
+console.log(
+  `Gate: parity-only -> ${gateFailures.parityFailures.length} failures; ` +
+  `strict -> ${gateFailures.strictFailures.length} failures`
+);
+if (gateFailures.failed) {
+  process.exitCode = 1;
+}
+
+async function runTarget({ target, testCase, trialIndex, wrappedPrompt, rawLogPath }) {
+  if (options.local) {
+    const response = buildLocalResponse(system, testCase, {
+      trialIndex,
+      seed: options.seed,
+      verbalizedSampling: options.verbalizedSampling
+    });
+    await writeFile(rawLogPath, JSON.stringify(response, null, 2) + "\n", "utf8");
+    return response;
+  }
+
   if (target === "cursor") {
     const cursorArgs = [
       "--print",

@@ -48,6 +48,33 @@ test("buildTrace produces a valid trace record", () => {
   assert.strictEqual(trace.scoring.score, 2);
   assert.ok(trace.timestamp);
   assert.ok(trace.promptHash);
+  assert.strictEqual(trace.prompt.userPrompt, null);
+  assert.match(trace.prompt.wrappedSnippet, /Fix the null pointer/);
+});
+
+test("buildTrace extracts the original user prompt from wrapped prompts", () => {
+  const trace = buildTrace({
+    caseId: "R1",
+    caseName: "Simple implementation request",
+    prompt: "Harness line\nUser prompt: Refactor this function.\n",
+    target: "cursor",
+    trialIndex: 0,
+    response: {
+      routingDecision: { domain: "implementation" },
+      outputSections: ["Answer"],
+      response: "Selected Expert: expert-engineer-peirce"
+    },
+    scoreResult: {
+      score: 2,
+      selectedExpert: "expert-engineer-peirce",
+      routingMatch: true,
+      missingSections: [],
+      notableDrift: [],
+      behavioralFindings: []
+    }
+  });
+
+  assert.strictEqual(trace.prompt.userPrompt, "Refactor this function.");
 });
 
 test("buildTrace truncates long response snippets", () => {

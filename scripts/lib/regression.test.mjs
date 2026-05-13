@@ -13,6 +13,7 @@ import {
   assertVerbalizedSamplingSchema,
   buildLocalResponse,
   buildWrappedPrompt,
+  computeRegressionGateFailures,
   shouldRequireVerbalizedSampling,
   VS_CLOSENESS_THRESHOLD,
   computeBehavioralMetrics,
@@ -85,6 +86,58 @@ test("parseArgs supports --verbalized-sampling", () => {
 test("parseArgs supports --local", () => {
   assert.strictEqual(parseArgs([]).local, false);
   assert.strictEqual(parseArgs(["--local"]).local, true);
+});
+
+test("parseArgs supports regression gate modes", () => {
+  const defaults = parseArgs([]);
+  assert.strictEqual(defaults.strict, false);
+  assert.strictEqual(defaults.parityOnly, false);
+
+  assert.strictEqual(parseArgs(["--strict"]).strict, true);
+  assert.strictEqual(parseArgs(["--parity-only"]).parityOnly, true);
+
+  const both = parseArgs(["--strict", "--parity-only"]);
+  assert.strictEqual(both.strict, true);
+  assert.strictEqual(both.parityOnly, true);
+});
+
+test("computeRegressionGateFailures evaluates strict and parity modes", () => {
+  const run = {
+    parity: [
+      { caseId: "R1", equivalent: true, deltas: [] },
+      { caseId: "R2", equivalent: false, deltas: ["section mismatch"] }
+    ],
+    results: [
+      { caseId: "R1", score: { score: 2 } },
+      { caseId: "R2", score: { score: 1 } }
+    ]
+  };
+
+  const none = computeRegressionGateFailures(run, {});
+  assert.strictEqual(none.failed, false);
+  assert.deepEqual(none.parityFailures.map((p) => p.caseId), ["R2"]);
+  assert.deepEqual(none.strictFailures.map((r) => r.caseId), ["R2"]);
+
+  const parityOnly = computeRegressionGateFailures(run, { parityOnly: true });
+  assert.strictEqual(parityOnly.failed, true);
+  assert.deepEqual(parityOnly.parityFailures.map((p) => p.caseId), ["R2"]);
+  assert.deepEqual(parityOnly.strictFailures.map((r) => r.caseId), ["R2"]);
+
+  const strict = computeRegressionGateFailures(run, { strict: true });
+  assert.strictEqual(strict.failed, true);
+  assert.deepEqual(strict.parityFailures.map((p) => p.caseId), ["R2"]);
+  assert.deepEqual(strict.strictFailures.map((r) => r.caseId), ["R2"]);
+
+  const both = computeRegressionGateFailures(run, { parityOnly: true, strict: true });
+  assert.strictEqual(both.failed, true);
+  assert.deepEqual(both.parityFailures.map((p) => p.caseId), ["R2"]);
+  assert.deepEqual(both.strictFailures.map((r) => r.caseId), ["R2"]);
+
+  const pass = computeRegressionGateFailures({
+    parity: [{ caseId: "R1", equivalent: true, deltas: [] }],
+    results: [{ caseId: "R1", score: { score: 2 } }]
+  }, { parityOnly: true, strict: true });
+  assert.strictEqual(pass.failed, false);
 });
 
 test("buildWrappedPrompt adds confidenceDistribution when verbalizedSampling", () => {
@@ -190,6 +243,36 @@ test("evaluateResponse accepts a valid architecture response", async () => {
   assert.strictEqual(result.score, 2);
   assert.deepEqual(result.missingSections, []);
   assert.deepEqual(result.notableDrift, []);
+});
+
+test("evaluateResponse normalizes selected expert lines with handshake tokens", async () => {
+  const system = await loadPromptSystemSpec(workspaceRoot);
+  const testCase = await loadCase("PN1");
+  const response = {
+    routingDecision: {
+      domain: "implementation",
+      selectedExpert: "expert-engineer-peirce",
+      reason: "The request asks for code.",
+      confidence: "High"
+    },
+    activeExpert: "expert-engineer-peirce",
+    handoffs: [],
+    outputSections: ["Selected Expert", "Reason", "Confidence", "Answer"],
+    confidenceLabeled: true,
+    personaBlend: false,
+    domainStayedInScope: true,
+    summary: "Implementation is primary.",
+    response: [
+      "Selected Expert: expert-engineer-peirce [rules:loaded init router experts@12]",
+      "Reason: Direct implementation request.",
+      "Confidence: High.",
+      "Answer: Build the function and include edge-case tests."
+    ].join("\n")
+  };
+
+  const result = evaluateResponse(system, testCase, response);
+  assert.strictEqual(result.selectedExpert, "expert-engineer-peirce");
+  assert.strictEqual(result.routingMatch, true);
 });
 
 test("evaluateResponse ignores inline uncertainty labels that are not headings", async () => {
