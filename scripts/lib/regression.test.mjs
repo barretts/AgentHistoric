@@ -79,6 +79,11 @@ test("parseArgs supports --verbalized-sampling", () => {
   assert.strictEqual(parseArgs(["--verbalized-sampling"]).verbalizedSampling, true);
 });
 
+test("parseArgs supports --local", () => {
+  assert.strictEqual(parseArgs([]).local, false);
+  assert.strictEqual(parseArgs(["--local"]).local, true);
+});
+
 test("buildWrappedPrompt adds confidenceDistribution when verbalizedSampling", () => {
   const tc = {
     prompt: "Test",
