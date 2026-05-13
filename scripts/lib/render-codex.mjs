@@ -115,7 +115,10 @@ export function renderAgents(system, options = {}) {
       ? `\n\n## Logging\n\n` +
         toList(g.logging.required) +
         `\n\n` +
-        codeFence(g.logging.pattern.join("\n"), "bash")
+        codeFence(g.logging.pattern.join("\n"), "bash") +
+        (g.logging.hostExecutionNotes?.length
+          ? `\n\n**Host execution notes:**\n\n` + toList(g.logging.hostExecutionNotes)
+          : "")
       : "") +
     `\n\n## Definition Of Done\n\n` +
     toList(g.definitionOfDone) +

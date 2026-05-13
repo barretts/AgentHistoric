@@ -106,7 +106,7 @@ Safety Valves:
 - Massive Codebase Sweeps -> .codex/skills/expert-architect-descartes -> .codex/skills/expert-engineer-peirce -> .codex/skills/expert-qa-popper -> .codex/skills/expert-manager-blackmore
 - Agent Workflows & Orchestration -> .codex/skills/expert-orchestrator-simon -> .codex/skills/expert-architect-descartes -> .codex/skills/expert-manager-blackmore | Boost: "phases", "gates", "rollback criteria", "implementation plan with", "stopping conditions", "what gets deployed first"
 - Exploration & Ideation -> .codex/skills/expert-visionary-dennett -> .codex/skills/expert-ux-rogers
-- Foundational Architecture -> .codex/skills/expert-architect-descartes
+- Foundational Architecture -> .codex/skills/expert-architect-descartes | Boost: "trust boundaries", "data constraints", "bedrock"
 - Interfaces & Abstractions -> .codex/skills/expert-abstractions-liskov -> .codex/skills/expert-architect-descartes -> .codex/skills/expert-engineer-peirce
 - Refactoring & Restructuring -> .codex/skills/expert-abstractions-liskov -> .codex/skills/expert-engineer-peirce
 - Quick Fix & Patch -> .codex/skills/expert-engineer-peirce | Anti-triggers: "interface", "coupling", "module boundary", "public api", "invariant", "state machine"
@@ -183,6 +183,7 @@ Second-pass refinement targets. After the first pass identifies a broad domain, 
 
 - Never pipe test, build, or run output directly into a filter.
 - Always write full output to `.logs/` before inspecting it.
+- Run terminal commands through the host's background/non-blocking execution path by default, then inspect completion with status polling instead of blocking the chat.
 - Do not use heredocs (`<<EOF`, `<<'NODE'`, `<<PY`) in terminal commands or `run_command`; create a script file with file-edit tools and execute that file instead.
 - Avoid multi-line terminal payloads whose correctness depends on exact line boundaries; keep shell commands single-line unless executing a saved script.
 
@@ -191,6 +192,11 @@ mkdir -p .logs
 your_command > .logs/run-<slug>-1.log 2>&1
 tail -n 30 .logs/run-<slug>-1.log   # or grep -iE 'fail|error|exception' .logs/run-<slug>-1.log
 ```
+
+**Host execution notes:**
+
+- Launch the logged command through the host's background/non-blocking execution path.
+- Poll command status until it completes, then inspect the saved log.
 
 ## Definition Of Done
 

@@ -23,6 +23,10 @@ function tokenize(text) {
     .filter(w => w.length > 2);
 }
 
+function normalizePrompt(text) {
+  return String(text || "").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
 const STOP_WORDS = new Set([
   'the','and','for','are','but','not','you','all','can','had','her','was','one',
   'our','out','has','have','been','with','this','that','from','they','will',
@@ -223,6 +227,8 @@ export function detectDistributionShift(existingPrompts, newPrompts, opts = {}) 
       classifierAccuracy: null,
       shiftScore: 'insufficient-data',
       novelPrompts: [],
+      wellCoveredPrompts: [],
+      totalNewPrompts: newPrompts.length,
       message: 'Not enough data for a train/test split. Need at least 2 prompts in each set.'
     };
   }
@@ -250,9 +256,10 @@ export function detectDistributionShift(existingPrompts, newPrompts, opts = {}) 
     shiftScore = 'significant';
   }
 
-  // Identify which new prompts are most likely misclassified as "existing"
-  // (i.e., the model thinks they belong to the existing distribution)
   const novelPrompts = [];
+  const wellCoveredPrompts = [];
+  const existingPromptSet = new Set(existingPrompts.map(normalizePrompt));
+
   for (let i = 0; i < newPrompts.length; i++) {
     const globalIdx = existingPrompts.length + i;
     const x = X[globalIdx];
@@ -261,30 +268,78 @@ export function detectDistributionShift(existingPrompts, newPrompts, opts = {}) 
       z += model.weights[j] * x[j];
     }
     const pNew = sigmoid(z);
-    if (pNew < 0.5) {
+    const prompt = newPrompts[i];
+    const exactCoverage = existingPromptSet.has(normalizePrompt(prompt));
+
+    if (!exactCoverage && pNew >= 0.5) {
       novelPrompts.push({
         index: i,
-        prompt: newPrompts[i],
-        noveltyScore: Math.round(Number(1 - pNew).toFixed(3))
+        prompt,
+        noveltyScore: Number(pNew.toFixed(3))
+      });
+    } else {
+      const coverageScore = exactCoverage ? 1 : Number((1 - pNew).toFixed(3));
+      wellCoveredPrompts.push({
+        index: i,
+        prompt,
+        coverageScore
       });
     }
   }
+
+  novelPrompts.sort((left, right) => right.noveltyScore - left.noveltyScore);
+  wellCoveredPrompts.sort((left, right) => right.coverageScore - left.coverageScore);
 
   return {
     shiftDetected,
     classifierAccuracy: acc !== null ? Math.round(acc * 1000) / 1000 : null,
     shiftScore,
-    novelPrompts: novelPrompts.slice(0, 10), // top 10 most novel
+    novelPrompts: novelPrompts.slice(0, 10),
+    wellCoveredPrompts: wellCoveredPrompts.slice(0, 10),
     totalNewPrompts: newPrompts.length,
     message: `Classifier accuracy: ${acc !== null ? (acc * 100).toFixed(1) : 'N/A'}%. ` +
       `Shift: ${shiftScore}${shiftDetected ? ' — new inputs differ significantly from test coverage.' : '.'}`
   };
 }
 
+export function promptsFromFixtures(fixtures) {
+  return (fixtures.cases || [])
+    .map((testCase) => testCase.prompt)
+    .filter((prompt) => typeof prompt === "string" && prompt.trim().length > 0);
+}
+
+export function extractUserPromptFromWrappedPrompt(prompt) {
+  const match = String(prompt || "").match(/^User prompt:\s*(.+)$/m);
+  return match ? match[1].trim() : null;
+}
+
+export function extractUserPromptsFromTraces(traces) {
+  const prompts = [];
+  const seen = new Set();
+
+  for (const trace of traces || []) {
+    const prompt =
+      trace.prompt?.userPrompt ||
+      extractUserPromptFromWrappedPrompt(trace.prompt?.wrappedSnippet) ||
+      extractUserPromptFromWrappedPrompt(trace.promptText) ||
+      extractUserPromptFromWrappedPrompt(trace.wrappedPrompt);
+
+    if (prompt && !seen.has(prompt)) {
+      seen.add(prompt);
+      prompts.push(prompt);
+    }
+  }
+
+  return prompts;
+}
+
 /**
  * Format shift detection results as markdown.
  */
-export function formatShiftReport(result) {
+export function formatShiftReport(result, opts = {}) {
+  const view = opts.view || 'novel';
+  const novelPrompts = result.novelPrompts || [];
+  const wellCoveredPrompts = result.wellCoveredPrompts || [];
   const lines = [];
   lines.push('# Distribution Shift Analysis');
   lines.push('');
@@ -292,20 +347,37 @@ export function formatShiftReport(result) {
   lines.push(`- Shift score: ${result.shiftScore}`);
   lines.push(`- Classifier accuracy: ${result.classifierAccuracy !== null ? (result.classifierAccuracy * 100).toFixed(1) : 'N/A'}%`);
   lines.push(`- New prompts analyzed: ${result.totalNewPrompts}`);
-  lines.push(`- Novel prompts found: ${result.novelPrompts.length}`);
+  lines.push(`- Novel prompts found: ${novelPrompts.length}`);
+  lines.push(`- Well-covered prompts found: ${wellCoveredPrompts.length}`);
+  if (result.traceFiles?.length) {
+    lines.push(`- Trace files: ${result.traceFiles.join(', ')}`);
+  }
   lines.push('');
   lines.push(`**Assessment:** ${result.message}`);
   lines.push('');
 
-  if (result.novelPrompts.length > 0) {
+  if ((view === 'novel' || view === 'both') && novelPrompts.length > 0) {
     lines.push('## Novel Prompts (candidates for test inclusion)');
     lines.push('');
     lines.push('| # | Novelty Score | Prompt |');
     lines.push('|---|:-------------:|--------|');
-    for (let i = 0; i < result.novelPrompts.length; i++) {
-      const p = result.novelPrompts[i];
+    for (let i = 0; i < novelPrompts.length; i++) {
+      const p = novelPrompts[i];
       const snippet = p.prompt.length > 100 ? p.prompt.slice(0, 100) + '…' : p.prompt;
       lines.push(`| ${i + 1} | ${p.noveltyScore} | ${snippet} |`);
+    }
+    lines.push('');
+  }
+
+  if ((view === 'well-covered' || view === 'both') && wellCoveredPrompts.length > 0) {
+    lines.push('## Well-Covered Prompts (existing coverage)');
+    lines.push('');
+    lines.push('| # | Coverage Score | Prompt |');
+    lines.push('|---|:--------------:|--------|');
+    for (let i = 0; i < wellCoveredPrompts.length; i++) {
+      const p = wellCoveredPrompts[i];
+      const snippet = p.prompt.length > 100 ? p.prompt.slice(0, 100) + '…' : p.prompt;
+      lines.push(`| ${i + 1} | ${p.coverageScore} | ${snippet} |`);
     }
     lines.push('');
   }

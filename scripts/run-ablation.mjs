@@ -18,7 +18,8 @@ import {
   runCommandLogged,
   runTrials,
   scoreCase,
-  selectCases
+  selectCases,
+  shouldRequireVerbalizedSampling
 } from "./lib/regression.mjs";
 import { attachJudgeResults } from "./lib/eval-judge.mjs";
 
@@ -259,7 +260,10 @@ for (const section of sectionsToRun) {
             continue;
           }
           let score = scoreCase(system, orig, r.response, {
-            requireVerbalizedSampling: options.verbalizedSampling && condition === "ablated"
+            requireVerbalizedSampling:
+              options.verbalizedSampling
+              && condition === "ablated"
+              && shouldRequireVerbalizedSampling(system, orig)
           });
           score = await attachJudgeResults(system, orig, r.response, {
             scoreResult: score,
@@ -319,7 +323,10 @@ for (const section of sectionsToRun) {
                 options
               });
           let score = scoreCase(system, testCase, response, {
-            requireVerbalizedSampling: options.verbalizedSampling && condition === "ablated"
+            requireVerbalizedSampling:
+              options.verbalizedSampling
+              && condition === "ablated"
+              && shouldRequireVerbalizedSampling(system, testCase)
           });
           score = await attachJudgeResults(system, testCase, response, {
             scoreResult: score,

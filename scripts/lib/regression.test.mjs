@@ -11,7 +11,11 @@ import {
   assertNoGoldPlating,
   assertRoutingFirst,
   assertVerbalizedSamplingSchema,
+  buildLocalResponse,
   buildWrappedPrompt,
+  computeRegressionGateFailures,
+  shouldRequireVerbalizedSampling,
+  VS_CLOSENESS_THRESHOLD,
   computeBehavioralMetrics,
   evaluateResponse,
   expectedResponseSections,
@@ -77,6 +81,63 @@ test("parseArgs accepts --cases as alias for --case", () => {
 test("parseArgs supports --verbalized-sampling", () => {
   assert.strictEqual(parseArgs([]).verbalizedSampling, false);
   assert.strictEqual(parseArgs(["--verbalized-sampling"]).verbalizedSampling, true);
+});
+
+test("parseArgs supports --local", () => {
+  assert.strictEqual(parseArgs([]).local, false);
+  assert.strictEqual(parseArgs(["--local"]).local, true);
+});
+
+test("parseArgs supports regression gate modes", () => {
+  const defaults = parseArgs([]);
+  assert.strictEqual(defaults.strict, false);
+  assert.strictEqual(defaults.parityOnly, false);
+
+  assert.strictEqual(parseArgs(["--strict"]).strict, true);
+  assert.strictEqual(parseArgs(["--parity-only"]).parityOnly, true);
+
+  const both = parseArgs(["--strict", "--parity-only"]);
+  assert.strictEqual(both.strict, true);
+  assert.strictEqual(both.parityOnly, true);
+});
+
+test("computeRegressionGateFailures evaluates strict and parity modes", () => {
+  const run = {
+    parity: [
+      { caseId: "R1", equivalent: true, deltas: [] },
+      { caseId: "R2", equivalent: false, deltas: ["section mismatch"] }
+    ],
+    results: [
+      { caseId: "R1", score: { score: 2 } },
+      { caseId: "R2", score: { score: 1 } }
+    ]
+  };
+
+  const none = computeRegressionGateFailures(run, {});
+  assert.strictEqual(none.failed, false);
+  assert.deepEqual(none.parityFailures.map((p) => p.caseId), ["R2"]);
+  assert.deepEqual(none.strictFailures.map((r) => r.caseId), ["R2"]);
+
+  const parityOnly = computeRegressionGateFailures(run, { parityOnly: true });
+  assert.strictEqual(parityOnly.failed, true);
+  assert.deepEqual(parityOnly.parityFailures.map((p) => p.caseId), ["R2"]);
+  assert.deepEqual(parityOnly.strictFailures.map((r) => r.caseId), ["R2"]);
+
+  const strict = computeRegressionGateFailures(run, { strict: true });
+  assert.strictEqual(strict.failed, true);
+  assert.deepEqual(strict.parityFailures.map((p) => p.caseId), ["R2"]);
+  assert.deepEqual(strict.strictFailures.map((r) => r.caseId), ["R2"]);
+
+  const both = computeRegressionGateFailures(run, { parityOnly: true, strict: true });
+  assert.strictEqual(both.failed, true);
+  assert.deepEqual(both.parityFailures.map((p) => p.caseId), ["R2"]);
+  assert.deepEqual(both.strictFailures.map((r) => r.caseId), ["R2"]);
+
+  const pass = computeRegressionGateFailures({
+    parity: [{ caseId: "R1", equivalent: true, deltas: [] }],
+    results: [{ caseId: "R1", score: { score: 2 } }]
+  }, { parityOnly: true, strict: true });
+  assert.strictEqual(pass.failed, false);
 });
 
 test("buildWrappedPrompt adds confidenceDistribution when verbalizedSampling", () => {
@@ -182,6 +243,36 @@ test("evaluateResponse accepts a valid architecture response", async () => {
   assert.strictEqual(result.score, 2);
   assert.deepEqual(result.missingSections, []);
   assert.deepEqual(result.notableDrift, []);
+});
+
+test("evaluateResponse normalizes selected expert lines with handshake tokens", async () => {
+  const system = await loadPromptSystemSpec(workspaceRoot);
+  const testCase = await loadCase("PN1");
+  const response = {
+    routingDecision: {
+      domain: "implementation",
+      selectedExpert: "expert-engineer-peirce",
+      reason: "The request asks for code.",
+      confidence: "High"
+    },
+    activeExpert: "expert-engineer-peirce",
+    handoffs: [],
+    outputSections: ["Selected Expert", "Reason", "Confidence", "Answer"],
+    confidenceLabeled: true,
+    personaBlend: false,
+    domainStayedInScope: true,
+    summary: "Implementation is primary.",
+    response: [
+      "Selected Expert: expert-engineer-peirce [rules:loaded init router experts@12]",
+      "Reason: Direct implementation request.",
+      "Confidence: High.",
+      "Answer: Build the function and include edge-case tests."
+    ].join("\n")
+  };
+
+  const result = evaluateResponse(system, testCase, response);
+  assert.strictEqual(result.selectedExpert, "expert-engineer-peirce");
+  assert.strictEqual(result.routingMatch, true);
 });
 
 test("evaluateResponse ignores inline uncertainty labels that are not headings", async () => {
@@ -384,8 +475,9 @@ test("assertVerbalizedSamplingSchema passes for a valid distribution", () => {
     activeExpert: "expert-engineer-peirce",
     response: "Selected Expert: expert-engineer-peirce\n\nReason\n\nConfidence\nHigh\n\nAnswer\nOK.",
     confidenceDistribution: [
-      { expert: "expert-engineer-peirce", probability: 0.62 },
-      { expert: "expert-qa-popper", probability: 0.38 }
+      { expert: "expert-engineer-peirce", probability: 0.5 },
+      { expert: "expert-qa-popper", probability: 0.3 },
+      { expert: "expert-architect-descartes", probability: 0.2 }
     ]
   };
   const result = assertVerbalizedSamplingSchema(globalSystem, response);
@@ -400,7 +492,7 @@ test("assertVerbalizedSamplingSchema fails when confidenceDistribution is missin
   };
   const result = assertVerbalizedSamplingSchema(globalSystem, response);
   assert.strictEqual(result.pass, false);
-  assert.match(result.finding, /length >= 2/);
+  assert.match(result.finding, /length >= 3/);
 });
 
 test("assertVerbalizedSamplingSchema fails when too few entries", () => {
@@ -408,11 +500,14 @@ test("assertVerbalizedSamplingSchema fails when too few entries", () => {
     routingDecision: { selectedExpert: "expert-engineer-peirce" },
     activeExpert: "expert-engineer-peirce",
     response: "Selected Expert: expert-engineer-peirce\n\nReason\n\nConfidence\n\nAnswer\nOK.",
-    confidenceDistribution: [{ expert: "expert-engineer-peirce", probability: 1 }]
+    confidenceDistribution: [
+      { expert: "expert-engineer-peirce", probability: 0.6 },
+      { expert: "expert-qa-popper", probability: 0.4 }
+    ]
   };
   const result = assertVerbalizedSamplingSchema(globalSystem, response);
   assert.strictEqual(result.pass, false);
-  assert.match(result.finding, /length >= 2/);
+  assert.match(result.finding, /length >= 3/);
 });
 
 test("assertVerbalizedSamplingSchema fails when probabilities do not sum to ~1", () => {
@@ -422,7 +517,8 @@ test("assertVerbalizedSamplingSchema fails when probabilities do not sum to ~1",
     response: "Selected Expert: expert-engineer-peirce\n\nReason\n\nConfidence\n\nAnswer\nOK.",
     confidenceDistribution: [
       { expert: "expert-engineer-peirce", probability: 0.5 },
-      { expert: "expert-qa-popper", probability: 0.3 }
+      { expert: "expert-qa-popper", probability: 0.3 },
+      { expert: "expert-architect-descartes", probability: 0.1 }
     ]
   };
   const result = assertVerbalizedSamplingSchema(globalSystem, response);
@@ -436,8 +532,9 @@ test("assertVerbalizedSamplingSchema fails when top expert mismatches selectedEx
     activeExpert: "expert-engineer-peirce",
     response: "Selected Expert: expert-engineer-peirce\n\nReason\n\nConfidence\n\nAnswer\nOK.",
     confidenceDistribution: [
-      { expert: "expert-qa-popper", probability: 0.7 },
-      { expert: "expert-engineer-peirce", probability: 0.3 }
+      { expert: "expert-qa-popper", probability: 0.5 },
+      { expert: "expert-engineer-peirce", probability: 0.3 },
+      { expert: "expert-architect-descartes", probability: 0.2 }
     ]
   };
   const result = assertVerbalizedSamplingSchema(globalSystem, response);
@@ -982,5 +1079,83 @@ test("ablation mode produces smaller artifacts than control", () => {
   assert.ok(
     ablatedSize < controlSize,
     `Ablated (${ablatedSize}) should be smaller than control (${controlSize})`
+  );
+});
+
+test("buildLocalResponse emits routingDecision.reason and confidence (schema-compatible)", async () => {
+  const testCase = await loadCase("R1");
+  const envelope = buildLocalResponse(globalSystem, testCase, { trialIndex: 0, seed: 0 });
+  assert.ok(envelope.routingDecision, "routingDecision required");
+  for (const key of ["domain", "selectedExpert", "reason", "confidence"]) {
+    assert.strictEqual(
+      typeof envelope.routingDecision[key],
+      "string",
+      `routingDecision.${key} must be a non-empty string`
+    );
+    assert.ok(
+      envelope.routingDecision[key].length > 0,
+      `routingDecision.${key} must be non-empty`
+    );
+  }
+});
+
+test("buildLocalResponse with verbalizedSampling emits a >=3-entry valid distribution", async () => {
+  const testCase = await loadCase("R1");
+  const envelope = buildLocalResponse(globalSystem, testCase, {
+    trialIndex: 0,
+    seed: 0,
+    verbalizedSampling: true
+  });
+  const vs = assertVerbalizedSamplingSchema(globalSystem, envelope);
+  assert.strictEqual(vs.pass, true, vs.finding);
+  assert.ok(envelope.confidenceDistribution.length >= 3);
+});
+
+test("VS_CLOSENESS_THRESHOLD is exported as 0.2 (single source of truth)", () => {
+  assert.strictEqual(VS_CLOSENESS_THRESHOLD, 0.2);
+});
+
+test("shouldRequireVerbalizedSampling is true for fixtures marked ambiguousBetween", async () => {
+  const fixtures = await loadRegressionFixtures(workspaceRoot);
+  const ambiguous = fixtures.cases.find(
+    (c) => Array.isArray(c.ambiguousBetween) && c.ambiguousBetween.length >= 1
+  );
+  assert.ok(ambiguous, "fixtures must contain at least one ambiguousBetween case");
+  assert.strictEqual(
+    shouldRequireVerbalizedSampling(globalSystem, ambiguous),
+    true
+  );
+});
+
+test("shouldRequireVerbalizedSampling is false for clearly-routed cases", () => {
+  // Highly Peirce-specific prompt; no other heuristic should match strongly.
+  const clearCase = {
+    id: "synthetic-clear",
+    prompt: "fix the null pointer exception in production now, fast fix",
+    expectedSections: [],
+    ambiguousBetween: []
+  };
+  assert.strictEqual(
+    shouldRequireVerbalizedSampling(globalSystem, clearCase),
+    false
+  );
+});
+
+test("evaluateResponse does not flag missing distribution when case is not close", async () => {
+  // Score a clear-route synthetic case with --verbalized-sampling enabled but
+  // shouldRequireVerbalizedSampling=false. Caller passes requireVerbalizedSampling=false,
+  // so missing distribution must NOT produce a behavioral finding.
+  const testCase = await loadCase("R1");
+  const response = buildLocalResponse(globalSystem, testCase, {
+    trialIndex: 0,
+    seed: 0,
+    verbalizedSampling: false
+  });
+  const result = evaluateResponse(globalSystem, testCase, response, {
+    requireVerbalizedSampling: false
+  });
+  assert.ok(
+    !result.behavioralFindings.some((f) => /Verbalized sampling/i.test(f)),
+    `unexpected VS finding: ${result.behavioralFindings.join(" | ")}`
   );
 });

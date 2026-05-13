@@ -37,6 +37,7 @@ Each layer restricts but never expands the constraints of the layer above. Highe
 
 - Never pipe test, build, or run output directly into a filter.
 - Always write full output to `.logs/` before inspecting it.
+- Run terminal commands through the host's background/non-blocking execution path by default, then inspect completion with status polling instead of blocking the chat.
 - Do not use heredocs (`<<EOF`, `<<'NODE'`, `<<PY`) in terminal commands or `run_command`; create a script file with file-edit tools and execute that file instead.
 - Avoid multi-line terminal payloads whose correctness depends on exact line boundaries; keep shell commands single-line unless executing a saved script.
 
@@ -48,11 +49,16 @@ your_command > .logs/run-<slug>-1.log 2>&1
 tail -n 30 .logs/run-<slug>-1.log   # or grep -iE 'fail|error|exception' .logs/run-<slug>-1.log
 ```
 
+**Host execution notes:**
+
+- Launch the logged command through the host's background/non-blocking execution path.
+- Poll command status until it completes, then inspect the saved log.
+
 ## 3. All Test, Build, and Run Commands Should Be Logged
 
-**Fail-Closed Enforcement:** Use a literal log filename chosen before the command runs, such as `.logs/run-test-1.log`, and append `> .logs/run-<slug>-1.log 2>&1` (or `| tee .logs/run-<slug>-1.log`) to `run_command` invocations. On retry, choose a new literal suffix such as `-2.log`. Commands without one of these literal `.logs/` suffixes are non-compliant. Avoid `$(date)`, `$(pwd)`, `mktemp`, backticks, or any shell-generated value when constructing log filenames. Inline stdout capture is acceptable only for one-line probes (`echo`, `pwd`, `which`) that never produce failure output. Avoid heredocs (`<<EOF`, `<<'NODE'`, `<<PY`) and multi-line terminal payloads; create a script file with file-edit tools and execute it instead.
+**Fail-Closed Enforcement:** Use the host's background/non-blocking execution path for `run_command` invocations so command status can be polled instead of blocking the chat. For logged commands, use a literal log filename chosen before the command runs, such as `.logs/run-test-1.log`, and append `> .logs/run-<slug>-1.log 2>&1` (or `| tee .logs/run-<slug>-1.log`). On retry, choose a new literal suffix such as `-2.log`. Commands without one of these literal `.logs/` suffixes are non-compliant. After launching non-blocking, poll command status and inspect the saved log. Avoid `$(date)`, `$(pwd)`, `mktemp`, backticks, or any shell-generated value when constructing log filenames. Inline stdout capture is acceptable only for one-line probes (`echo`, `pwd`, `which`) that never produce failure output; those probes are exempt from persistent logging only, not from the background/status-poll preference when the host supports it. Avoid heredocs (`<<EOF`, `<<'NODE'`, `<<PY`) and multi-line terminal payloads; create a script file with file-edit tools and execute it instead.
 
-A `PreToolUse` hook in supported IDEs (Claude, Cursor, Codex, Gemini, OpenCode) nudges long-running commands without `.logs/` redirection.
+A `PreToolUse` hook in supported IDEs (Claude, Cursor, Codex, Gemini, OpenCode) nudges long-running commands without `.logs/` redirection and reminds agents to prefer background/non-blocking execution plus status polling.
 
 ## 4. Epistemic Humility & Communication Constraints
 
@@ -129,15 +135,16 @@ Done = Code, Tests, Verified, No TODOs or placeholders in core logic.
 - Never treat pre-existing breakage as out of scope if it blocks the requested workflow.
 
 ## 7. Swarm Registry
-* **expert-abstractions-liskov:** Design specialist for stable interfaces, modular boundaries, and abstractions that remain safe under change.
-* **expert-architect-descartes:** Foundational architect who strips assumptions and verifies trustworthy contracts before implementation.
-* **expert-craftsman-crawford:** Anti-automation craftsman who believes that direct, iterative engagement with material produces judgment that no script can replace.
-* **expert-engineer-peirce:** Senior implementation lead focused on the smallest correct change that can be verified.
-* **expert-formal-dijkstra:** Correctness specialist for stateful systems, concurrency hazards, invariants, and control-flow complexity.
-* **expert-information-shannon:** Information-flow specialist focused on reducing noise, improving retrieval quality, and preserving critical context under tight prompt budgets.
-* **expert-manager-blackmore:** Organizational memory that turns successful fixes into durable patterns, automation, and project guidance.
-* **expert-orchestrator-simon:** Workflow designer for agent systems, task decomposition, stopping rules, and bounded decision procedures.
-* **expert-performance-knuth:** Performance specialist focused on measurement, algorithmic tradeoffs, and removing bottlenecks without breaking correctness.
-* **expert-qa-popper:** Adversarial debugger focused on reproducing failures, falsifying assumptions, and isolating exact failure coordinates.
-* **expert-ux-rogers:** Human-centered reviewer with veto power against hostile user experiences.
-* **expert-visionary-dennett:** Divergent explorer who expands the solution space before convergence.
+
+- `expert-abstractions-liskov`
+- `expert-architect-descartes`
+- `expert-craftsman-crawford`
+- `expert-engineer-peirce`
+- `expert-formal-dijkstra`
+- `expert-information-shannon`
+- `expert-manager-blackmore`
+- `expert-orchestrator-simon`
+- `expert-performance-knuth`
+- `expert-qa-popper`
+- `expert-ux-rogers`
+- `expert-visionary-dennett`

@@ -5,8 +5,10 @@ import { writeFile } from "node:fs/promises";
 import { loadPromptSystemSpec } from "./lib/prompt-system.mjs";
 import {
   aggregateTrialResults,
+  buildLocalResponse,
   buildWrappedPrompt,
   compareTargets,
+  computeRegressionGateFailures,
   createTimestamp,
   ensureLogsDirectory,
   formatSummary,
@@ -17,7 +19,8 @@ import {
   runCommandLogged,
   runTrials,
   scoreCase,
-  selectCases
+  selectCases,
+  shouldRequireVerbalizedSampling
 } from "./lib/regression.mjs";
 import { attachJudgeResults } from "./lib/eval-judge.mjs";
 import { buildAndAppendTrace, analyzeTraceFailures, formatTraceAnalysis } from "./lib/tracer.mjs";
@@ -58,11 +61,17 @@ for (const testCase of cases) {
 
         const response = await runTarget({
           target,
+          testCase,
+          trialIndex,
           wrappedPrompt,
           rawLogPath
         });
 
-        let score = scoreCase(system, testCase, response);
+        let score = scoreCase(system, testCase, response, {
+          requireVerbalizedSampling:
+            options.verbalizedSampling
+            && shouldRequireVerbalizedSampling(system, testCase)
+        });
 
         // LLM-as-a-Judge evaluation
         if (options.judge) {
@@ -76,6 +85,7 @@ for (const testCase of cases) {
             caseId: testCase.id,
             caseName: testCase.name,
             prompt: wrappedPrompt,
+            userPrompt: testCase.prompt,
             target,
             trialIndex,
             response,
@@ -140,7 +150,26 @@ await writeFile(mdPath, formatSummary(run), "utf8");
 console.log(`JSON summary: ${path.relative(workspaceRoot, jsonPath)}`);
 console.log(`Markdown summary: ${path.relative(workspaceRoot, mdPath)}`);
 
-async function runTarget({ target, wrappedPrompt, rawLogPath }) {
+const gateFailures = computeRegressionGateFailures(run, options);
+console.log(
+  `Gate: parity-only -> ${gateFailures.parityFailures.length} failures; ` +
+  `strict -> ${gateFailures.strictFailures.length} failures`
+);
+if (gateFailures.failed) {
+  process.exitCode = 1;
+}
+
+async function runTarget({ target, testCase, trialIndex, wrappedPrompt, rawLogPath }) {
+  if (options.local) {
+    const response = buildLocalResponse(system, testCase, {
+      trialIndex,
+      seed: options.seed,
+      verbalizedSampling: options.verbalizedSampling
+    });
+    await writeFile(rawLogPath, JSON.stringify(response, null, 2) + "\n", "utf8");
+    return response;
+  }
+
   if (target === "cursor") {
     const cursorArgs = [
       "--print",

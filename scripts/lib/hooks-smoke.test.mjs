@@ -69,6 +69,19 @@ function expectAllow(out, mode) {
   }
 }
 
+function expectNudgeGuidance(message) {
+  assert.match(message, /TENET 3/);
+  assert.match(message, /REWRITE REQUIRED/);
+  assert.match(message, /PowerShell pattern/);
+  assert.match(message, /\.logs\/run-test-1\.log/);
+  assert.match(message, /background\/non-blocking/);
+  assert.match(message, /poll status|poll command status/);
+  assert.match(message, /rc=\$\?/);
+  assert.match(message, /exit \$rc/);
+  assert.match(message, /\$Status = \$LASTEXITCODE/);
+  assert.match(message, /exit \$Status/);
+}
+
 function expectAllowNudge(out, mode) {
   let message;
   if (mode === 'cursor') {
@@ -87,10 +100,7 @@ function expectAllowNudge(out, mode) {
     message = out.hookSpecificOutput?.permissionDecisionReason || '';
   }
   if (message) {
-    assert.match(message, /TENET 3/);
-    assert.match(message, /REWRITE REQUIRED/);
-    assert.match(message, /PowerShell pattern/);
-    assert.match(message, /\.logs\/run-test-1\.log/);
+    expectNudgeGuidance(message);
     assert.doesNotMatch(message, /run-<slug>-\$\(|Get-Date -Format|mktemp .*\.logs|`[^`]*\.logs[^`]*`/);
   }
   assert.doesNotMatch(message, /Approve only if/i);
@@ -261,9 +271,7 @@ describe('HOOKS-SMOKE: opencode plugin (evaluateCommand)', () => {
     const result = captureStderr(() => evaluateCommand('npm test'));
     assert.equal(result.value, null);
     assert.match(result.stderr, /TENET 3 NUDGE/);
-    assert.match(result.stderr, /REWRITE REQUIRED/);
-    assert.match(result.stderr, /PowerShell pattern/);
-    assert.match(result.stderr, /\.logs\/run-test-1\.log/);
+    expectNudgeGuidance(result.stderr);
     assert.doesNotMatch(result.stderr, /run-<slug>-\$\(|Get-Date -Format|mktemp .*\.logs/);
   });
 
@@ -273,6 +281,7 @@ describe('HOOKS-SMOKE: opencode plugin (evaluateCommand)', () => {
     assert.match(result.stderr, /TENET 3 NUDGE/);
     assert.match(result.stderr, /literal log filename/);
     assert.match(result.stderr, /\.logs\/run-test-1\.log/);
+    expectNudgeGuidance(result.stderr);
   });
 
   test('denylist hit: bare non-whitelisted log variables return null with nudge on stderr', () => {
@@ -283,6 +292,7 @@ describe('HOOKS-SMOKE: opencode plugin (evaluateCommand)', () => {
       const result = captureStderr(() => evaluateCommand(cmd));
       assert.equal(result.value, null);
       assert.match(result.stderr, /TENET 3 NUDGE/);
+      expectNudgeGuidance(result.stderr);
     }
   });
 
