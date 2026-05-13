@@ -698,8 +698,8 @@ Options:
 
 No flags = auto-detect installed editors.
 
-Before running (if compiled output is missing), the script invokes:
-  node scripts/build-prompt-system.mjs
+Static main installs prebuilt release artifacts from compiled/.
+Use the dev branch to rebuild generated prompt artifacts.
 `);
 }
 
@@ -747,6 +747,9 @@ function maybeBuildPromptSystem(flags) {
     if (flags.debug) args.push('--debug');
     if (flags.scaffolded) args.push('--scaffolded');
     runNode(args);
+  } else if (customFlags) {
+    console.error('ERROR: --debug and --scaffolded require the source branch (`dev`). Static main installs release artifacts only.');
+    process.exit(1);
   } else if (compiledReady) {
     console.log('--> Compiled files found, skipping build.');
   } else if (fileExists(buildScript)) {
