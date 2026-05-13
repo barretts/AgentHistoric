@@ -5,6 +5,7 @@ import { writeFile } from "node:fs/promises";
 import { loadPromptSystemSpec } from "./lib/prompt-system.mjs";
 import {
   aggregateTrialResults,
+  buildLocalResponse,
   buildWrappedPrompt,
   compareTargets,
   createTimestamp,
@@ -17,7 +18,8 @@ import {
   runCommandLogged,
   runTrials,
   scoreCase,
-  selectCases
+  selectCases,
+  shouldRequireVerbalizedSampling
 } from "./lib/regression.mjs";
 import { attachJudgeResults } from "./lib/eval-judge.mjs";
 import { buildAndAppendTrace, analyzeTraceFailures, formatTraceAnalysis } from "./lib/tracer.mjs";
@@ -56,13 +58,27 @@ for (const testCase of cases) {
           `regression-${timestamp}-${testCase.id}-${target}${trialSuffix}.log`
         );
 
-        const response = await runTarget({
-          target,
-          wrappedPrompt,
-          rawLogPath
-        });
+        let response;
+        if (options.local) {
+          response = buildLocalResponse(system, testCase, {
+            trialIndex,
+            seed: options.seed,
+            verbalizedSampling: options.verbalizedSampling
+          });
+          await writeFile(rawLogPath, JSON.stringify(response, null, 2) + "\n", "utf8");
+        } else {
+          response = await runTarget({
+            target,
+            wrappedPrompt,
+            rawLogPath
+          });
+        }
 
-        let score = scoreCase(system, testCase, response);
+        let score = scoreCase(system, testCase, response, {
+          requireVerbalizedSampling:
+            options.verbalizedSampling
+            && shouldRequireVerbalizedSampling(system, testCase)
+        });
 
         // LLM-as-a-Judge evaluation
         if (options.judge) {

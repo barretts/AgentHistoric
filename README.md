@@ -231,6 +231,13 @@ node scripts/run-regressions.mjs --suite smoke --cursor-model gpt-5.4-medium
 node scripts/run-regressions.mjs --suite diversity --trials 3  # Multi-trial for consistency
 ```
 
+Local synthetic mode (no external CLI calls; deterministic synthetic responses via `buildLocalResponse()`):
+
+```bash
+node scripts/run-regressions.mjs --local --suite smoke --targets cursor,codex --trials 3
+node scripts/run-regressions.mjs --local --verbalized-sampling --cases TP5,SP-Li1
+```
+
 ### Scores
 
 - **2:** Correct expert, correct structure, no behavioral findings

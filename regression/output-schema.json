@@ -15,19 +15,6 @@
     "response"
   ],
   "properties": {
-    "confidenceDistribution": {
-      "type": "array",
-      "minItems": 2,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["expert", "probability"],
-        "properties": {
-          "expert": { "type": "string" },
-          "probability": { "type": "number", "minimum": 0, "maximum": 1 }
-        }
-      }
-    },
     "routingDecision": {
       "type": "object",
       "additionalProperties": false,
