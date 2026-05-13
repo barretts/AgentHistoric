@@ -184,6 +184,36 @@ test("evaluateResponse accepts a valid architecture response", async () => {
   assert.deepEqual(result.notableDrift, []);
 });
 
+test("evaluateResponse normalizes selected expert lines with handshake tokens", async () => {
+  const system = await loadPromptSystemSpec(workspaceRoot);
+  const testCase = await loadCase("PN1");
+  const response = {
+    routingDecision: {
+      domain: "implementation",
+      selectedExpert: "expert-engineer-peirce",
+      reason: "The request asks for code.",
+      confidence: "High"
+    },
+    activeExpert: "expert-engineer-peirce",
+    handoffs: [],
+    outputSections: ["Selected Expert", "Reason", "Confidence", "Answer"],
+    confidenceLabeled: true,
+    personaBlend: false,
+    domainStayedInScope: true,
+    summary: "Implementation is primary.",
+    response: [
+      "Selected Expert: expert-engineer-peirce [rules:loaded init router experts@12]",
+      "Reason: Direct implementation request.",
+      "Confidence: High.",
+      "Answer: Build the function and include edge-case tests."
+    ].join("\n")
+  };
+
+  const result = evaluateResponse(system, testCase, response);
+  assert.strictEqual(result.selectedExpert, "expert-engineer-peirce");
+  assert.strictEqual(result.routingMatch, true);
+});
+
 test("evaluateResponse ignores inline uncertainty labels that are not headings", async () => {
   const system = await loadPromptSystemSpec(workspaceRoot);
   const testCase = await loadCase("R2");

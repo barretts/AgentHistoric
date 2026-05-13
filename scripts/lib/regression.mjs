@@ -1348,8 +1348,10 @@ function escapeRegex(value) {
 }
 
 function normalizeExpertId(value) {
-  return String(value)
+  const normalized = String(value)
     .trim()
     .replace(/^`|`$/g, "")
     .replace(/^skills\//, "");
+  const canonical = normalized.match(/\bexpert-[a-z0-9-]+\b/);
+  return canonical ? canonical[0] : normalized;
 }

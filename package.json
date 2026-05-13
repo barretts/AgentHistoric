@@ -16,6 +16,9 @@
     "test:regressions:smoke": "node scripts/run-regressions.mjs --suite smoke",
     "test:regressions:clr": "node scripts/run-via-clr.mjs",
     "test:regressions:clr:smoke": "node scripts/run-via-clr.mjs --suite smoke",
+    "test:model-parity": "node scripts/run-regressions.mjs --local --suite model-parity --targets cursor,codex --trace --judge",
+    "test:model-parity:real": "node scripts/run-regressions.mjs --suite model-parity --targets cursor,codex --trace --judge",
+    "analyze:shift": "node scripts/analyze-distribution-shift.mjs",
     "test:ablation": "node scripts/run-ablation.mjs",
     "test:experiment": "node scripts/run-experiment.mjs"
   }

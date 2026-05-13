@@ -223,6 +223,7 @@ export function detectDistributionShift(existingPrompts, newPrompts, opts = {}) 
       classifierAccuracy: null,
       shiftScore: 'insufficient-data',
       novelPrompts: [],
+      totalNewPrompts: newPrompts.length,
       message: 'Not enough data for a train/test split. Need at least 2 prompts in each set.'
     };
   }
@@ -281,6 +282,37 @@ export function detectDistributionShift(existingPrompts, newPrompts, opts = {}) 
   };
 }
 
+export function promptsFromFixtures(fixtures) {
+  return (fixtures.cases || [])
+    .map((testCase) => testCase.prompt)
+    .filter((prompt) => typeof prompt === "string" && prompt.trim().length > 0);
+}
+
+export function extractUserPromptFromWrappedPrompt(prompt) {
+  const match = String(prompt || "").match(/^User prompt:\s*(.+)$/m);
+  return match ? match[1].trim() : null;
+}
+
+export function extractUserPromptsFromTraces(traces) {
+  const prompts = [];
+  const seen = new Set();
+
+  for (const trace of traces || []) {
+    const prompt =
+      trace.prompt?.userPrompt ||
+      extractUserPromptFromWrappedPrompt(trace.prompt?.wrappedSnippet) ||
+      extractUserPromptFromWrappedPrompt(trace.promptText) ||
+      extractUserPromptFromWrappedPrompt(trace.wrappedPrompt);
+
+    if (prompt && !seen.has(prompt)) {
+      seen.add(prompt);
+      prompts.push(prompt);
+    }
+  }
+
+  return prompts;
+}
+
 /**
  * Format shift detection results as markdown.
  */
@@ -293,6 +325,9 @@ export function formatShiftReport(result) {
   lines.push(`- Classifier accuracy: ${result.classifierAccuracy !== null ? (result.classifierAccuracy * 100).toFixed(1) : 'N/A'}%`);
   lines.push(`- New prompts analyzed: ${result.totalNewPrompts}`);
   lines.push(`- Novel prompts found: ${result.novelPrompts.length}`);
+  if (result.traceFiles?.length) {
+    lines.push(`- Trace files: ${result.traceFiles.join(', ')}`);
+  }
   lines.push('');
   lines.push(`**Assessment:** ${result.message}`);
   lines.push('');

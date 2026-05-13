@@ -106,7 +106,7 @@ Safety Valves:
 - Massive Codebase Sweeps -> .codex/skills/expert-architect-descartes -> .codex/skills/expert-engineer-peirce -> .codex/skills/expert-qa-popper -> .codex/skills/expert-manager-blackmore
 - Agent Workflows & Orchestration -> .codex/skills/expert-orchestrator-simon -> .codex/skills/expert-architect-descartes -> .codex/skills/expert-manager-blackmore | Boost: "phases", "gates", "rollback criteria", "implementation plan with", "stopping conditions", "what gets deployed first"
 - Exploration & Ideation -> .codex/skills/expert-visionary-dennett -> .codex/skills/expert-ux-rogers
-- Foundational Architecture -> .codex/skills/expert-architect-descartes
+- Foundational Architecture -> .codex/skills/expert-architect-descartes | Boost: "trust boundaries", "data constraints", "bedrock"
 - Interfaces & Abstractions -> .codex/skills/expert-abstractions-liskov -> .codex/skills/expert-architect-descartes -> .codex/skills/expert-engineer-peirce
 - Refactoring & Restructuring -> .codex/skills/expert-abstractions-liskov -> .codex/skills/expert-engineer-peirce
 - Quick Fix & Patch -> .codex/skills/expert-engineer-peirce | Anti-triggers: "interface", "coupling", "module boundary", "public api", "invariant", "state machine"

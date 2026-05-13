@@ -3,6 +3,9 @@ import assert from "node:assert/strict";
 
 import {
   detectDistributionShift,
+  extractUserPromptFromWrappedPrompt,
+  extractUserPromptsFromTraces,
+  promptsFromFixtures,
   formatShiftReport
 } from "./distribution-shift.mjs";
 
@@ -235,4 +238,60 @@ test("detectDistributionShift: same inputs produce same result", () => {
   assert.strictEqual(r1.shiftDetected, r2.shiftDetected);
   assert.strictEqual(r1.classifierAccuracy, r2.classifierAccuracy);
   assert.strictEqual(r1.shiftScore, r2.shiftScore);
+});
+
+// ── Prompt extraction helpers ───────────────────────────────────────
+
+test("promptsFromFixtures extracts fixture prompts", () => {
+  const prompts = promptsFromFixtures({
+    cases: [
+      { prompt: "Fix the bug." },
+      { prompt: "" },
+      { name: "missing prompt" },
+      { prompt: "Design the system." }
+    ]
+  });
+
+  assert.deepEqual(prompts, ["Fix the bug.", "Design the system."]);
+});
+
+test("extractUserPromptFromWrappedPrompt returns user prompt line", () => {
+  const wrapped = [
+    "Harness instructions.",
+    "Use JSON only.",
+    "User prompt: Profile heap allocations."
+  ].join("\n");
+
+  assert.strictEqual(
+    extractUserPromptFromWrappedPrompt(wrapped),
+    "Profile heap allocations."
+  );
+});
+
+test("extractUserPromptsFromTraces dedupes prompt.userPrompt and wrapped snippets", () => {
+  const traces = [
+    { prompt: { userPrompt: "Fix the auth bug." } },
+    { prompt: { userPrompt: "Fix the auth bug." } },
+    { prompt: { wrappedSnippet: "Harness\nUser prompt: Design rollback gates." } },
+    { response: { responseSnippet: "No prompt here." } }
+  ];
+
+  assert.deepEqual(
+    extractUserPromptsFromTraces(traces),
+    ["Fix the auth bug.", "Design rollback gates."]
+  );
+});
+
+test("formatShiftReport includes trace files when supplied", () => {
+  const md = formatShiftReport({
+    shiftDetected: false,
+    classifierAccuracy: 0.5,
+    shiftScore: "no-shift",
+    totalNewPrompts: 2,
+    novelPrompts: [],
+    traceFiles: [".logs/traces/traces-test.ndjson"],
+    message: "No shift."
+  });
+
+  assert.ok(md.includes("Trace files: .logs/traces/traces-test.ndjson"));
 });

@@ -5,6 +5,7 @@ import { writeFile } from "node:fs/promises";
 import { loadPromptSystemSpec } from "./lib/prompt-system.mjs";
 import {
   aggregateTrialResults,
+  buildLocalResponse,
   buildWrappedPrompt,
   compareTargets,
   createTimestamp,
@@ -58,6 +59,8 @@ for (const testCase of cases) {
 
         const response = await runTarget({
           target,
+          testCase,
+          trialIndex,
           wrappedPrompt,
           rawLogPath
         });
@@ -76,6 +79,7 @@ for (const testCase of cases) {
             caseId: testCase.id,
             caseName: testCase.name,
             prompt: wrappedPrompt,
+            userPrompt: testCase.prompt,
             target,
             trialIndex,
             response,
@@ -140,7 +144,17 @@ await writeFile(mdPath, formatSummary(run), "utf8");
 console.log(`JSON summary: ${path.relative(workspaceRoot, jsonPath)}`);
 console.log(`Markdown summary: ${path.relative(workspaceRoot, mdPath)}`);
 
-async function runTarget({ target, wrappedPrompt, rawLogPath }) {
+async function runTarget({ target, testCase, trialIndex, wrappedPrompt, rawLogPath }) {
+  if (options.local) {
+    const response = buildLocalResponse(system, testCase, {
+      trialIndex,
+      seed: options.seed,
+      verbalizedSampling: options.verbalizedSampling
+    });
+    await writeFile(rawLogPath, JSON.stringify(response, null, 2) + "\n", "utf8");
+    return response;
+  }
+
   if (target === "cursor") {
     const cursorArgs = [
       "--print",
