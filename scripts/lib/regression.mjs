@@ -49,7 +49,9 @@ export function parseArgs(argv) {
     // --judge: run LLM-as-judge evaluation on each response.
     judge: false,
     // --trace: write structured trace records to .logs/traces/.
-    trace: false
+    trace: false,
+    strict: false,
+    parityOnly: false
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -109,6 +111,10 @@ export function parseArgs(argv) {
       options.judge = true;
     } else if (arg === "--trace") {
       options.trace = true;
+    } else if (arg === "--strict") {
+      options.strict = true;
+    } else if (arg === "--parity-only") {
+      options.parityOnly = true;
     }
   }
 
@@ -1138,6 +1144,19 @@ export function compareTargets(resultsByTarget) {
   return {
     equivalent: deltas.length === 0,
     deltas
+  };
+}
+
+export function computeRegressionGateFailures(run, options = {}) {
+  const parityFailures = (run.parity || []).filter((p) => p.equivalent === false);
+  const strictFailures = (run.results || []).filter((r) => (r.score?.score ?? 0) < 2);
+
+  return {
+    parityFailures,
+    strictFailures,
+    failed:
+      Boolean(options.parityOnly && parityFailures.length > 0)
+      || Boolean(options.strict && strictFailures.length > 0)
   };
 }
 

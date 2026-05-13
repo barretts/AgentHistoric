@@ -8,6 +8,7 @@ import {
   buildLocalResponse,
   buildWrappedPrompt,
   compareTargets,
+  computeRegressionGateFailures,
   createTimestamp,
   ensureLogsDirectory,
   formatSummary,
@@ -143,6 +144,15 @@ await writeFile(mdPath, formatSummary(run), "utf8");
 
 console.log(`JSON summary: ${path.relative(workspaceRoot, jsonPath)}`);
 console.log(`Markdown summary: ${path.relative(workspaceRoot, mdPath)}`);
+
+const gateFailures = computeRegressionGateFailures(run, options);
+console.log(
+  `Gate: parity-only -> ${gateFailures.parityFailures.length} failures; ` +
+  `strict -> ${gateFailures.strictFailures.length} failures`
+);
+if (gateFailures.failed) {
+  process.exitCode = 1;
+}
 
 async function runTarget({ target, testCase, trialIndex, wrappedPrompt, rawLogPath }) {
   if (options.local) {

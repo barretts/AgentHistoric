@@ -12,6 +12,7 @@ import {
   assertRoutingFirst,
   assertVerbalizedSamplingSchema,
   buildWrappedPrompt,
+  computeRegressionGateFailures,
   computeBehavioralMetrics,
   evaluateResponse,
   expectedResponseSections,
@@ -77,6 +78,58 @@ test("parseArgs accepts --cases as alias for --case", () => {
 test("parseArgs supports --verbalized-sampling", () => {
   assert.strictEqual(parseArgs([]).verbalizedSampling, false);
   assert.strictEqual(parseArgs(["--verbalized-sampling"]).verbalizedSampling, true);
+});
+
+test("parseArgs supports regression gate modes", () => {
+  const defaults = parseArgs([]);
+  assert.strictEqual(defaults.strict, false);
+  assert.strictEqual(defaults.parityOnly, false);
+
+  assert.strictEqual(parseArgs(["--strict"]).strict, true);
+  assert.strictEqual(parseArgs(["--parity-only"]).parityOnly, true);
+
+  const both = parseArgs(["--strict", "--parity-only"]);
+  assert.strictEqual(both.strict, true);
+  assert.strictEqual(both.parityOnly, true);
+});
+
+test("computeRegressionGateFailures evaluates strict and parity modes", () => {
+  const run = {
+    parity: [
+      { caseId: "R1", equivalent: true, deltas: [] },
+      { caseId: "R2", equivalent: false, deltas: ["section mismatch"] }
+    ],
+    results: [
+      { caseId: "R1", score: { score: 2 } },
+      { caseId: "R2", score: { score: 1 } }
+    ]
+  };
+
+  const none = computeRegressionGateFailures(run, {});
+  assert.strictEqual(none.failed, false);
+  assert.deepEqual(none.parityFailures.map((p) => p.caseId), ["R2"]);
+  assert.deepEqual(none.strictFailures.map((r) => r.caseId), ["R2"]);
+
+  const parityOnly = computeRegressionGateFailures(run, { parityOnly: true });
+  assert.strictEqual(parityOnly.failed, true);
+  assert.deepEqual(parityOnly.parityFailures.map((p) => p.caseId), ["R2"]);
+  assert.deepEqual(parityOnly.strictFailures.map((r) => r.caseId), ["R2"]);
+
+  const strict = computeRegressionGateFailures(run, { strict: true });
+  assert.strictEqual(strict.failed, true);
+  assert.deepEqual(strict.parityFailures.map((p) => p.caseId), ["R2"]);
+  assert.deepEqual(strict.strictFailures.map((r) => r.caseId), ["R2"]);
+
+  const both = computeRegressionGateFailures(run, { parityOnly: true, strict: true });
+  assert.strictEqual(both.failed, true);
+  assert.deepEqual(both.parityFailures.map((p) => p.caseId), ["R2"]);
+  assert.deepEqual(both.strictFailures.map((r) => r.caseId), ["R2"]);
+
+  const pass = computeRegressionGateFailures({
+    parity: [{ caseId: "R1", equivalent: true, deltas: [] }],
+    results: [{ caseId: "R1", score: { score: 2 } }]
+  }, { parityOnly: true, strict: true });
+  assert.strictEqual(pass.failed, false);
 });
 
 test("buildWrappedPrompt adds confidenceDistribution when verbalizedSampling", () => {
