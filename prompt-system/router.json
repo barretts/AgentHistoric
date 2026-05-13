@@ -87,6 +87,11 @@
         "new service",
         "scaffold",
         "bootstrap"
+      ],
+      "boostSignals": [
+        "trust boundaries",
+        "data constraints",
+        "bedrock"
       ]
     },
     {
