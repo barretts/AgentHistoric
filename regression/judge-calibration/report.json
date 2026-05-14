@@ -1,0 +1,31 @@
+{
+  "timestamp": "2026-05-14T06:43:41.952Z",
+  "mode": "heuristic",
+  "rubrics": [
+    {
+      "rubricId": "factual-grounding",
+      "n": 2,
+      "kappa": 1,
+      "observedAgreement": 1,
+      "expectedAgreement": 0.5,
+      "kappaFloor": 0.4,
+      "pass": true,
+      "examples": [
+        {
+          "caseId": "calibration-factual-1",
+          "humanLabel": 2,
+          "judgeLabel": 2,
+          "critique": "The response ties its claim to explicit test-log and code-path evidence.",
+          "judgeReasoning": "Claims reference concrete evidence (heuristic)."
+        },
+        {
+          "caseId": "calibration-factual-2",
+          "humanLabel": 0,
+          "judgeLabel": 0,
+          "critique": "The response makes confident claims without evidence or uncertainty.",
+          "judgeReasoning": "No evidence markers found (heuristic)."
+        }
+      ]
+    }
+  ]
+}

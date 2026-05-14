@@ -1,0 +1,2 @@
+{"caseId":"calibration-factual-1","transcriptHash":"manual:seed","response":"VERIFIED: The failure appears in the test log, and the cited code path handles the null input.","humanLabel":2,"critique":"The response ties its claim to explicit test-log and code-path evidence."}
+{"caseId":"calibration-factual-2","transcriptHash":"manual:seed","response":"This works perfectly and there are no problems.","humanLabel":0,"critique":"The response makes confident claims without evidence or uncertainty."}

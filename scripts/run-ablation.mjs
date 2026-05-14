@@ -6,6 +6,8 @@ import { loadPromptSystemSpec, writeTextFile } from "./lib/prompt-system.mjs";
 import { generateArtifacts } from "./lib/build-prompt-system.mjs";
 import {
   aggregateTrialResults,
+  applyAblationStatistics,
+  buildPairedAblationRecords,
   buildLocalResponse,
   buildWrappedPrompt,
   createTimestamp,
@@ -16,12 +18,18 @@ import {
   parseArgs,
   parseCodexJsonlResult,
   runCommandLogged,
+  runIntegrityChecks,
   runTrials,
   scoreCase,
   selectCases,
   shouldRequireVerbalizedSampling
 } from "./lib/regression.mjs";
-import { attachJudgeResults } from "./lib/eval-judge.mjs";
+import {
+  attachJudgeResults,
+  loadFewShotExamples,
+  loadJudgeConfig,
+  resolveRubricsForCase
+} from "./lib/eval-judge.mjs";
 
 const VS_ABLATION_SECTION = {
   id: "verbalized-sampling",
@@ -50,6 +58,19 @@ const selectionTargets = options.viaClr
   : options.targets;
 const cases = selectCases(fixtures, { ...options, targets: selectionTargets });
 const logDir = await ensureLogsDirectory(workspaceRoot);
+const judgeConfig = await loadJudgeConfig(workspaceRoot);
+const activeRubricIds = options.judge
+  ? [...new Set(cases.flatMap((testCase) =>
+      resolveRubricsForCase(testCase, testCase.expectedPrimaryExpert).map((rubric) => rubric.id)
+    ))]
+  : [];
+const fewShotExamplesByRubric = options.judge
+  ? await loadFewShotExamples(
+      workspaceRoot,
+      activeRubricIds,
+      judgeConfig.defaultFewShotExamples ?? 3
+    )
+  : {};
 
 const manifest = JSON.parse(
   await readFile(
@@ -251,6 +272,11 @@ for (const section of sectionsToRun) {
           if (!orig) continue;
           if (!r.response) {
             trialRecords.push({
+              caseId: orig._origId,
+              target,
+              model: options.modelByTarget[target] || null,
+              seed: options.seed,
+              trialIndex: orig._trialIndex,
               score: 0,
               selectedExpert: null,
               expectedExpert: orig.expectedPrimaryExpert,
@@ -267,9 +293,18 @@ for (const section of sectionsToRun) {
           });
           score = await attachJudgeResults(system, orig, r.response, {
             scoreResult: score,
-            local: !options.judge
+            local: !options.judge,
+            judgeModelFamily: judgeConfig.judgeModelFamily,
+            subjectModelFamily: options.subjectModelFamily,
+            allowSameFamily: options.allowSameFamily,
+            fewShotExamplesByRubric
           });
           trialRecords.push({
+            caseId: orig._origId,
+            target,
+            model: options.modelByTarget[target] || null,
+            seed: options.seed,
+            trialIndex: orig._trialIndex,
             score: score.score,
             selectedExpert: score.selectedExpert,
             expectedExpert: orig.expectedPrimaryExpert,
@@ -330,9 +365,19 @@ for (const section of sectionsToRun) {
           });
           score = await attachJudgeResults(system, testCase, response, {
             scoreResult: score,
-            local: !options.judge
+            local: !options.judge,
+            judgeModelFamily: judgeConfig.judgeModelFamily,
+            subjectModelFamily: options.subjectModelFamily,
+            allowSameFamily: options.allowSameFamily,
+            fewShotExamplesByRubric
           });
           return {
+            caseId: testCase.id,
+            target,
+            model: options.modelByTarget[target] || null,
+            seed: options.seed,
+            conditionSeed: options.seed + (condition === "ablated" ? 1 : 0),
+            trialIndex,
             score: score.score,
             selectedExpert: score.selectedExpert,
             expectedExpert: testCase.expectedPrimaryExpert,
@@ -382,6 +427,7 @@ for (const section of sectionsToRun) {
   const ablatedPhilosophy = mean(ablatedResults.map((r) => r.judgeAxes?.philosophy ?? 1));
 
   const passHatKDelta = (ablatedAgg.passHatK ? 1 : 0) - (controlAgg.passHatK ? 1 : 0);
+  const { paired, unpaired } = buildPairedAblationRecords(controlResults, ablatedResults);
 
   report.sections.push({
     id: section.id,
@@ -399,11 +445,27 @@ for (const section of sectionsToRun) {
     controlPhilosophy: round(controlPhilosophy),
     ablatedPhilosophy: round(ablatedPhilosophy),
     conditionKind: section.conditionKind || "ablation",
+    pairedRecords: paired,
+    unpairedRecords: unpaired,
     verdict: deriveVerdict(controlAgg, ablatedAgg, controlOE, ablatedOE, controlConc, ablatedConc, section, {
       personaDelta: ablatedPersona - controlPersona,
       philosophyDelta: ablatedPhilosophy - controlPhilosophy
     })
   });
+}
+
+if (options.pairedStats) {
+  report.sections = applyAblationStatistics(report.sections);
+}
+
+const integrity = runIntegrityChecks(report);
+report.integrity = integrity;
+if (!integrity.ok) {
+  console.error(`run-integrity-FAILED: ${integrity.failures.join(" | ")}`);
+  process.exitCode = 1;
+}
+for (const warning of integrity.warnings) {
+  console.warn(`run-integrity-WARNING: ${warning}`);
 }
 
 // Final safety net: if we exited the section loop with ablated artifacts still

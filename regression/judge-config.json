@@ -1,0 +1,5 @@
+{
+  "judgeModelFamily": "openai",
+  "defaultFewShotExamples": 3,
+  "kappaFloor": 0.4
+}

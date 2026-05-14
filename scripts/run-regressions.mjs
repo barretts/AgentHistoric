@@ -17,12 +17,20 @@ import {
   parseArgs,
   parseCodexJsonlResult,
   runCommandLogged,
+  runIntegrityChecks,
   runTrials,
   scoreCase,
   selectCases,
   shouldRequireVerbalizedSampling
 } from "./lib/regression.mjs";
-import { attachJudgeResults } from "./lib/eval-judge.mjs";
+import {
+  attachJudgeResults,
+  loadFewShotExamples,
+  loadJudgeCalibrationReport,
+  loadJudgeConfig,
+  resolveRubricsForCase,
+  validateJudgeCalibration
+} from "./lib/eval-judge.mjs";
 import { buildAndAppendTrace, analyzeTraceFailures, formatTraceAnalysis } from "./lib/tracer.mjs";
 
 const workspaceRoot = process.cwd();
@@ -32,6 +40,36 @@ const timestamp = createTimestamp();
 const fixtures = await loadRegressionFixtures(workspaceRoot);
 const cases = selectCases(fixtures, options);
 const logDir = await ensureLogsDirectory(workspaceRoot);
+const judgeConfig = await loadJudgeConfig(workspaceRoot);
+const activeRubricIds = options.judge
+  ? [...new Set(cases.flatMap((testCase) =>
+      resolveRubricsForCase(testCase, testCase.expectedPrimaryExpert).map((rubric) => rubric.id)
+    ))]
+  : [];
+const calibrationReport = options.judge
+  ? await loadJudgeCalibrationReport(workspaceRoot)
+  : null;
+const calibrationValidation = options.judge
+  ? validateJudgeCalibration(activeRubricIds, calibrationReport, {
+      requireCalibratedJudge: options.requireCalibratedJudge,
+      kappaFloor: judgeConfig.kappaFloor ?? 0.4
+    })
+  : { ok: true, failures: [], warnings: [] };
+const fewShotExamplesByRubric = options.judge
+  ? await loadFewShotExamples(
+      workspaceRoot,
+      activeRubricIds,
+      judgeConfig.defaultFewShotExamples ?? 3
+    )
+  : {};
+
+if (!calibrationValidation.ok) {
+  console.error(`judge-calibration-FAILED: ${calibrationValidation.failures.join(" | ")}`);
+  process.exitCode = 1;
+}
+for (const warning of calibrationValidation.warnings) {
+  console.warn(`judge-calibration-WARNING: ${warning}`);
+}
 
 const run = {
   suite: options.suite,
@@ -41,7 +79,14 @@ const run = {
   caseCount: cases.length,
   results: [],
   aggregated: [],
-  parity: []
+  parity: [],
+  judgeCalibration: options.judge
+    ? {
+        activeRubricIds,
+        report: calibrationReport,
+        validation: calibrationValidation
+      }
+    : null
 };
 
 for (const testCase of cases) {
@@ -75,7 +120,14 @@ for (const testCase of cases) {
 
         // LLM-as-a-Judge evaluation
         if (options.judge) {
-          score = await attachJudgeResults(system, testCase, response, { scoreResult: score, local: true });
+          score = await attachJudgeResults(system, testCase, response, {
+            scoreResult: score,
+            local: options.local,
+            judgeModelFamily: judgeConfig.judgeModelFamily,
+            subjectModelFamily: options.subjectModelFamily,
+            allowSameFamily: options.allowSameFamily,
+            fewShotExamplesByRubric
+          });
         }
 
         // Trace logging
@@ -143,6 +195,16 @@ for (const testCase of cases) {
 
 const jsonPath = path.join(logDir, `regression-summary-${timestamp}.json`);
 const mdPath = path.join(logDir, `regression-summary-${timestamp}.md`);
+
+const integrity = runIntegrityChecks(run);
+run.integrity = integrity;
+if (!integrity.ok) {
+  console.error(`run-integrity-FAILED: ${integrity.failures.join(" | ")}`);
+  process.exitCode = 1;
+}
+for (const warning of integrity.warnings) {
+  console.warn(`run-integrity-WARNING: ${warning}`);
+}
 
 await writeFile(jsonPath, JSON.stringify(run, null, 2) + "\n", "utf8");
 await writeFile(mdPath, formatSummary(run), "utf8");

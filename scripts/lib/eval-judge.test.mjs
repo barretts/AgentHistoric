@@ -5,10 +5,12 @@ import path from "node:path";
 import {
   resolveRubricsForCase,
   judgeResponse,
+  judgePairwise,
   judgeResponseMulti,
   attachJudgeResults,
   loadCustomRubrics,
-  BUILTIN_RUBRICS
+  BUILTIN_RUBRICS,
+  BUILTIN_RUBRICS_PAIRWISE
 } from "./eval-judge.mjs";
 
 const workspaceRoot = path.resolve(import.meta.dirname, "..", "..");
@@ -81,6 +83,39 @@ test("judgeResponse heuristic: factual grounding scores 0 without evidence", asy
     local: true
   });
   assert.strictEqual(result.score, 0);
+});
+
+test("judgePairwise normalizes swapped winners to original response coordinates", async () => {
+  const result = await judgePairwise({
+    responseA: "VERIFIED: test log evidence supports the claim.",
+    responseB: "This works perfectly.",
+    rubric: BUILTIN_RUBRICS.find(r => r.id === "factual-grounding"),
+    local: true
+  });
+
+  assert.strictEqual(result.winner, "control");
+  assert.strictEqual(result.swapConsistent, true);
+  assert.strictEqual(result.positionBiasDetected, false);
+});
+
+test("BUILTIN_RUBRICS_PAIRWISE mirrors built-in rubric ids", () => {
+  assert.deepEqual(
+    BUILTIN_RUBRICS_PAIRWISE.map(r => r.id).sort(),
+    BUILTIN_RUBRICS.map(r => r.id).sort()
+  );
+});
+
+test("judgeResponse rejects same-family real judge unless explicitly allowed", async () => {
+  await assert.rejects(
+    () => judgeResponse({
+      response: "VERIFIED: evidence.",
+      rubric: BUILTIN_RUBRICS.find(r => r.id === "factual-grounding"),
+      local: false,
+      judgeModelFamily: "openai",
+      subjectModelFamily: "openai"
+    }),
+    /matches subject model family/
+  );
 });
 
 // ── Heuristic Judge: Failure Mode Analysis ─────────────────────────

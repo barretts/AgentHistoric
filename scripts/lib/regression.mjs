@@ -2,6 +2,13 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import path from "node:path";
 import { resolveRequiredSections } from "./prompt-system.mjs";
+import {
+  bootstrapCI,
+  holmCorrection,
+  mcnemarExact,
+  sampleRatioMismatch,
+  wilcoxonSignedRank
+} from "./stats.mjs";
 
 export async function loadRegressionFixtures(workspaceRoot) {
   const raw = await readFile(
@@ -48,6 +55,11 @@ export function parseArgs(argv) {
     verbalizedSampling: false,
     // --judge: run LLM-as-judge evaluation on each response.
     judge: false,
+    pairedStats: false,
+    judgeMode: "pointwise",
+    requireCalibratedJudge: false,
+    allowSameFamily: false,
+    subjectModelFamily: null,
     // --trace: write structured trace records to .logs/traces/.
     trace: false,
     strict: false,
@@ -109,6 +121,18 @@ export function parseArgs(argv) {
       options.verbalizedSampling = true;
     } else if (arg === "--judge") {
       options.judge = true;
+    } else if (arg === "--paired-stats") {
+      options.pairedStats = true;
+    } else if (arg === "--judge-mode") {
+      options.judgeMode = argv[index + 1] || "pointwise";
+      index += 1;
+    } else if (arg === "--require-calibrated-judge") {
+      options.requireCalibratedJudge = true;
+    } else if (arg === "--allow-same-family") {
+      options.allowSameFamily = true;
+    } else if (arg === "--subject-model-family") {
+      options.subjectModelFamily = argv[index + 1] || null;
+      index += 1;
     } else if (arg === "--trace") {
       options.trace = true;
     } else if (arg === "--strict") {
@@ -1108,6 +1132,207 @@ export function aggregateTrialResults(trialResults) {
   };
 }
 
+export function buildPairedAblationRecords(controlResults, treatmentResults) {
+  const controlByKey = new Map();
+  const treatmentByKey = new Map();
+
+  for (const result of controlResults || []) {
+    controlByKey.set(comparisonKey(result), result);
+  }
+  for (const result of treatmentResults || []) {
+    treatmentByKey.set(comparisonKey(result), result);
+  }
+
+  const paired = [];
+  const unpaired = [];
+  const keys = new Set([...controlByKey.keys(), ...treatmentByKey.keys()]);
+  for (const key of keys) {
+    const control = controlByKey.get(key);
+    const treatment = treatmentByKey.get(key);
+    if (!control || !treatment) {
+      unpaired.push({
+        key,
+        hasControl: Boolean(control),
+        hasTreatment: Boolean(treatment)
+      });
+      continue;
+    }
+    paired.push({
+      key,
+      caseId: control.caseId || treatment.caseId,
+      target: control.target || treatment.target,
+      model: control.model || treatment.model || null,
+      seed: control.seed ?? treatment.seed ?? null,
+      trialIndex: control.trialIndex ?? treatment.trialIndex ?? null,
+      controlScore: control.score,
+      treatmentScore: treatment.score,
+      controlPass: control.score === 2,
+      treatmentPass: treatment.score === 2,
+      overEngineeringDelta:
+        (treatment.behavioralMetrics?.overEngineering ?? 1)
+        - (control.behavioralMetrics?.overEngineering ?? 1),
+      concisionDelta:
+        (treatment.behavioralMetrics?.concision ?? 1)
+        - (control.behavioralMetrics?.concision ?? 1)
+    });
+  }
+
+  return { paired, unpaired };
+}
+
+export function applyAblationStatistics(sections, opts = {}) {
+  const sectionStats = sections.map((section) => {
+    const paired = section.pairedRecords || [];
+    let b = 0;
+    let c = 0;
+    for (const pair of paired) {
+      if (pair.controlPass && !pair.treatmentPass) b += 1;
+      if (!pair.controlPass && pair.treatmentPass) c += 1;
+    }
+
+    const overEngineeringDeltas = paired.map((pair) => pair.overEngineeringDelta);
+    const concisionDeltas = paired.map((pair) => pair.concisionDelta);
+    const primary = mcnemarExact(b, c);
+    const overEngineering = wilcoxonSignedRank(overEngineeringDeltas);
+    const concision = wilcoxonSignedRank(concisionDeltas);
+    const overEngineeringCI = bootstrapCI(overEngineeringDeltas, undefined, {
+      resamples: opts.resamples || 2000,
+      seed: opts.seed || 7
+    });
+    const concisionCI = bootstrapCI(concisionDeltas, undefined, {
+      resamples: opts.resamples || 2000,
+      seed: opts.seed || 11
+    });
+
+    return {
+      section,
+      primaryPValue: primary.pValue,
+      stats: {
+        pairedCount: paired.length,
+        unpairedCount: (section.unpairedRecords || []).length,
+        primary,
+        overEngineering,
+        concision,
+        overEngineeringCI,
+        concisionCI
+      }
+    };
+  });
+
+  const holm = holmCorrection(sectionStats.map((entry) => entry.primaryPValue), opts.alpha || 0.05);
+
+  return sectionStats.map((entry, index) => {
+    const stats = {
+      ...entry.stats,
+      primaryHolmPValue: holm.adjustedPValues[index],
+      primaryRejected: holm.rejected[index]
+    };
+    return {
+      ...entry.section,
+      statisticalTests: stats,
+      pHolm: stats.primaryHolmPValue,
+      confidenceInterval: formatConfidenceInterval(stats.concisionCI),
+      verdict: deriveStatisticalAblationVerdict(entry.section, stats, opts)
+    };
+  });
+}
+
+export function runIntegrityChecks(run, opts = {}) {
+  const failures = [];
+  const warnings = [];
+  const alpha = opts.alpha ?? 0.001;
+
+  if (Array.isArray(run.variantCounts) && Array.isArray(run.expectedVariantRatios)) {
+    const srm = sampleRatioMismatch(run.variantCounts, run.expectedVariantRatios, { alpha });
+    if (srm.failed) {
+      failures.push(`SRM failed: p=${srm.pValue} statistic=${srm.statistic}`);
+    }
+  }
+
+  const resultGroups = new Map();
+  for (const result of run.results || []) {
+    if (typeof result?.score?.score !== "number") {
+      failures.push(`Malformed score for ${result?.caseId || "unknown"} ${result?.target || ""}`);
+    }
+    if (result?.score?.judgeResult) {
+      const scores = (result.score.judgeResult.results || []).map((row) => row.score);
+      const hasNull = scores.some((score) => score === null || score === undefined);
+      const hasNumber = scores.some((score) => typeof score === "number");
+      if (hasNull && hasNumber) {
+        failures.push(`Mixed null/numeric judge scores for ${result.caseId} ${result.target}`);
+      }
+    }
+    const key = [result.caseId, result.target].join("|");
+    if (!resultGroups.has(key)) resultGroups.set(key, []);
+    resultGroups.get(key).push(result);
+  }
+
+  if (run.trialsPerCase && run.trialsPerCase > 1) {
+    for (const [key, rows] of resultGroups.entries()) {
+      if (rows.length !== run.trialsPerCase) {
+        failures.push(`Missing trials for ${key}: expected ${run.trialsPerCase}, got ${rows.length}`);
+      }
+    }
+  }
+
+  for (const section of run.sections || []) {
+    if ((section.unpairedRecords || []).length > 0) {
+      warnings.push(`${section.id}: ${section.unpairedRecords.length} unpaired ablation record(s) excluded from paired stats`);
+    }
+  }
+
+  return {
+    ok: failures.length === 0,
+    failures,
+    warnings
+  };
+}
+
+function comparisonKey(result) {
+  return [
+    result.caseId || "unknown-case",
+    result.target || "unknown-target",
+    result.model || "unknown-model",
+    result.seed ?? "no-seed",
+    result.trialIndex ?? "no-trial"
+  ].join("|");
+}
+
+function formatConfidenceInterval(ci) {
+  if (!ci || ci.lower === null || ci.upper === null) return "N/A";
+  return `[${ci.lower.toFixed(3)}, ${ci.upper.toFixed(3)}]`;
+}
+
+function deriveStatisticalAblationVerdict(section, stats, opts = {}) {
+  const alpha = opts.alpha || 0.05;
+  const guardrailTolerance = opts.guardrailTolerance ?? 0.02;
+  const significantPrimary = stats.primaryHolmPValue < alpha;
+  const primaryDelta = section.passHatKDelta || 0;
+  const overEngineeringDelta = section.overEngineeringDelta || 0;
+  const concisionDelta = section.concisionDelta || 0;
+  const guardrailRegression =
+    overEngineeringDelta < -guardrailTolerance
+    || concisionDelta < -guardrailTolerance;
+  const guardrailImprovement =
+    overEngineeringDelta > guardrailTolerance
+    || concisionDelta > guardrailTolerance;
+
+  if (!significantPrimary) {
+    return "REVIEW";
+  }
+
+  if (section.conditionKind === "positive") {
+    if (primaryDelta > 0 && !guardrailRegression) return "KEEP";
+    if (primaryDelta < 0 || guardrailRegression) return "REMOVE";
+    if (guardrailImprovement) return "KEEP";
+    return "REVIEW";
+  }
+
+  if (primaryDelta < 0 || guardrailRegression) return "KEEP";
+  if (primaryDelta > 0 || guardrailImprovement) return "REMOVE";
+  return "REVIEW";
+}
+
 // ── Behavioral Metrics ──────────────────────────────────────────────
 
 export function computeBehavioralMetrics(response, testCase) {
@@ -1151,12 +1376,14 @@ export function formatAblationReport(report) {
   lines.push(`- Timestamp: ${report.timestamp}`);
   lines.push(`- Trials per condition: ${report.trialsPerCondition}`);
   lines.push("");
-  lines.push("| Section | Kind | Chars Saved | pass^k Delta | Persona Delta | Philosophy Delta | Over-Engineering Delta | Concision Delta | Verdict |");
-  lines.push("|---------|:----:|:----------:|:------------:|:-------------:|:----------------:|:---------------------:|:--------------:|:-------:|");
+  lines.push("| Section | Kind | Chars Saved | pass^k Delta | Persona Delta | Philosophy Delta | Over-Engineering Delta | Concision Delta | p (Holm) | 95% CI | Verdict |");
+  lines.push("|---------|:----:|:----------:|:------------:|:-------------:|:----------------:|:---------------------:|:--------------:|:--------:|:------:|:-------:|");
 
   for (const s of report.sections) {
+    const pHolm = typeof s.pHolm === "number" ? s.pHolm.toFixed(4) : "N/A";
+    const ci = s.confidenceInterval || "N/A";
     lines.push(
-      `| ${s.id} | ${s.conditionKind || "ablation"} | ${s.charsSaved} | ${formatDelta(s.passHatKDelta)} | ${formatDelta(s.personaDelta || 0)} | ${formatDelta(s.philosophyDelta || 0)} | ${formatDelta(s.overEngineeringDelta)} | ${formatDelta(s.concisionDelta)} | ${s.verdict} |`
+      `| ${s.id} | ${s.conditionKind || "ablation"} | ${s.charsSaved} | ${formatDelta(s.passHatKDelta)} | ${formatDelta(s.personaDelta || 0)} | ${formatDelta(s.philosophyDelta || 0)} | ${formatDelta(s.overEngineeringDelta)} | ${formatDelta(s.concisionDelta)} | ${pHolm} | ${ci} | ${s.verdict} |`
     );
   }
 
@@ -1240,7 +1467,23 @@ export function formatSummary(run) {
   if (trialsPerCase > 1) {
     lines.push(`- Trials per case: ${trialsPerCase}`);
   }
+  if (run.judgeCalibration) {
+    const validation = run.judgeCalibration.validation || {};
+    lines.push(`- Judge calibration: ${validation.ok ? "OK" : "FAILED"}`);
+  }
   lines.push("");
+
+  if (run.judgeCalibration?.report?.rubrics?.length) {
+    lines.push("## Judge Calibration");
+    lines.push("");
+    lines.push("| Rubric | n | Kappa | Pass |");
+    lines.push("|--------|---:|------:|:----:|");
+    for (const row of run.judgeCalibration.report.rubrics) {
+      const kappa = typeof row.kappa === "number" ? row.kappa.toFixed(3) : "N/A";
+      lines.push(`| ${row.rubricId} | ${row.n || 0} | ${kappa} | ${row.pass ? "Y" : "N"} |`);
+    }
+    lines.push("");
+  }
 
   if (trialsPerCase > 1 && run.aggregated) {
     lines.push("| Case | Target | pass@k | pass^k | Mean | Routing | Distribution |");

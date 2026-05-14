@@ -241,6 +241,31 @@ Return ONLY a JSON object: {"score": 0|1|2, "reasoning": "brief explanation"}`,
   }
 ];
 
+export const BUILTIN_RUBRICS_PAIRWISE = BUILTIN_RUBRICS.map((rubric) => ({
+  id: rubric.id,
+  name: `${rubric.name} (Pairwise)`,
+  description: rubric.description,
+  applicableTo: rubric.applicableTo,
+  prompt: (responseA, responseB, context) =>
+    `Compare Response A and Response B for this criterion:
+
+${rubric.description}
+
+Use the same rubric intent as the pointwise evaluator, but choose the response
+that better satisfies the criterion. Prefer "tie" when neither response is
+materially better.
+
+Context: ${context || "No specific context provided."}
+
+Response A:
+${responseA}
+
+Response B:
+${responseB}
+
+Return ONLY a JSON object: {"winner": "A"|"B"|"tie", "reasoning": "brief explanation"}`
+}));
+
 // ── Rubric Resolution ───────────────────────────────────────────────
 
 export function resolveRubricsForCase(testCase, expertId, customRubrics = []) {
@@ -260,6 +285,82 @@ export function resolveRubricsForCase(testCase, expertId, customRubrics = []) {
     }
     return false;
   });
+}
+
+export async function loadJudgeConfig(workspaceRoot) {
+  const configPath = path.join(workspaceRoot, "regression", "judge-config.json");
+  try {
+    return JSON.parse(await readFile(configPath, "utf8"));
+  } catch {
+    return {
+      judgeModelFamily: null,
+      defaultFewShotExamples: 3,
+      kappaFloor: 0.4
+    };
+  }
+}
+
+export async function loadJudgeCalibrationReport(workspaceRoot) {
+  const reportPath = path.join(workspaceRoot, "regression", "judge-calibration", "report.json");
+  try {
+    return JSON.parse(await readFile(reportPath, "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+export function validateJudgeCalibration(activeRubricIds, report, opts = {}) {
+  const kappaFloor = opts.kappaFloor ?? 0.4;
+  const failures = [];
+  const warnings = [];
+  if (!report) {
+    const message = "judge calibration report missing";
+    if (opts.requireCalibratedJudge) failures.push(message);
+    else warnings.push(message);
+    return { ok: failures.length === 0, failures, warnings };
+  }
+
+  const byRubric = new Map((report.rubrics || []).map((row) => [row.rubricId, row]));
+  for (const rubricId of activeRubricIds) {
+    const row = byRubric.get(rubricId);
+    if (!row) {
+      const message = `rubric ${rubricId} missing from judge calibration report`;
+      if (opts.requireCalibratedJudge) failures.push(message);
+      else warnings.push(message);
+      continue;
+    }
+    if (typeof row.kappa !== "number" || row.kappa < kappaFloor) {
+      const message = `rubric ${rubricId} kappa ${row.kappa ?? "N/A"} below floor ${kappaFloor}`;
+      if (opts.requireCalibratedJudge) failures.push(message);
+      else warnings.push(message);
+    }
+  }
+  return { ok: failures.length === 0, failures, warnings };
+}
+
+export async function loadFewShotExamples(workspaceRoot, rubricIds, limit = 3) {
+  const examplesByRubric = {};
+  for (const rubricId of rubricIds) {
+    const filePath = path.join(
+      workspaceRoot,
+      "regression",
+      "judge-calibration",
+      "gold",
+      `${rubricId}.jsonl`
+    );
+    try {
+      const content = await readFile(filePath, "utf8");
+      examplesByRubric[rubricId] = content
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .slice(0, limit)
+        .map((line) => JSON.parse(line));
+    } catch {
+      examplesByRubric[rubricId] = [];
+    }
+  }
+  return examplesByRubric;
 }
 
 // ── Judge Evaluation ────────────────────────────────────────────────
@@ -286,7 +387,63 @@ export async function judgeResponse(params) {
   }
 
   // Real LLM judge path (requires a configured LLM client)
-  return judgeResponseWithLLM(response, rubric, context);
+  return judgeResponseWithLLM(response, rubric, context, params);
+}
+
+export async function judgePairwise(params) {
+  const {
+    responseA,
+    responseB,
+    rubric,
+    context,
+    local = true,
+    swapOrder = true
+  } = params;
+
+  const forward = await judgePairwiseRaw({
+    responseA,
+    responseB,
+    rubric,
+    context,
+    local,
+    options: params
+  });
+  if (!swapOrder) {
+    return {
+      winner: normalizeRawWinner(forward.winner, false),
+      swapConsistent: true,
+      positionBiasDetected: false,
+      forward,
+      reverse: null,
+      rubricId: rubric.id
+    };
+  }
+
+  const reverse = await judgePairwiseRaw({
+    responseA: responseB,
+    responseB: responseA,
+    rubric,
+    context,
+    local,
+    options: params
+  });
+
+  const forwardWinner = normalizeRawWinner(forward.winner, false);
+  const reverseWinner = normalizeRawWinner(reverse.winner, true);
+  const swapConsistent = forwardWinner === reverseWinner;
+  const positionBiasDetected =
+    !swapConsistent
+    && rawPosition(forward.winner) !== "tie"
+    && rawPosition(forward.winner) === rawPosition(reverse.winner);
+
+  return {
+    winner: swapConsistent ? forwardWinner : "tie",
+    swapConsistent,
+    positionBiasDetected,
+    forward,
+    reverse,
+    rubricId: rubric.id
+  };
 }
 
 /**
@@ -508,10 +665,15 @@ async function judgeResponseHeuristic(response, rubric, context) {
  * Real LLM judge path. Expects a `JUDGE_MODEL` env var or defaults to a
  * reasonably capable model. Uses the OpenAI-compatible chat completions API.
  */
-async function judgeResponseWithLLM(response, rubric, context) {
+export async function judgeResponseWithLLM(response, rubric, context, opts = {}) {
   const apiKey = process.env.JUDGE_API_KEY;
   const baseUrl = process.env.JUDGE_BASE_URL || "https://api.openai.com/v1";
   const model = process.env.JUDGE_MODEL || "gpt-4o-mini";
+  enforceJudgeFamily({
+    judgeModelFamily: opts.judgeModelFamily || inferModelFamily(model),
+    subjectModelFamily: opts.subjectModelFamily,
+    allowSameFamily: opts.allowSameFamily
+  });
 
   if (!apiKey) {
     // Graceful degradation: if no API key, fall back to heuristic
@@ -521,7 +683,10 @@ async function judgeResponseWithLLM(response, rubric, context) {
     };
   }
 
-  const prompt = rubric.prompt(response, context);
+  const prompt = withFewShotExamples(
+    rubric.prompt(response, context),
+    opts.fewShotExamples || []
+  );
 
   let result;
   try {
@@ -564,6 +729,110 @@ async function judgeResponseWithLLM(response, rubric, context) {
   };
 }
 
+async function judgePairwiseRaw({ responseA, responseB, rubric, context, local, options }) {
+  const pairwiseRubric = BUILTIN_RUBRICS_PAIRWISE.find((candidate) => candidate.id === rubric.id) || {
+    id: rubric.id,
+    prompt: (left, right, ctx) =>
+      `Compare the two responses for rubric ${rubric.id}.
+
+Context: ${ctx || "No context."}
+
+Response A:
+${left}
+
+Response B:
+${right}
+
+Return ONLY JSON: {"winner":"A"|"B"|"tie","reasoning":"brief explanation"}`
+  };
+
+  if (local) {
+    const left = await judgeResponseHeuristic(responseA, rubric, context);
+    const right = await judgeResponseHeuristic(responseB, rubric, context);
+    let winner = "tie";
+    if (left.score > right.score) winner = "A";
+    if (right.score > left.score) winner = "B";
+    return {
+      winner,
+      reasoning: `Heuristic pairwise comparison: A=${left.score}, B=${right.score}.`,
+      mode: "heuristic",
+      rubricId: rubric.id,
+      left,
+      right
+    };
+  }
+
+  return judgePairwiseWithLLM(responseA, responseB, pairwiseRubric, context, options);
+}
+
+async function judgePairwiseWithLLM(responseA, responseB, rubric, context, opts = {}) {
+  const apiKey = process.env.JUDGE_API_KEY;
+  const baseUrl = process.env.JUDGE_BASE_URL || "https://api.openai.com/v1";
+  const model = process.env.JUDGE_MODEL || "gpt-4o-mini";
+  enforceJudgeFamily({
+    judgeModelFamily: opts.judgeModelFamily || inferModelFamily(model),
+    subjectModelFamily: opts.subjectModelFamily,
+    allowSameFamily: opts.allowSameFamily
+  });
+
+  if (!apiKey) {
+    return judgePairwiseRaw({
+      responseA,
+      responseB,
+      rubric: BUILTIN_RUBRICS.find((candidate) => candidate.id === rubric.id) || rubric,
+      context,
+      local: true,
+      options: opts
+    });
+  }
+
+  const prompt = withFewShotExamples(
+    rubric.prompt(responseA, responseB, context),
+    opts.fewShotExamples || []
+  );
+
+  try {
+    const resp = await fetch(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: "You are a precise evaluator of technical responses. Return ONLY valid JSON." },
+          { role: "user", content: prompt }
+        ],
+        temperature: 0,
+        response_format: { type: "json_object" }
+      })
+    });
+    if (!resp.ok) {
+      throw new Error(`Judge API returned ${resp.status}: ${await resp.text()}`);
+    }
+    const data = await resp.json();
+    const raw = JSON.parse(data.choices?.[0]?.message?.content || "{}");
+    return {
+      winner: normalizePairwiseWinner(raw.winner),
+      reasoning: raw.reasoning || "No reasoning provided by judge.",
+      mode: "llm",
+      rubricId: rubric.id,
+      rawLLM: raw
+    };
+  } catch (err) {
+    const fallback = await judgePairwiseRaw({
+      responseA,
+      responseB,
+      rubric: BUILTIN_RUBRICS.find((candidate) => candidate.id === rubric.id) || rubric,
+      context,
+      local: true,
+      options: opts
+    });
+    return { ...fallback, note: `LLM call failed (${err.message}); heuristic fallback` };
+  }
+}
+
 // ── Multi-Rubric Evaluation ─────────────────────────────────────────
 
 /**
@@ -589,7 +858,16 @@ export async function judgeResponseMulti(params) {
 
   const results = [];
   for (const rubric of rubrics) {
-    const result = await judgeResponse({ response, rubric, context, local });
+    const result = await judgeResponse({
+      response,
+      rubric,
+      context,
+      local,
+      judgeModelFamily: params.judgeModelFamily,
+      subjectModelFamily: params.subjectModelFamily,
+      allowSameFamily: params.allowSameFamily,
+      fewShotExamples: params.fewShotExamplesByRubric?.[rubric.id] || []
+    });
     results.push(result);
   }
 
@@ -629,7 +907,11 @@ export async function attachJudgeResults(system, testCase, response, opts = {}) 
       expertId,
       context: testCase.prompt,
       local,
-      customRubrics: opts.customRubrics
+      customRubrics: opts.customRubrics,
+      judgeModelFamily: opts.judgeModelFamily,
+      subjectModelFamily: opts.subjectModelFamily,
+      allowSameFamily: opts.allowSameFamily,
+      fewShotExamplesByRubric: opts.fewShotExamplesByRubric
     });
 
     // Adjust score based on judge findings
@@ -659,6 +941,68 @@ function clampScore(raw) {
   const n = Number(raw);
   if (Number.isNaN(n)) return 0;
   return Math.max(0, Math.min(2, Math.round(n)));
+}
+
+function normalizePairwiseWinner(raw) {
+  const value = String(raw || "").trim().toUpperCase();
+  if (value === "A" || value === "B") return value;
+  return "tie";
+}
+
+function normalizeRawWinner(raw, swapped) {
+  const winner = normalizePairwiseWinner(raw);
+  if (winner === "tie") return "tie";
+  if (!swapped) {
+    return winner === "A" ? "control" : "treatment";
+  }
+  return winner === "A" ? "treatment" : "control";
+}
+
+function rawPosition(raw) {
+  const winner = normalizePairwiseWinner(raw);
+  if (winner === "A") return "first";
+  if (winner === "B") return "second";
+  return "tie";
+}
+
+function enforceJudgeFamily({ judgeModelFamily, subjectModelFamily, allowSameFamily }) {
+  if (!judgeModelFamily || !subjectModelFamily || allowSameFamily) return;
+  if (normalizeFamily(judgeModelFamily) === normalizeFamily(subjectModelFamily)) {
+    throw new Error(
+      `Judge model family (${judgeModelFamily}) matches subject model family (${subjectModelFamily}); use --allow-same-family to override.`
+    );
+  }
+}
+
+function inferModelFamily(model) {
+  const value = String(model || "").toLowerCase();
+  if (value.includes("claude")) return "anthropic";
+  if (value.includes("gemini")) return "google";
+  if (value.includes("grok")) return "xai";
+  if (value.includes("gpt") || value.includes("o1") || value.includes("o3") || value.includes("o4")) return "openai";
+  return value.split(/[-_:/.]/)[0] || "unknown";
+}
+
+function normalizeFamily(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function withFewShotExamples(prompt, examples) {
+  if (!examples || examples.length === 0) return prompt;
+  const rendered = examples.map((example, index) => {
+    return [
+      `Example ${index + 1}:`,
+      `Human label: ${example.humanLabel}`,
+      `Human critique: ${example.critique || "No critique provided."}`,
+      example.response ? `Response:\n${example.response}` : null
+    ].filter(Boolean).join("\n");
+  }).join("\n\n");
+  return [
+    "Use these human-labeled critique examples to calibrate your judgment:",
+    rendered,
+    "",
+    prompt
+  ].join("\n");
 }
 
 function countMatches(text, patterns) {
